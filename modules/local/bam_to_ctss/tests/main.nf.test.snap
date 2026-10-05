@@ -116,7 +116,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss.bed:md5,4e320f2ac0ebe26a5af3f094423b27ed"
+                        "test.ctss.bed:md5,6098ca2f512b40b46df359d2b8b530e0"
                     ]
                 ],
                 "1": [
@@ -126,7 +126,7 @@
                         },
                         [
                             "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
-                            "test.ctss.plus.bedgraph:md5,3496c6593ec4c953bd6c756030f81b9f"
+                            "test.ctss.plus.bedgraph:md5,4cf7fd24a3027f2bb88c34de6a6f9e5e"
                         ]
                     ]
                 ],
@@ -143,7 +143,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss_stats_mqc.tsv:md5,be7dd1e08a0d72bed132eb7ecbd8c02c"
+                        "test.ctss_stats_mqc.tsv:md5,3b9bfd2124c0f54200884dd69b3f30dc"
                     ]
                 ],
                 "4": [
@@ -167,7 +167,7 @@
                         },
                         [
                             "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
-                            "test.ctss.plus.bedgraph:md5,3496c6593ec4c953bd6c756030f81b9f"
+                            "test.ctss.plus.bedgraph:md5,4cf7fd24a3027f2bb88c34de6a6f9e5e"
                         ]
                     ]
                 ],
@@ -176,7 +176,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss.bed:md5,4e320f2ac0ebe26a5af3f094423b27ed"
+                        "test.ctss.bed:md5,6098ca2f512b40b46df359d2b8b530e0"
                     ]
                 ],
                 "softclip": [
@@ -192,7 +192,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss_stats_mqc.tsv:md5,be7dd1e08a0d72bed132eb7ecbd8c02c"
+                        "test.ctss_stats_mqc.tsv:md5,3b9bfd2124c0f54200884dd69b3f30dc"
                     ]
                 ],
                 "versions_pysam": [
@@ -211,7 +211,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-05T11:45:47.335631968",
+        "timestamp": "2026-10-05T17:13:50.194618434",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -37,31 +37,38 @@ def revcomp(seq):
 
 
 def five_prime(read):
-    """Return (pos0, strand, softclipped 5' sequence in read orientation)."""
+    """Return (pos0, strand, softclipped 5' sequence, first aligned bases), all in read orientation."""
     cigar = [op for op in (read.cigartuples or []) if op[0] != 5]  # hard clips are not in the sequence
     seq = read.query_sequence or ""
     if read.is_reverse:
         clip = cigar[-1][1] if cigar and cigar[-1][0] == 4 else 0
-        return read.reference_end - 1, "-", revcomp(seq[len(seq) - clip:]) if clip else ""
+        oriented = revcomp(seq)
+        return read.reference_end - 1, "-", oriented[:clip], oriented[clip:clip + 8]
     clip = cigar[0][1] if cigar and cigar[0][0] == 4 else 0
-    return read.reference_start, "+", seq[:clip]
+    return read.reference_start, "+", seq[:clip], seq[clip:clip + 8]
 
 
-def is_sl(clip, sl_sequence, min_overlap, max_aligned=3):
-    """True if the soft clip ends with (a suffix of) the spliced-leader sequence.
+def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
+    """Number of spliced-leader 3' bases aligned to the genome, or None if the read has no SL.
 
-    The last few SL bases can align to the genome by chance, so the clip may end
-    up to `max_aligned` bases before the SL's own 3' end.
+    The soft clip must end with (a suffix of) the SL.  The SL's last bases often
+    match the genome, because the trans-splice acceptor (...AG, ...CAG) resembles
+    the SL's own 3' end (...AACAG); then the clip stops up to `max_aligned` bases
+    early and those SL bases start the alignment.
     """
     if not sl_sequence or len(clip) < min_overlap:
-        return False
-    clip = clip.upper()
+        return None
+    clip, aligned = clip.upper(), aligned.upper()
     for k in range(max_aligned + 1):
         sl = sl_sequence[:len(sl_sequence) - k]
         n = min(len(clip), len(sl))
-        if n >= min_overlap and clip[-n:] == sl[-n:]:
-            return True
-    return False
+        if n >= min_overlap and clip[-n:] == sl[-n:] and aligned[:k] == sl_sequence[len(sl_sequence) - k:]:
+            return k
+    return None
+
+
+def shift_downstream(pos, strand, k):
+    return pos + k if strand == "+" else pos - k
 
 
 def is_primary(read):
@@ -174,13 +181,16 @@ def main():
             if read.is_paired and not read.is_proper_pair:
                 continue
             n_read1 += 1
-            pos, strand, clip = five_prime(read)
+            pos, strand, clip, aligned = five_prime(read)
+            k = sl_aligned(clip, aligned, sl_sequence, args.sl_min_overlap)
+            if k:
+                pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py
             tss_id = index.find(read.reference_name, pos, strand)
             if tss_id is None:
                 continue
             assigned[read.query_name] = tss_id
             counts[tss_id] += 1
-            if is_sl(clip, sl_sequence, args.sl_min_overlap):
+            if k is not None:
                 sl_counts[tss_id] += 1
 
     # Pass 2: write every primary record of the assigned templates.

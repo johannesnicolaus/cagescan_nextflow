@@ -101,6 +101,14 @@ If you are unsure what precedes the cap in your reads, run the pipeline once wit
 | `-` (none) or `G` | READ1 starts at the cap (± extra G) | nothing |
 | a constant longer sequence, e.g. `...TATAGGG` | a 5' linker is still present | `--r1_5p_linker TATAGGG` (cutadapt removes it and everything before it) |
 | a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL-clipped READ1s are counted per sample and per TSS cluster |
+
+With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site. The last bases of a spliced leader
+often also match the genome, because the splice acceptor (`...AG`, `...CAG`) resembles the leader's 3' end (e.g.
+`...AACAG` in *Oikopleura dioica*). STAR then aligns those leader bases, and the read's 5' end lands up to 3 bases
+upstream, inside the acceptor. Such reads are recognised (soft clip ending in the leader minus its last k bases, and
+the first k aligned bases equal to the leader's last k bases) and their CTSS is moved k bases downstream. On
+*O. dioica* embryo CAGE this put 97% of trans-spliced TSS peaks exactly on annotated 5' ends, against 0% (62% at -2,
+35% at -3) without the correction.
 | fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
 READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the RNA are tolerated by the reverse
