@@ -195,6 +195,7 @@ def toolCitationText() {
             "GffRead and GffCompare (Pertea and Pertea 2020),",
             "bedGraphToBigWig (Kent et al. 2010),",
             "following the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017),",
+            params.find_erna ? "eRNA-like divergent TSS pairs as defined by Andersson et al. (2014)," : "",
             "MultiQC (Ewels et al. 2016)",
             "."
         ].findAll { text -> text }.join(' ').trim()
@@ -218,6 +219,7 @@ def toolBibliographyText() {
             "<li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351</li>",
             "<li>Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470</li>",
             "<li>Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147</li>",
+            params.find_erna ? "<li>Andersson R, Gebhard C, Miguel-Escalada I, et al. (2014). An atlas of active enhancers across human cell types and tissues. Nature, 507, 455-461. doi: 10.1038/nature12787</li>" : "",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].findAll { text -> text }.join(' ').trim()
 
@@ -227,7 +229,7 @@ def toolBibliographyText() {
 //
 // IGV session (relative paths inside --outdir; genome and annotation by absolute path)
 //
-def igvSessionXml(samples, sets, fasta, gtf) {
+def igvSessionXml(samples, sets, fasta, gtf, erna) {
     def tracks = []
     if (gtf) {
         tracks << [file(gtf).toString(), 'Gene models (--gtf)', 'displayMode="EXPANDED"']
@@ -235,6 +237,9 @@ def igvSessionXml(samples, sets, fasta, gtf) {
     sets.each { set ->
         tracks << ["transcripts/${set}/merged/merged.${set}.transcripts.bed12", "Transcripts (${set} TSS clusters)", 'displayMode="EXPANDED"']
         tracks << ["tss_clusters/${set}/all_samples.${set}.tss_clusters.bed", "TSS clusters (${set})", 'displayMode="COLLAPSED"']
+        if (erna) {
+            tracks << ["erna/${set}/all_samples.${set}.erna_candidates.bed", "eRNA-like divergent pairs (${set})", 'displayMode="EXPANDED" color="120,0,160"']
+        }
     }
     tracks << ['ctss/bigwig/all_samples.ctss.plus.bigWig', 'TSS signal + (all samples)', 'color="200,0,0" autoScale="true" autoscaleGroup="ctss"']
     tracks << ['ctss/bigwig/all_samples.ctss.minus.bigWig', 'TSS signal - (all samples)', 'color="0,0,200" autoScale="true" autoscaleGroup="ctss"']

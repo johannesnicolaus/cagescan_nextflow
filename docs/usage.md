@@ -54,6 +54,28 @@ pairs are kept on overlap alone (reported in the MultiQC table).
 `--reclu_min_tpm_per_base` (0.1, as in RECLU) is relative to sequencing depth: in very small libraries one read
 already exceeds it, so the filter has no effect there.
 
+### Enhancer-RNA candidates
+
+Enhancer RNAs are transcribed in both directions from enhancers, so CAGE shows them as a **divergent pair** of TSS
+clusters on opposite strands, facing away from each other, typically 100-400 bp apart, away from gene promoters,
+with similar expression on both strands and short unspliced RNAs ([Andersson et al. 2014](https://doi.org/10.1038/nature12787)).
+For each cluster set, `erna/` lists such pairs:
+
+1. both clusters have >= `--erna_min_reads` READ1s and a spliced-leader fraction <= `--erna_max_sl_fraction`
+   (SL-dominated clusters are trans-splice acceptors, not TSSs);
+2. the minus-strand peak lies `--erna_min_distance` to `--erna_max_distance` bases upstream of the plus-strand peak;
+3. with `--gtf`, both peaks are more than `--erna_distal_distance` bases from any annotated transcript 5' end;
+4. directionality |F - R| / (F + R) < `--erna_max_directionality`;
+5. neither cluster starts a spliced transcript.
+
+Convergent pairs (plus-strand peak upstream of a minus-strand peak, same distances) go through the same filters as a
+**control**: they arise by chance or from overlapping transcription, not from bidirectional initiation. The MultiQC
+table reports both after each filter; only an excess of divergent pairs supports an eRNA-like signal, and on *O.
+dioica* embryo CAGE the excess was about 3-fold (156 divergent vs 48 convergent candidates, broad set). Candidates
+are hypotheses: unannotated genes and other short RNAs can look the same, so check them in the genome browser
+(the session has an eRNA track) and against chromatin data. Use the broad set: the reproducibility filter of the
+sharp set removes most weak, eRNA-like signal. `--find_erna false` turns this step off.
+
 ### Why StringTie, and what the pipeline corrects
 
 StringTie is only trusted for what TSS-anchored CAGEscan pairs can support: the splice structure near the TSS.

@@ -22,6 +22,7 @@ include { PREPARE_GENOME         } from '../subworkflows/local/prepare_genome'
 include { TSS_CLUSTERS           } from '../subworkflows/local/tss_clusters'
 include { BUILD_TRANSCRIPTS      } from '../subworkflows/local/build_transcripts'
 include { COVERAGE_TRACKS        } from '../subworkflows/local/coverage_tracks'
+include { FIND_ERNA              } from '../modules/local/find_erna/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -164,6 +165,18 @@ workflow CAGESCAN {
     ch_multiqc_files = ch_multiqc_files.mix(BUILD_TRANSCRIPTS.out.multiqc_files)
 
     //
+    // MODULE: Enhancer-RNA-like divergent TSS pairs, per cluster set
+    //
+    if (params.find_erna) {
+        def ch_erna = TSS_CLUSTERS.out.clusters_tsv
+            .join(TSS_CLUSTERS.out.counts.map { meta, files -> [meta.cluster_set, files] })
+            .join(BUILD_TRANSCRIPTS.out.gtf.filter { meta, _gtf -> meta.id == 'merged' }.map { meta, gtf -> [meta.cluster_set, gtf] })
+            .map { set, tsv, files, gtf -> [[id: 'all_samples', cluster_set: set], tsv, files, gtf] }
+        FIND_ERNA(ch_erna, PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf })
+        ch_multiqc_files = ch_multiqc_files.mix(FIND_ERNA.out.stats.map { _meta, stats -> stats })
+    }
+
+    //
     // SUBWORKFLOW: Stranded read coverage tracks
     //
     COVERAGE_TRACKS(ch_bam_bai, TSS_CLUSTERS.out.ctss_stats, PREPARE_GENOME.out.sizes)
@@ -173,7 +186,7 @@ workflow CAGESCAN {
     //
     ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') }
         .combine(TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') })
-        .map { samples, sets -> igvSessionXml(samples.tokenize(','), sets.tokenize(','), params.fasta, params.gtf) }
+        .map { samples, sets -> igvSessionXml(samples.tokenize(','), sets.tokenize(','), params.fasta, params.gtf, params.find_erna) }
         .collectFile(name: 'igv_session.xml', storeDir: "${outdir}")
 
     //

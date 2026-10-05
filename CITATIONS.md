@@ -30,6 +30,10 @@
 
   > Chen S, Zhou Y, Chen Y, Gu J. fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics. 2018 Sep 1;34(17):i884-i890. doi: 10.1093/bioinformatics/bty560.
 
+- [Enhancer RNA definition from CAGE](https://pubmed.ncbi.nlm.nih.gov/24670763/)
+
+  > Andersson R, Gebhard C, Miguel-Escalada I, et al. An atlas of active enhancers across human cell types and tissues. Nature. 2014 Mar 27;507(7493):455-461. doi: 10.1038/nature12787.
+
 - [BEDTools](https://pubmed.ncbi.nlm.nih.gov/20110278/)
 
   > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033.

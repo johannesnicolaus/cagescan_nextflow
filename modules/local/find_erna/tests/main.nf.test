@@ -1,0 +1,69 @@
+nextflow_process {
+
+    name "Test Process FIND_ERNA"
+    script "../main.nf"
+    process "FIND_ERNA"
+
+    tag "modules"
+    tag "modules_local"
+    tag "find_erna"
+
+    test("designed pairs - one candidate survives all filters") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/erna_tss_clusters.tsv", checkIfExists: true),
+                    [
+                        file("${projectDir}/tests/data/modules/erna.tss_cluster_counts.tsv", checkIfExists: true),
+                        file("${projectDir}/tests/data/modules/erna.tss_cluster_sl_counts.tsv", checkIfExists: true)
+                    ],
+                    file("${projectDir}/tests/data/modules/erna.merged.transcripts.gtf", checkIfExists: true)
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/erna.annotation.gtf", checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            // A passes; B (SL), C (unbalanced), D (near annotated 5' end), E (spliced) are removed; F is the convergent control
+            def candidates = path(process.out.bed[0][1]).readLines().collect { line -> line.split('\t')[3] }
+            def stats = path(process.out.stats[0][1]).readLines().findAll { line -> !line.startsWith('#') }.tail()
+                .collect { line -> line.split('\t') }
+            assertAll(
+                { assert process.success },
+                { assert candidates == ['TC01|TC02'] },
+                { assert stats.collect { f -> f[1] as int } == [4, 3, 2, 1] },
+                { assert stats.collect { f -> f[2] as int } == [1, 1, 1, 1] },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("designed pairs - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/erna_tss_clusters.tsv", checkIfExists: true),
+                    [ file("${projectDir}/tests/data/modules/erna.tss_cluster_counts.tsv", checkIfExists: true) ],
+                    file("${projectDir}/tests/data/modules/erna.merged.transcripts.gtf", checkIfExists: true)
+                ]
+                input[1] = []
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+}

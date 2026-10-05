@@ -16,6 +16,7 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 - CTSS of spliced-leader READ1s whose leader end aligned to the splice acceptor are moved to the trans-splice site (up to 3 bases downstream).
 - Fixed the nf-core paraclu module sorting CTSS without strand (patched; plus and minus strand CTSS interleaved and fragmented paraclu's per-strand runs).
 - Stranded coverage bigWigs per sample, pooled TSS-signal bigWigs, and an `igv_session.xml` for genome browsing.
+- eRNA candidates: divergent, distal, balanced, unspliced pairs of non-SL TSS clusters per cluster set, with convergent pairs as a control (`erna/`, MultiQC table, IGV track).
 - Simulated test data set (`tests/data/make_test_data.py`) with known TSSs and isoforms.
 
 ### `Fixed`

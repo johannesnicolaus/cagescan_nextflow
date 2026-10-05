@@ -15,6 +15,7 @@ Everything downstream of the TSS clusters is produced twice, once per cluster se
 stands for either, and output files carry the set in their name.
 
 - [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
+- [eRNA candidates](#erna-candidates) - enhancer-RNA-like divergent TSS pairs
 - [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
 - [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
@@ -46,6 +47,20 @@ A gzipped `--fasta` must be bgzip-compressed and indexed for IGV.
 Coverage shows where the mapped read pairs lie, so transcription outside gene models (unannotated genes, 5'
 extensions, antisense or intergenic transcripts) is visible directly; the TSS signal shows where those RNAs start.
 Coverage of CAGEscan libraries decays with distance from the TSS (fragment length), so it is strongest near 5' ends.
+
+### eRNA candidates
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `erna/<set>/`
+  - `all_samples.<set>.erna_candidates.bed`: divergent pairs passing all filters; the region spans from the minus-strand to the plus-strand TSS peak, name = `<tss_minus>|<tss_plus>`, score = reads of the pair (capped at 1000).
+  - `all_samples.<set>.erna_candidates.tsv`: the same with reads per strand, directionality, peak distance and distance to the nearest annotated 5' end.
+  - `all_samples.<set>.erna_stats_mqc.tsv`: divergent and convergent (control) pairs after each filter, also shown in MultiQC.
+
+</details>
+
+See [usage](usage.md#enhancer-rna-candidates) for the criteria.
 
 ### Transcripts
 

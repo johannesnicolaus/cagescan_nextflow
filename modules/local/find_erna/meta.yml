@@ -1,0 +1,68 @@
+name: find_erna
+description: "Find enhancer-RNA-like divergent pairs of non-SL TSS clusters, with convergent pairs as a chance control"
+keywords:
+  - cage
+  - enhancer
+  - erna
+  - bidirectional
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory
+      homepage: https://www.python.org
+      licence:
+        - "PSF"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'all_samples', cluster_set:'broad' ]
+    - clusters:
+        type: file
+        description: "TSS cluster table"
+        pattern: "*.tss_clusters.tsv"
+    - count_files:
+        type: file
+        description: "TSS cluster count matrices (counts required, SL counts optional)"
+        pattern: "*.tss_cluster*.tsv"
+    - transcripts:
+        type: file
+        description: "Merged TSS-anchored transcripts of the same cluster set"
+        pattern: "*.transcripts.gtf"
+  - annotation:
+      type: file
+      description: "Reference annotation GTF (optional; enables the distal filter)"
+      pattern: "*.gtf"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+      - "*.erna_candidates.bed":
+          type: file
+          description: "Candidate divergent pairs (region from minus-strand to plus-strand peak)"
+          pattern: "*.erna_candidates.bed"
+  tsv:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+      - "*.erna_candidates.tsv":
+          type: file
+          description: "Candidates with read counts, directionality and distances"
+          pattern: "*.erna_candidates.tsv"
+  stats:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+      - "*.erna_stats_mqc.tsv":
+          type: file
+          description: "Divergent vs convergent pairs after each filter (MultiQC)"
+          pattern: "*.erna_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

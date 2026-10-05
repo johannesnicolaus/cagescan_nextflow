@@ -297,6 +297,64 @@
                 }
             }
         },
+        "erna_options": {
+            "title": "eRNA candidate options",
+            "type": "object",
+            "fa_icon": "fas fa-arrows-alt-h",
+            "description": "Enhancer-RNA-like divergent pairs of TSS clusters (Andersson et al. 2014), with convergent pairs as a chance control.",
+            "properties": {
+                "find_erna": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Report enhancer-RNA-like divergent TSS cluster pairs for each cluster set.",
+                    "fa_icon": "fas fa-search"
+                },
+                "erna_min_reads": {
+                    "type": "number",
+                    "default": 10,
+                    "minimum": 0,
+                    "description": "Minimum READ1s (all samples) of each TSS cluster of a pair.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "erna_max_sl_fraction": {
+                    "type": "number",
+                    "default": 0.1,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum spliced-leader fraction of each TSS cluster (SL-dominated clusters are trans-splice acceptors, not TSSs).",
+                    "fa_icon": "fas fa-filter"
+                },
+                "erna_min_distance": {
+                    "type": "integer",
+                    "default": 50,
+                    "minimum": 0,
+                    "description": "Minimum distance between the two TSS peaks.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "erna_max_distance": {
+                    "type": "integer",
+                    "default": 400,
+                    "minimum": 1,
+                    "description": "Maximum distance between the two TSS peaks.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "erna_distal_distance": {
+                    "type": "integer",
+                    "default": 500,
+                    "minimum": 0,
+                    "description": "Both TSS peaks must be further than this from any annotated transcript 5' end (needs --gtf).",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "erna_max_directionality": {
+                    "type": "number",
+                    "default": 0.8,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum directionality |F-R|/(F+R) of a pair (Andersson et al. 2014).",
+                    "fa_icon": "fas fa-balance-scale"
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -479,6 +537,9 @@
         },
         {
             "$ref": "#/$defs/transcript_options"
+        },
+        {
+            "$ref": "#/$defs/erna_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

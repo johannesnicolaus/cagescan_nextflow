@@ -31,6 +31,9 @@
                 "FASTQC": {
                     "fastqc": "0.12.1"
                 },
+                "FIND_ERNA": {
+                    "python": "3.12.14"
+                },
                 "GFFCOMPARE": {
                     "gffcompare": "0.12.6"
                 },
@@ -160,6 +163,15 @@
                 "ctss/bigwig/SAMPLE2.ctss.plus.bigWig",
                 "ctss/bigwig/all_samples.ctss.minus.bigWig",
                 "ctss/bigwig/all_samples.ctss.plus.bigWig",
+                "erna",
+                "erna/broad",
+                "erna/broad/all_samples.broad.erna_candidates.bed",
+                "erna/broad/all_samples.broad.erna_candidates.tsv",
+                "erna/broad/all_samples.broad.erna_stats_mqc.tsv",
+                "erna/sharp",
+                "erna/sharp/all_samples.sharp.erna_candidates.bed",
+                "erna/sharp/all_samples.sharp.erna_candidates.tsv",
+                "erna/sharp/all_samples.sharp.erna_stats_mqc.tsv",
                 "fastqc",
                 "fastqc/SAMPLE1_1_fastqc.html",
                 "fastqc/SAMPLE1_1_fastqc.zip",
@@ -217,6 +229,8 @@
                 "multiqc/multiqc_data/multiqc_citations.txt",
                 "multiqc/multiqc_data/multiqc_ctss_stats.txt",
                 "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_erna_stats_all_samples_broad.txt",
+                "multiqc/multiqc_data/multiqc_erna_stats_all_samples_sharp.txt",
                 "multiqc/multiqc_data/multiqc_fastp.txt",
                 "multiqc/multiqc_data/multiqc_fastqc.txt",
                 "multiqc/multiqc_data/multiqc_general_stats.txt",
@@ -242,6 +256,8 @@
                 "multiqc/multiqc_plots/pdf",
                 "multiqc/multiqc_plots/pdf/anchor_stats.pdf",
                 "multiqc/multiqc_plots/pdf/ctss_stats.pdf",
+                "multiqc/multiqc_plots/pdf/erna_stats_all_samples_broad.pdf",
+                "multiqc/multiqc_plots/pdf/erna_stats_all_samples_sharp.pdf",
                 "multiqc/multiqc_plots/pdf/fastp-seq-content-gc-plot_Read_1_After_filtering.pdf",
                 "multiqc/multiqc_plots/pdf/fastp-seq-content-gc-plot_Read_1_Before_filtering.pdf",
                 "multiqc/multiqc_plots/pdf/fastp-seq-content-gc-plot_Read_2_After_filtering.pdf",
@@ -287,6 +303,8 @@
                 "multiqc/multiqc_plots/png",
                 "multiqc/multiqc_plots/png/anchor_stats.png",
                 "multiqc/multiqc_plots/png/ctss_stats.png",
+                "multiqc/multiqc_plots/png/erna_stats_all_samples_broad.png",
+                "multiqc/multiqc_plots/png/erna_stats_all_samples_sharp.png",
                 "multiqc/multiqc_plots/png/fastp-seq-content-gc-plot_Read_1_After_filtering.png",
                 "multiqc/multiqc_plots/png/fastp-seq-content-gc-plot_Read_1_Before_filtering.png",
                 "multiqc/multiqc_plots/png/fastp-seq-content-gc-plot_Read_2_After_filtering.png",
@@ -332,6 +350,8 @@
                 "multiqc/multiqc_plots/svg",
                 "multiqc/multiqc_plots/svg/anchor_stats.svg",
                 "multiqc/multiqc_plots/svg/ctss_stats.svg",
+                "multiqc/multiqc_plots/svg/erna_stats_all_samples_broad.svg",
+                "multiqc/multiqc_plots/svg/erna_stats_all_samples_sharp.svg",
                 "multiqc/multiqc_plots/svg/fastp-seq-content-gc-plot_Read_1_After_filtering.svg",
                 "multiqc/multiqc_plots/svg/fastp-seq-content-gc-plot_Read_1_Before_filtering.svg",
                 "multiqc/multiqc_plots/svg/fastp-seq-content-gc-plot_Read_2_After_filtering.svg",
@@ -523,7 +543,13 @@
                 "SAMPLE1.softclip_5p.tsv:md5,c0a53c46d48f1328132224cc4865b871",
                 "SAMPLE2.ctss.bed:md5,10542e9482fd0f65b99502f68b3c9f57",
                 "SAMPLE2.softclip_5p.tsv:md5,deb6ba6cd3dbc70536ce5226cc4f2131",
-                "igv_session.xml:md5,3596c6c46db664bcdbaee7a137fd5f93",
+                "all_samples.broad.erna_candidates.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "all_samples.broad.erna_candidates.tsv:md5,6e996a1e1b19be70c6ab35398ea08960",
+                "all_samples.broad.erna_stats_mqc.tsv:md5,9da157f7c4f92ab6efdd146e551a19e7",
+                "all_samples.sharp.erna_candidates.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "all_samples.sharp.erna_candidates.tsv:md5,6e996a1e1b19be70c6ab35398ea08960",
+                "all_samples.sharp.erna_stats_mqc.tsv:md5,0820b40740986ea161b409630fe6ad8b",
+                "igv_session.xml:md5,bde621a930936773a4c9f6ac89a29181",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
@@ -549,6 +575,8 @@
                 "multiqc_anchor_stats.txt:md5,e13c5cf3101c2f1e1adb65dc555404d6",
                 "multiqc_citations.txt:md5,fea6804f3cca511dce770d4cee7e7e86",
                 "multiqc_ctss_stats.txt:md5,496e0f259b7f50173119cf19aeb34260",
+                "multiqc_erna_stats_all_samples_broad.txt:md5,2e08348a1be5b3f3f6405903b744c5b2",
+                "multiqc_erna_stats_all_samples_sharp.txt:md5,2e08348a1be5b3f3f6405903b744c5b2",
                 "multiqc_fastp.txt:md5,9a03d5a5fcde000c45449944e56fab04",
                 "multiqc_fastqc.txt:md5,5d0a077bb6cc205b8ab570aa82c0f1bb",
                 "multiqc_general_stats.txt:md5,5f6ca6dccbbd55c41b7242fafbc4ec28",
@@ -613,7 +641,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
             ]
         ],
-        "timestamp": "2026-10-05T20:47:49.058930854",
+        "timestamp": "2026-10-05T21:34:01.046610764",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
