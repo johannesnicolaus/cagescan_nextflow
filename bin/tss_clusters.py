@@ -6,7 +6,8 @@
 
   tss_clusters.py annotate --prefix P --ctss pooled.ctss.bed paraclu.bed
       Turn paraclu output into named, correctly bounded TSS clusters, with
-      sparse tails trimmed (--trim-fraction):
+      sparse tails trimmed (--trim-fraction) and nearby clusters merged
+      (--merge-distance):
       P.tss_clusters.bed (BED9: chrom, start, end, id, score, strand,
       peak, peak+1, rgb) and P.tss_clusters.tsv (id, location, strand,
       peak position, total CTSS count, width).
@@ -69,7 +70,8 @@ def annotate(args):
         value.sort()
     starts = {key: [p for p, _ in value] for key, value in positions.items()}
 
-    clusters = []
+    # Trimmed paraclu clusters per (chrom, strand), as (first, last) CTSS positions.
+    spans = collections.defaultdict(list)
     with open(args.paraclu) as handle:
         for line in handle:
             fields = line.rstrip("\n").split("\t")
@@ -80,9 +82,25 @@ def annotate(args):
             lo = bisect.bisect_left(starts.get(key, []), first)
             hi = bisect.bisect_right(starts.get(key, []), last)
             members = trim_tails(positions.get(key, [])[lo:hi], args.trim_fraction)
-            if not members:
-                continue
-            first, last = members[0][0], members[-1][0]
+            if members:
+                spans[key].append((members[0][0], members[-1][0]))
+
+    # Merge clusters separated by <= merge_distance bases.  One TSS is often split
+    # by paraclu, e.g. when the non-templated G aligns to a genomic G for part of
+    # the reads; merging also guarantees disjoint clusters per strand.
+    clusters = []
+    for (chrom, strand), key_spans in spans.items():
+        merged = []
+        for first, last in sorted(key_spans):
+            if merged and first - merged[-1][1] - 1 <= args.merge_distance:
+                merged[-1][1] = max(merged[-1][1], last)
+            else:
+                merged.append([first, last])
+        for first, last in merged:
+            key = (chrom, strand)
+            lo = bisect.bisect_left(starts[key], first)
+            hi = bisect.bisect_right(starts[key], last)
+            members = positions[key][lo:hi]
             total = sum(c for _, c in members)
             # Dominant CTSS; ties broken towards the 5'-most position.
             best = max(members, key=lambda pc: (pc[1], -pc[0] if strand == "+" else pc[0]))
@@ -115,6 +133,8 @@ def main():
     p_annot.add_argument("--id-prefix", default="TC", help="cluster ID prefix (default: %(default)s)")
     p_annot.add_argument("--trim-fraction", type=float, default=0.01,
                          help="trim cluster ends by up to this fraction of the cluster's counts per end (default: %(default)s)")
+    p_annot.add_argument("--merge-distance", type=int, default=20,
+                         help="merge clusters on the same strand separated by <= this many bases (default: %(default)s; -1 merges only overlapping clusters)")
     p_annot.add_argument("paraclu", help="paraclu bed (chrom, first, last, name, count, strand)")
     p_annot.set_defaults(func=annotate)
 

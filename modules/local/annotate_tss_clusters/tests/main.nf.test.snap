@@ -56,6 +56,63 @@
             "nextflow": "26.04.6"
         }
     },
+    "edge cases - neighbouring clusters are merged": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.tss_clusters.bed:md5,efdb96cf3e62dcd085e81966ef2b3467"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.tss_clusters.tsv:md5,ab363ad195382b96ec3b4459fd9fe9c4"
+                    ]
+                ],
+                "2": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.tss_clusters.bed:md5,efdb96cf3e62dcd085e81966ef2b3467"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.tss_clusters.tsv:md5,ab363ad195382b96ec3b4459fd9fe9c4"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T13:22:02.155851559",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "simulated CAGE": {
         "content": [
             {

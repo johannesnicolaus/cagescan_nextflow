@@ -96,7 +96,7 @@
                         {
                             "id": "test"
                         },
-                        "test.anchor_stats_mqc.tsv:md5,e53239dd891ad14bda9ab5e7fd4fb25c"
+                        "test.anchor_stats_mqc.tsv:md5,647ab353732737d3777d25a3a0922d6e"
                     ]
                 ],
                 "3": [
@@ -127,7 +127,7 @@
                         {
                             "id": "test"
                         },
-                        "test.anchor_stats_mqc.tsv:md5,e53239dd891ad14bda9ab5e7fd4fb25c"
+                        "test.anchor_stats_mqc.tsv:md5,647ab353732737d3777d25a3a0922d6e"
                     ]
                 ],
                 "versions_python": [
@@ -139,7 +139,80 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-05T12:00:10.002953192",
+        "timestamp": "2026-10-05T13:21:14.908460408",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "edge cases - strongest cluster, 3' truncations, derived transcripts": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.transcripts.gtf:md5,ef4bbd5a47a21e39fd6b3fe9cb13e796"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.transcripts.bed12:md5,67031f5851efa87b564809f022b0e6e6"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.anchor_stats_mqc.tsv:md5,9d238aeff81bd3f8d8de51ab4fd5c2e3"
+                    ]
+                ],
+                "3": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.transcripts.bed12:md5,67031f5851efa87b564809f022b0e6e6"
+                    ]
+                ],
+                "gtf": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.transcripts.gtf:md5,ef4bbd5a47a21e39fd6b3fe9cb13e796"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "edge"
+                        },
+                        "edge.anchor_stats_mqc.tsv:md5,9d238aeff81bd3f8d8de51ab4fd5c2e3"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T13:21:33.843262814",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

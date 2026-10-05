@@ -53,4 +53,41 @@ nextflow_process {
         }
     }
 
+    test("edge cases - strongest cluster, 3' truncations, derived transcripts") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'edge' ],
+                    file("${projectDir}/tests/data/modules/edge_stringtie.gtf", checkIfExists: true)
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/edge_tss_clusters_split.tsv", checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            def tx = path(process.out.gtf[0][1]).readLines()
+                .findAll { line -> line.split('\t')[2] == 'transcript' }
+                .collect { line ->
+                    def f = line.split('\t')
+                    def id = (f[8] =~ /transcript_id "([^"]+)"/)[0][1]
+                    [id: id, start: f[3] as int, end: f[4] as int, derived: f[8].contains('anchored "derived"')]
+                }
+            assertAll(
+                { assert process.success },
+                // second TSS inside geneA's first exon gets a derived transcript starting at its peak
+                { assert tx.find { t -> t.id == 'TC000002.1' }?.derived },
+                { assert tx.find { t -> t.id == 'TC000002.1' }?.start == 5201 },
+                // geneA: the 3'-truncated StringTie variant is collapsed
+                { assert tx.count { t -> t.id.startsWith('TC000001.') } == 1 },
+                // geneD's assembled transcripts anchor to the strong cluster (TC000006), not the
+                // 153-read neighbour (TC000005), which only gets derived copies
+                { assert tx.count { t -> t.id.startsWith('TC000006.') && !t.derived } == 4 },
+                { assert tx.findAll { t -> t.id.startsWith('TC000005.') }.every { t -> t.derived } },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
 }

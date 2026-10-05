@@ -38,7 +38,7 @@ def revcomp(seq):
 
 def five_prime(read):
     """Return (pos0, strand, softclipped 5' sequence in read orientation)."""
-    cigar = read.cigartuples
+    cigar = [op for op in (read.cigartuples or []) if op[0] != 5]  # hard clips are not in the sequence
     seq = read.query_sequence or ""
     if read.is_reverse:
         clip = cigar[-1][1] if cigar and cigar[-1][0] == 4 else 0
