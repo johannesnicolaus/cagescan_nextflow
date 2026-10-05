@@ -180,27 +180,43 @@ def validateInputSamplesheet(input) {
 // Generate methods description for MultiQC
 //
 def toolCitationText() {
-    // TODO nf-core: Optionally add in-text citation tools to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def citation_text = [
             "Tools used in the workflow included:",
-            "FastQC (Andrews 2010),",
+            params.skip_fastqc ? "" : "FastQC (Andrews 2010),",
+            params.r1_5p_linker ? "cutadapt (Martin 2011)," : "",
+            params.skip_fastp ? "" : "fastp (Chen et al. 2018),",
+            params.ribo_database_manifest ? "SortMeRNA (Kopylova et al. 2012)," : "",
+            "STAR (Dobin et al. 2013),",
+            "SAMtools (Danecek et al. 2021),",
+            "pysam,",
+            "paraclu (Frith et al. 2008),",
+            "StringTie (Pertea et al. 2015),",
+            "GffRead and GffCompare (Pertea and Pertea 2020),",
+            "bedGraphToBigWig (Kent et al. 2010),",
+            "following the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017),",
             "MultiQC (Ewels et al. 2016)",
             "."
-        ].join(' ').trim()
+        ].findAll { text -> text }.join(' ').trim()
 
     return citation_text
 }
 
 def toolBibliographyText() {
-    // TODO nf-core: Optionally add bibliographic entries to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def reference_text = [
-            "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
+            params.skip_fastqc ? "" : "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
+            params.r1_5p_linker ? "<li>Martin M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal, 17(1), 10-12. doi: 10.14806/ej.17.1.200</li>" : "",
+            params.skip_fastp ? "" : "<li>Chen S, Zhou Y, Chen Y, Gu J. (2018). fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics, 34(17), i884-i890. doi: 10.1093/bioinformatics/bty560</li>",
+            params.ribo_database_manifest ? "<li>Kopylova E, Noé L, Touzet H. (2012). SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data. Bioinformatics, 28(24), 3211-3217. doi: 10.1093/bioinformatics/bts611</li>" : "",
+            "<li>Dobin A, Davis CA, Schlesinger F, et al. (2013). STAR: ultrafast universal RNA-seq aligner. Bioinformatics, 29(1), 15-21. doi: 10.1093/bioinformatics/bts635</li>",
+            "<li>Danecek P, Bonfield JK, Liddle J, et al. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>",
+            "<li>Frith MC, Valen E, Krogh A, Hayashizaki Y, Carninci P, Sandelin A. (2008). A code for transcription initiation in mammalian genomes. Genome Research, 18(1), 1-12. doi: 10.1101/gr.6831208</li>",
+            "<li>Pertea M, Pertea GM, Antonescu CM, et al. (2015). StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology, 33(3), 290-295. doi: 10.1038/nbt.3122</li>",
+            "<li>Pertea G, Pertea M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9, 304. doi: 10.12688/f1000research.23297.2</li>",
+            "<li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351</li>",
+            "<li>Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470</li>",
+            "<li>Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147</li>",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
-        ].join(' ').trim()
+        ].findAll { text -> text }.join(' ').trim()
 
     return reference_text
 }
@@ -226,12 +242,8 @@ def methodsDescriptionText(mqc_methods_yaml) {
     meta["nodoi_text"] = meta.manifest_map.doi ? "" : "<li>If available, make sure to update the text to include the Zenodo DOI of version of the pipeline used. </li>"
 
     // Tool references
-    meta["tool_citations"] = ""
-    meta["tool_bibliography"] = ""
-
-    // TODO nf-core: Only uncomment below if logic in toolCitationText/toolBibliographyText has been filled!
-    // meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
-    // meta["tool_bibliography"] = toolBibliographyText()
+    meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
+    meta["tool_bibliography"] = toolBibliographyText()
 
 
     def methods_text = mqc_methods_yaml.text

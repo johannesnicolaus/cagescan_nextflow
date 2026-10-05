@@ -1,0 +1,220 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "test.ctss.plus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.softclip_5p.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "4": [
+                    [
+                        "BAM_TO_CTSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "5": [
+                    [
+                        "BAM_TO_CTSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "bedgraph": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "test.ctss.plus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
+                    ]
+                ],
+                "ctss": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "softclip": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.softclip_5p.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "BAM_TO_CTSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "BAM_TO_CTSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:45:58.236613447",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss.bed:md5,4e320f2ac0ebe26a5af3f094423b27ed"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
+                            "test.ctss.plus.bedgraph:md5,3496c6593ec4c953bd6c756030f81b9f"
+                        ]
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.softclip_5p.tsv:md5,b0d3979199efbe2cde9671277573ecac"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_stats_mqc.tsv:md5,be7dd1e08a0d72bed132eb7ecbd8c02c"
+                    ]
+                ],
+                "4": [
+                    [
+                        "BAM_TO_CTSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "5": [
+                    [
+                        "BAM_TO_CTSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "bedgraph": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
+                            "test.ctss.plus.bedgraph:md5,3496c6593ec4c953bd6c756030f81b9f"
+                        ]
+                    ]
+                ],
+                "ctss": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss.bed:md5,4e320f2ac0ebe26a5af3f094423b27ed"
+                    ]
+                ],
+                "softclip": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.softclip_5p.tsv:md5,b0d3979199efbe2cde9671277573ecac"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_stats_mqc.tsv:md5,be7dd1e08a0d72bed132eb7ecbd8c02c"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "BAM_TO_CTSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "BAM_TO_CTSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:45:47.335631968",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

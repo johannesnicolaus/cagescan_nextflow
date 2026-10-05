@@ -13,6 +13,8 @@ lint:
     - assets/email_template.txt
     - docs/README.md
     - docs/CONTRIBUTING.md
+    # template ignores every data/ dir, which would drop tests/data/
+    - .gitignore
   nextflow_config:
     - manifest.name
     - manifest.homePage
@@ -37,7 +39,7 @@ template:
   author: Johannes Nicolaus Wibisana
   version: 1.0.0dev
   force: true
-  outdir: /scratch/claude-7949/-flash-LuscombeU-nico-cagescan-nextflow/ed5686fd-c0f1-4e02-8de7-8657f0b80bdc/scratchpad/luscombeu-cagescan
+  outdir: .
   skip_features:
     - igenomes
     - gpu

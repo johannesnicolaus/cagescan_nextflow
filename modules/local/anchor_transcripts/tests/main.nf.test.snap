@@ -1,0 +1,148 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.gtf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.anchor_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "gtf": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.gtf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.anchor_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:44:54.811800731",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.gtf:md5,d3c4594e46065e07e2c75fbd65ab6cec"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.bed12:md5,d7378d258b4f3d4ee5daf63a62ea49df"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.anchor_stats_mqc.tsv:md5,e53239dd891ad14bda9ab5e7fd4fb25c"
+                    ]
+                ],
+                "3": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.bed12:md5,d7378d258b4f3d4ee5daf63a62ea49df"
+                    ]
+                ],
+                "gtf": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.transcripts.gtf:md5,d3c4594e46065e07e2c75fbd65ab6cec"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.anchor_stats_mqc.tsv:md5,e53239dd891ad14bda9ab5e7fd4fb25c"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANCHOR_TRANSCRIPTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T12:00:10.002953192",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

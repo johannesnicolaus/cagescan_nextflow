@@ -4,7 +4,64 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+The pipeline takes **paired-end CAGE** reads (CAGEscan-style: READ1 starts at the capped 5' end of the RNA,
+READ2 is random-primed downstream) **without UMIs**, and reconstructs 5'-anchored transcripts:
+
+1. read pairs are aligned to the genome with STAR (spliced, local alignment);
+2. READ1 5' ends give CAGE TSSs (CTSS), which are pooled across samples and clustered with paraclu;
+3. read pairs whose READ1 starts in a TSS cluster are kept and tagged with the cluster ID (`TC:Z:`);
+4. StringTie builds isoforms from those pairs, per sample and merged across samples;
+5. every transcript is matched to a TSS cluster, its 5' end is moved to the cluster's dominant CTSS and it is
+   renamed `<tss_id>.<n>`; one TSS can therefore have several isoforms.
+
+### Why not assemble per TSS like the original CAGEscan pipeline?
+
+The original pipeline assembles the reads of each *molecule* (defined by UMI) de novo and maps the contigs.
+Without UMIs a group of reads can only be defined by its TSS cluster, which mixes many molecules and isoforms.
+The original assembler gives up on inconsistent read layouts and the transcript builder rejects alternative
+splicing, so per-TSS de novo assembly fails exactly where isoforms exist. Grouping the *aligned* pairs by TSS and
+assembling them with a splice-aware, isoform-aware assembler avoids that.
+
+### READ1 structure, linkers and spliced leaders
+
+Reverse transcriptase usually adds a non-templated G at the cap, so many READ1s start with one extra G. STAR's local
+alignment soft-clips it, and the CTSS is taken from the first *aligned* READ1 base. When the genome itself has a G
+at that position, the extra G aligns and the CTSS shifts 1 base upstream. This is a known limitation of CAGE.
+
+If you are unsure what precedes the cap in your reads, run the pipeline once with defaults and check
+`ctss/<sample>.softclip_5p.tsv` and the *CTSS extraction* table in the MultiQC report:
+
+| Most frequent soft clip | Meaning | What to do |
+| --- | --- | --- |
+| `-` (none) or `G` | READ1 starts at the cap (± extra G) | nothing |
+| a constant longer sequence, e.g. `...TATAGGG` | a 5' linker is still present | `--r1_5p_linker TATAGGG` (cutadapt removes it and everything before it) |
+| a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL-clipped READ1s are counted per sample and per TSS cluster |
+| fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
+
+READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the RNA are tolerated by the reverse
+transcriptase. FANTOM5 CAGEscan ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) trimmed the first 6
+bases of READ2 for random hexamers; use `--r2_trim_front 6` (or the length of your random primer) to do the same.
+
+### Relation to the FANTOM5 CAGEscan workflow
+
+The FANTOM5 CAGEscan libraries ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) had no UMIs either.
+That workflow aligned the pairs (BWA), kept proper pairs, removed pairs with identical coordinates, and grouped pairs
+whose READ1 starts in a CAGE peak into *CAGEscan clusters* (union of the pairs' blocks). This pipeline follows the same
+logic (STAR instead of BWA for spliced alignment, paraclu TSS clusters as seeds) and writes the same kind of clusters
+to `cagescan_clusters/`, but additionally resolves isoforms with StringTie.
+
+### Duplicates
+
+Without UMIs, PCR duplicates cannot be told apart from independent molecules with the same TSS. With
+`--dedup`, read pairs with identical READ1 *and* READ2 positions are marked by `samtools markdup` and ignored
+downstream. Because READ2 is random-primed this is a reasonable proxy (FANTOM5 CAGEscan removed such pairs), but
+highly expressed TSSs with short fragments also collide by chance, so it is off by default.
+
+### Reference annotation
+
+`--gtf` is optional. When given, it is used for the STAR splice-junction database and to compare the merged
+transcripts with the annotation (gffcompare). By default it is **not** given to StringTie as a guide, so that
+transcript 5' ends come from the CAGE data; use `--stringtie_guide` to change this.
 
 ## Samplesheet input
 
@@ -20,33 +77,20 @@ The `sample` identifiers have to be the same when you have re-sequenced the same
 
 ```csv title="samplesheet.csv"
 sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+CAGE_REP1,CAGE_REP1_L002_R1.fastq.gz,CAGE_REP1_L002_R2.fastq.gz
+CAGE_REP1,CAGE_REP1_L003_R1.fastq.gz,CAGE_REP1_L003_R2.fastq.gz
+CAGE_REP1,CAGE_REP1_L004_R1.fastq.gz,CAGE_REP1_L004_R2.fastq.gz
 ```
 
 ### Full samplesheet
 
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
+Reads must be paired-end. `fastq_1` must be READ1, the read that starts at the capped 5' end.
 
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| Column    | Description                                                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`  | Sample name: letters, digits, `_` and `-` only. Identical for multiple sequencing runs of the same library.                                  |
+| `fastq_1` | Full path to the gzipped READ1 FastQ file (cap side). Extension ".fastq.gz" or ".fq.gz".                                                     |
+| `fastq_2` | Full path to the gzipped READ2 FastQ file. Extension ".fastq.gz" or ".fq.gz".                                                                |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
@@ -55,7 +99,7 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run luscombeu/cagescan --input ./samplesheet.csv --outdir ./results  -profile docker
+nextflow run luscombeu/cagescan --input ./samplesheet.csv --fasta genome.fa --gtf annotation.gtf --outdir ./results -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.

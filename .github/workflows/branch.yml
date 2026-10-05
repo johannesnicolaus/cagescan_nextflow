@@ -17,7 +17,7 @@ jobs:
       - name: Check PRs
         if: github.repository == 'luscombeu/cagescan'
         env:
-          HEAD_REPO:  ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           { [[ "$HEAD_REPO" == luscombeu/cagescan ]] && [[ $GITHUB_HEAD_REF == "dev" ]]; } || [[ $GITHUB_HEAD_REF == "patch" ]]
 

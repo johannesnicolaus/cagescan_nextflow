@@ -1,0 +1,8 @@
+chr1	5000	5001	geneA.1	0	+
+chr1	24299	24300	geneB.1	0	-
+chr1	24299	24300	geneB.2	0	-
+chr1	40000	40001	geneC.1	0	+
+chr1	41000	41001	geneC.2	0	+
+chr1	61999	62000	geneD.1	0	-
+chr2	10000	10001	geneE.1	0	+
+chr2	33299	33300	geneF.1	0	-

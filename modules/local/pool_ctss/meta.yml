@@ -1,0 +1,37 @@
+name: pool_ctss
+description: "Sum CTSS counts across samples"
+keywords:
+  - cage
+  - ctss
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - ctss:
+        type: file
+        description: "Per-sample CTSS BED files"
+        pattern: "*.ctss.bed"
+output:
+  ctss:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.ctss.bed":
+          type: file
+          description: "Pooled CTSS counts"
+          pattern: "*.ctss.bed"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

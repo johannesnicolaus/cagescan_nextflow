@@ -156,4 +156,4 @@ If you update images or graphics, follow the nf-core [style guidelines](https://
 
 ## Pipeline specific contribution guidelines
 
-<!-- TODO nf-core: Add any pipeline specific contribution guidelines here, such as coding styles, procedures, checklists etc. -->
+Pipeline-specific helper scripts live in `bin/` (Python 3, run inside the pysam biocontainer). Each local module in `modules/local/` has an nf-test in its `tests/` directory; regenerate the simulated test data with `tests/data/make_test_data.py` if you change the test design.

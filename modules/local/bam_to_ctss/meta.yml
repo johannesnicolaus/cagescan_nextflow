@@ -1,0 +1,73 @@
+name: bam_to_ctss
+description: "Extract CAGE TSSs (READ1 5' ends) and the READ1 5' soft-clip spectrum from a paired-end CAGE BAM"
+keywords:
+  - cage
+  - ctss
+  - tss
+  - bam
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - bam:
+        type: file
+        description: "Coordinate-sorted BAM"
+        pattern: "*.bam"
+    - bai:
+        type: file
+        description: "BAM index"
+        pattern: "*.bai"
+output:
+  ctss:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.ctss.bed":
+          type: file
+          description: "CTSS counts (chrom, pos0, pos0+1, ., count, strand)"
+          pattern: "*.ctss.bed"
+  bedgraph:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.ctss.{plus,minus}.bedgraph":
+          type: file
+          description: "Per-strand CTSS bedGraphs"
+          pattern: "*.ctss.{plus,minus}.bedgraph"
+  softclip:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.softclip_5p.tsv":
+          type: file
+          description: "Most frequent READ1 5' soft-clipped sequences"
+          pattern: "*.softclip_5p.tsv"
+  stats:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.ctss_stats_mqc.tsv":
+          type: file
+          description: "MultiQC custom-content summary row"
+          pattern: "*.ctss_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

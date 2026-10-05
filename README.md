@@ -14,49 +14,63 @@
 
 ## Introduction
 
-**luscombeu/cagescan** is a bioinformatics pipeline that ...
+**luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**
+(CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream).
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+It is a reference-guided re-implementation of the idea behind the original
+[CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline). That pipeline groups reads into molecules by UMI
+and assembles each molecule de novo. Without UMIs, the closest equivalent of a molecule is a **TSS cluster**, so this
+pipeline maps the read pairs first, groups them by the TSS cluster that READ1 starts in, and builds one or more
+isoforms per TSS from the spliced pair alignments.
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/community/brand/workflow-schematics#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
+2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
+3. Spliced paired alignment ([`STAR`](https://github.com/alexdobin/STAR)); local alignment soft-clips the non-templated 5' G or a spliced leader on READ1
+4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
+5. CTSS extraction from READ1 5' ends, with a report of what was soft-clipped before the cap (extra G, linker, spliced leader)
+6. Consensus TSS clusters across samples ([`paraclu`](https://gitlab.com/mcfrith/paraclu)) and CTSS bigWigs ([`bedGraphToBigWig`](https://genome.ucsc.edu/goldenPath/help/bigWig.html))
+7. Grouping of read pairs by TSS cluster (READ1 5' end inside a cluster), per-sample TSS cluster counts, and FANTOM5-style CAGEscan clusters / meta-clusters ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147))
+8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
+9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
+10. Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))
+11. Report ([`MultiQC`](http://multiqc.info/))
+
+> [!NOTE]
+> CAGEscan transcripts span from the TSS to the end of the sequenced fragment (roughly the insert size, a few hundred
+> bases to ~1 kb). They are **5'-anchored transcript fragments**, not full-length transcripts.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
-
-First, prepare a samplesheet with your input data that looks as follows:
+Prepare a samplesheet with one row per pair of FASTQ files (rows with the same `sample` are treated as lanes and concatenated):
 
 `samplesheet.csv`:
 
 ```csv
 sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+CAGE_REP1,CAGE_REP1_R1.fastq.gz,CAGE_REP1_R2.fastq.gz
+CAGE_REP2,CAGE_REP2_R1.fastq.gz,CAGE_REP2_R2.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
-
--->
+`fastq_1` must be READ1, i.e. the read that starts at the capped 5' end.
 
 Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
 nextflow run luscombeu/cagescan \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
+   --fasta genome.fa \
+   --gtf annotation.gtf \
    --outdir <OUTDIR>
 ```
+
+`--gtf` is optional. If you do not know the READ1 structure, run once without `--r1_5p_linker` and look at
+`ctss/<sample>.softclip_5p.tsv` (and the *CTSS extraction* table in the MultiQC report): a single `G` is the
+expected non-templated base, a recurring longer sequence is a linker (`--r1_5p_linker`) or a spliced leader
+(`--sl_sequence`). See [usage](docs/usage.md) and [output](docs/output.md) for details.
 
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).
@@ -67,7 +81,7 @@ luscombeu/cagescan was originally written by Johannes Nicolaus Wibisana.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+- Martin C. Frith, for the original [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) whose BED conventions are reused here.
 
 ## Contributions and Support
 
@@ -78,7 +92,6 @@ If you would like to contribute to this pipeline, please see the [contributing g
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
 <!-- If you use luscombeu/cagescan for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 

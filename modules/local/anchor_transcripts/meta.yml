@@ -1,0 +1,63 @@
+name: anchor_transcripts
+description: "Anchor assembled transcripts to TSS clusters, snap their 5' end to the dominant CTSS and write GTF and BED12"
+keywords:
+  - cage
+  - transcripts
+  - gtf
+  - bed
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - gtf:
+        type: file
+        description: "Assembled transcripts (StringTie GTF)"
+        pattern: "*.gtf"
+  - clusters:
+      type: file
+      description: "tss_clusters.tsv"
+      pattern: "*.tsv"
+output:
+  gtf:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.transcripts.gtf":
+          type: file
+          description: "TSS-anchored transcripts"
+          pattern: "*.transcripts.gtf"
+  bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.transcripts.bed12":
+          type: file
+          description: "TSS-anchored transcripts, BED12"
+          pattern: "*.transcripts.bed12"
+  stats:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.anchor_stats_mqc.tsv":
+          type: file
+          description: "MultiQC custom-content summary row"
+          pattern: "*.anchor_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

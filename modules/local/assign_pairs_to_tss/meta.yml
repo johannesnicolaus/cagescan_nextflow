@@ -1,0 +1,81 @@
+name: assign_pairs_to_tss
+description: "Keep read pairs whose READ1 5' end falls in a TSS cluster and tag them with TC:Z:<tss_id>"
+keywords:
+  - cage
+  - tss
+  - bam
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - bam:
+        type: file
+        description: "Coordinate-sorted BAM"
+        pattern: "*.bam"
+    - bai:
+        type: file
+        description: "BAM index"
+        pattern: "*.bai"
+  - - meta2:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - clusters:
+        type: file
+        description: "TSS clusters BED"
+        pattern: "*.tss_clusters.bed"
+output:
+  bam:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tss.bam":
+          type: file
+          description: "TSS-anchored pairs and index"
+          pattern: "*.tss.bam"
+  counts:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tss_counts.tsv":
+          type: file
+          description: "READ1 counts per TSS cluster"
+          pattern: "*.tss_counts.tsv"
+  cagescan_clusters:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.cagescan_clusters.bed12":
+          type: file
+          description: "FANTOM5-style CAGEscan clusters (union of pair blocks per TSS cluster)"
+          pattern: "*.cagescan_clusters.bed12"
+  stats:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tss_assign_stats_mqc.tsv":
+          type: file
+          description: "MultiQC custom-content summary row"
+          pattern: "*.tss_assign_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

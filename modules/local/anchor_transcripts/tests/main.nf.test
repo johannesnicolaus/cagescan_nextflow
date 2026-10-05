@@ -1,0 +1,56 @@
+nextflow_process {
+
+    name "Test Process ANCHOR_TRANSCRIPTS"
+    script "../main.nf"
+    process "ANCHOR_TRANSCRIPTS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "anchor_transcripts"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/stringtie.gtf", checkIfExists: true)
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/tss_clusters.tsv", checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/stringtie.gtf", checkIfExists: true)
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/tss_clusters.tsv", checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

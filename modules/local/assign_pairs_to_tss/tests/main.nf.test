@@ -1,0 +1,64 @@
+nextflow_process {
+
+    name "Test Process ASSIGN_PAIRS_TO_TSS"
+    script "../main.nf"
+    process "ASSIGN_PAIRS_TO_TSS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "assign_pairs_to_tss"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/SAMPLE1.bam", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/SAMPLE1.bam.bai", checkIfExists: true)
+                ]
+                input[1] = [
+                    [ id:'clusters' ],
+                    file("${projectDir}/tests/data/modules/tss_clusters.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/SAMPLE1.bam", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/SAMPLE1.bam.bai", checkIfExists: true)
+                ]
+                input[1] = [
+                    [ id:'clusters' ],
+                    file("${projectDir}/tests/data/modules/tss_clusters.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

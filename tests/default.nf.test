@@ -8,6 +8,14 @@ nextflow_pipeline {
 
         when {
             params {
+                // The test samplesheet uses paths relative to the pipeline base directory;
+                // nf-test launches from its own directory, so write one with absolute paths.
+                def data_dir = "${projectDir}/tests/data"
+                def samplesheet = new File(new File(outputDir).parentFile, "samplesheet.csv")
+                samplesheet.text = "sample,fastq_1,fastq_2\n" + ['SAMPLE1', 'SAMPLE2'].collect { s ->
+                    "${s},${data_dir}/${s}_R1.fastq.gz,${data_dir}/${s}_R2.fastq.gz"
+                }.join("\n") + "\n"
+                input  = samplesheet.toString()
                 outdir = "$outputDir"
             }
         }
@@ -17,11 +25,18 @@ nextflow_pipeline {
             def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             // stable_content: All files in ${params.outdir}/ with stable content
             def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            // Every simulated TSS must be recovered as a cluster peak
+            def peaks = path("${params.outdir}/tss_clusters/all_samples.tss_clusters.bed").readLines()
+                .collect { line -> def f = line.split('\t'); "${f[0]}:${f[6]}:${f[5]}" } as Set
+            def truth = path("${projectDir}/tests/data/truth_tss.bed").readLines()
+                .collect { line -> def f = line.split('\t'); "${f[0]}:${f[1]}:${f[5]}" } as Set
             assert workflow.success
             assertAll(
+                { assert peaks.containsAll(truth) },
+                { assert path("${params.outdir}/transcripts/merged/merged.transcripts.fasta").exists() },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
-                    removeNextflowVersion("$outputDir/pipeline_info/cagescan_software_mqc_versions.yml"),
+                    removeNextflowVersion("${params.outdir}/pipeline_info/cagescan_software_mqc_versions.yml"),
                     // All stable path name, with a relative path
                     stable_path,
                     // All files with stable contents

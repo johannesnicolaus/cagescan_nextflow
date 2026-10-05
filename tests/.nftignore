@@ -10,3 +10,13 @@ multiqc/multiqc_plots/{svg,pdf,png}/*.{svg,pdf,png}
 multiqc/multiqc_report.html
 fastqc/*_fastqc.{html,zip}
 pipeline_info/*.{html,json,txt,yml}
+alignment/*.{bam,bai}
+alignment/star/log/*.{out,tab}
+alignment/samtools_stats/*.stats
+ctss/bigwig/*.bigWig
+gffcompare/*
+quantification/*/*.ballgown/*.ctab
+quantification/*/*.{gtf,txt}
+stringtie/assembly/*.gtf
+trimming/fastp/*.{html,json,log}
+tss_clusters/tss_anchored_bam/*.{bam,bai}

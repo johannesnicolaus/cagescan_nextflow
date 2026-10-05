@@ -1,0 +1,32 @@
+# stringtie --merge SAMPLE1.transcripts.gtf SAMPLE2.transcripts.gtf -o merged.gtf -p 4 -m 100 -l MSTRG
+# StringTie version 3.0.3
+chr1	StringTie	transcript	4999	7061	1000	+	.	gene_id "MSTRG.1"; transcript_id "MSTRG.1.1"; 
+chr1	StringTie	exon	4999	5300	1000	+	.	gene_id "MSTRG.1"; transcript_id "MSTRG.1.1"; exon_number "1"; 
+chr1	StringTie	exon	6001	6400	1000	+	.	gene_id "MSTRG.1"; transcript_id "MSTRG.1.1"; exon_number "2"; 
+chr1	StringTie	exon	7001	7061	1000	+	.	gene_id "MSTRG.1"; transcript_id "MSTRG.1.1"; exon_number "3"; 
+chr1	StringTie	transcript	21095	24302	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.1"; 
+chr1	StringTie	exon	21095	21200	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.1"; exon_number "1"; 
+chr1	StringTie	exon	22001	22150	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.1"; exon_number "2"; 
+chr1	StringTie	exon	23001	23250	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.1"; exon_number "3"; 
+chr1	StringTie	exon	24001	24302	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.1"; exon_number "4"; 
+chr1	StringTie	transcript	21095	24302	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.2"; 
+chr1	StringTie	exon	21095	21200	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.2"; exon_number "1"; 
+chr1	StringTie	exon	23001	23250	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.2"; exon_number "2"; 
+chr1	StringTie	exon	24001	24302	1000	-	.	gene_id "MSTRG.2"; transcript_id "MSTRG.2.2"; exon_number "3"; 
+chr1	StringTie	transcript	39993	43231	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.1"; 
+chr1	StringTie	exon	39993	40250	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.1"; exon_number "1"; 
+chr1	StringTie	exon	42001	42300	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.1"; exon_number "2"; 
+chr1	StringTie	exon	43001	43231	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.1"; exon_number "3"; 
+chr1	StringTie	transcript	40999	43231	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.2"; 
+chr1	StringTie	exon	40999	41200	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.2"; exon_number "1"; 
+chr1	StringTie	exon	42001	42300	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.2"; exon_number "2"; 
+chr1	StringTie	exon	43001	43231	1000	+	.	gene_id "MSTRG.3"; transcript_id "MSTRG.3.2"; exon_number "3"; 
+chr1	StringTie	transcript	61296	62002	1000	-	.	gene_id "MSTRG.4"; transcript_id "MSTRG.4.1"; 
+chr1	StringTie	exon	61296	62002	1000	-	.	gene_id "MSTRG.4"; transcript_id "MSTRG.4.1"; exon_number "1"; 
+chr2	StringTie	transcript	9999	11302	1000	+	.	gene_id "MSTRG.5"; transcript_id "MSTRG.5.1"; 
+chr2	StringTie	exon	9999	10400	1000	+	.	gene_id "MSTRG.5"; transcript_id "MSTRG.5.1"; exon_number "1"; 
+chr2	StringTie	exon	11001	11302	1000	+	.	gene_id "MSTRG.5"; transcript_id "MSTRG.5.1"; exon_number "2"; 
+chr2	StringTie	transcript	31275	33302	1000	-	.	gene_id "MSTRG.6"; transcript_id "MSTRG.6.1"; 
+chr2	StringTie	exon	31275	31500	1000	-	.	gene_id "MSTRG.6"; transcript_id "MSTRG.6.1"; exon_number "1"; 
+chr2	StringTie	exon	32001	32200	1000	-	.	gene_id "MSTRG.6"; transcript_id "MSTRG.6.1"; exon_number "2"; 
+chr2	StringTie	exon	33001	33302	1000	-	.	gene_id "MSTRG.6"; transcript_id "MSTRG.6.1"; exon_number "3"; 

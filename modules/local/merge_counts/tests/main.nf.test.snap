@@ -1,0 +1,92 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "MERGE_COUNTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "MERGE_COUNTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:46:17.662885946",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.tss_cluster_counts.tsv:md5,8acebb71c46d70767bd958e6826deb7f",
+                            "test.tss_cluster_cpm.tsv:md5,a011108b2b2211d0d9f20ef45058e0c3",
+                            "test.tss_cluster_sl_counts.tsv:md5,f506bcbc68bf84fcc5e8b7556355d4ed"
+                        ]
+                    ]
+                ],
+                "1": [
+                    [
+                        "MERGE_COUNTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.tss_cluster_counts.tsv:md5,8acebb71c46d70767bd958e6826deb7f",
+                            "test.tss_cluster_cpm.tsv:md5,a011108b2b2211d0d9f20ef45058e0c3",
+                            "test.tss_cluster_sl_counts.tsv:md5,f506bcbc68bf84fcc5e8b7556355d4ed"
+                        ]
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "MERGE_COUNTS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:53:32.821929474",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
