@@ -19,6 +19,12 @@
                     "pysam": "0.24.1",
                     "python": "3.12.14"
                 },
+                "BEDTOOLS_GENOMECOV": {
+                    "bedtools": "2.31.1"
+                },
+                "COVERAGE_BIGWIG": {
+                    "ucsc": 482
+                },
                 "FASTP": {
                     "fastp": "1.3.6"
                 },
@@ -74,6 +80,9 @@
                     "samtools": 1.24
                 },
                 "SAMTOOLS_STATS": {
+                    "samtools": 1.24
+                },
+                "SAMTOOLS_VIEW": {
                     "samtools": 1.24
                 },
                 "STAR_ALIGN": {
@@ -134,6 +143,11 @@
                 "cagescan_clusters/sharp/SAMPLE1.sharp.cagescan_clusters.bed12",
                 "cagescan_clusters/sharp/SAMPLE2.sharp.cagescan_clusters.bed12",
                 "cagescan_clusters/sharp/all_samples.sharp.cagescan_clusters.bed12",
+                "coverage",
+                "coverage/SAMPLE1.coverage.minus.bigWig",
+                "coverage/SAMPLE1.coverage.plus.bigWig",
+                "coverage/SAMPLE2.coverage.minus.bigWig",
+                "coverage/SAMPLE2.coverage.plus.bigWig",
                 "ctss",
                 "ctss/SAMPLE1.ctss.bed",
                 "ctss/SAMPLE1.softclip_5p.tsv",
@@ -144,6 +158,8 @@
                 "ctss/bigwig/SAMPLE1.ctss.plus.bigWig",
                 "ctss/bigwig/SAMPLE2.ctss.minus.bigWig",
                 "ctss/bigwig/SAMPLE2.ctss.plus.bigWig",
+                "ctss/bigwig/all_samples.ctss.minus.bigWig",
+                "ctss/bigwig/all_samples.ctss.plus.bigWig",
                 "fastqc",
                 "fastqc/SAMPLE1_1_fastqc.html",
                 "fastqc/SAMPLE1_1_fastqc.zip",
@@ -168,6 +184,7 @@
                 "gffcompare/sharp/merged_sharp.merged.sharp.transcripts.gtf.tmap",
                 "gffcompare/sharp/merged_sharp.stats",
                 "gffcompare/sharp/merged_sharp.tracking",
+                "igv_session.xml",
                 "multiqc",
                 "multiqc/multiqc_data",
                 "multiqc/multiqc_data/fastp-seq-content-gc-plot_Read_1_After_filtering.txt",
@@ -459,6 +476,8 @@
                 "trimming/fastp/SAMPLE2.fastp.log",
                 "tss_clusters",
                 "tss_clusters/all_samples.ctss.bed",
+                "tss_clusters/all_samples.ctss.minus.bedgraph",
+                "tss_clusters/all_samples.ctss.plus.bedgraph",
                 "tss_clusters/broad",
                 "tss_clusters/broad/all_samples.broad.tss_cluster_counts.tsv",
                 "tss_clusters/broad/all_samples.broad.tss_cluster_cpm.tsv",
@@ -496,10 +515,15 @@
                 "SAMPLE1.sharp.cagescan_clusters.bed12:md5,f4a288866248983effa849c20198ea6e",
                 "SAMPLE2.sharp.cagescan_clusters.bed12:md5,76aec909440a98c4295b75eaa1df45e4",
                 "all_samples.sharp.cagescan_clusters.bed12:md5,aee99b9fa46e55290fb7b82f00d60001",
+                "SAMPLE1.coverage.minus.bigWig:md5,178e4a8cd62e0ad1b71c00b0ed978e9d",
+                "SAMPLE1.coverage.plus.bigWig:md5,056630ca449a64a6d9f6c31310bea67d",
+                "SAMPLE2.coverage.minus.bigWig:md5,6b6a42319c219c89dc3f869d9be393b7",
+                "SAMPLE2.coverage.plus.bigWig:md5,04ad12b33662491f51c2a7eb0bb30348",
                 "SAMPLE1.ctss.bed:md5,b3964c2d21db92664a1d1b4cbe618ff5",
                 "SAMPLE1.softclip_5p.tsv:md5,c0a53c46d48f1328132224cc4865b871",
                 "SAMPLE2.ctss.bed:md5,10542e9482fd0f65b99502f68b3c9f57",
                 "SAMPLE2.softclip_5p.tsv:md5,deb6ba6cd3dbc70536ce5226cc4f2131",
+                "igv_session.xml:md5,3596c6c46db664bcdbaee7a137fd5f93",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
@@ -573,6 +597,8 @@
                 "merged.sharp.transcripts.gff3:md5,7493aa2b669601df257cc48e802dfb12",
                 "merged.sharp.transcripts.gtf:md5,b167d0f27218c4c6bfffbf98c27f6329",
                 "all_samples.ctss.bed:md5,917f86990029ae5bb4bbc4596e3a7c9a",
+                "all_samples.ctss.minus.bedgraph:md5,140b5b28aebf05e2ca2e5a9fe5051857",
+                "all_samples.ctss.plus.bedgraph:md5,ee73db74a6d5df21c5b784f77f402917",
                 "all_samples.broad.tss_cluster_counts.tsv:md5,87953eea72a80dbadea8464b4be25a8a",
                 "all_samples.broad.tss_cluster_cpm.tsv:md5,d8b04d829bf32f6fc1322ff09826fd68",
                 "all_samples.broad.tss_cluster_sl_counts.tsv:md5,bc4d7e3ccd09855dc2d7ab8597bd24e3",
@@ -587,7 +613,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
             ]
         ],
-        "timestamp": "2026-10-05T17:16:20.58921178",
+        "timestamp": "2026-10-05T20:47:49.058930854",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

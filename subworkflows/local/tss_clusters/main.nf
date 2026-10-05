@@ -30,16 +30,7 @@ workflow TSS_CLUSTERS {
     BAM_TO_CTSS(ch_bam_bai)
 
     //
-    // Per-strand CTSS bigWigs (skip empty strands)
-    //
-    def ch_bedgraph = BAM_TO_CTSS.out.bedgraph
-        .transpose()
-        .filter { _meta, bedgraph -> bedgraph.size() > 0 }
-        .map { meta, bedgraph -> [meta + [id: bedgraph.name - '.bedgraph'], bedgraph] }
-    UCSC_BEDGRAPHTOBIGWIG(ch_bedgraph, ch_sizes.map { _meta, sizes -> sizes })
-
-    //
-    // Broad clusters: paraclu on CTSS pooled across samples
+    // CTSS pooled across samples
     //
     POOL_CTSS(
         BAM_TO_CTSS.out.ctss
@@ -47,6 +38,20 @@ workflow TSS_CLUSTERS {
             .collect()
             .map { ctss -> [[id: 'all_samples'], ctss] }
     )
+
+    //
+    // Per-strand CTSS bigWigs, per sample and pooled (skip empty strands)
+    //
+    def ch_bedgraph = BAM_TO_CTSS.out.bedgraph
+        .mix(POOL_CTSS.out.bedgraph)
+        .transpose()
+        .filter { _meta, bedgraph -> bedgraph.size() > 0 }
+        .map { meta, bedgraph -> [meta + [id: bedgraph.name - '.bedgraph'], bedgraph] }
+    UCSC_BEDGRAPHTOBIGWIG(ch_bedgraph, ch_sizes.map { _meta, sizes -> sizes })
+
+    //
+    // Broad clusters: paraclu on the pooled CTSS
+    //
     PARACLU(POOL_CTSS.out.ctss, min_cluster)
     ANNOTATE_TSS_CLUSTERS(
         PARACLU.out.bed.combine(POOL_CTSS.out.ctss).map { meta, bed, _ctss_meta, ctss -> [meta + [cluster_set: 'broad'], bed, ctss] }
@@ -109,6 +114,7 @@ workflow TSS_CLUSTERS {
     emit:
     ctss              = BAM_TO_CTSS.out.ctss                            // channel: [ val(meta), path(ctss.bed) ]
     softclip          = BAM_TO_CTSS.out.softclip                        // channel: [ val(meta), path(tsv) ]
+    ctss_stats        = BAM_TO_CTSS.out.stats                           // channel: [ val(meta), path(ctss_stats_mqc.tsv) ]
     clusters_tsv      = ch_sets.map { set, _bed, tsv -> [set, tsv] }    // channel: [ val(cluster_set), path(tss_clusters.tsv) ]
     tss_bam           = ASSIGN_PAIRS_TO_TSS.out.bam                     // channel: [ val(meta), path(bam), path(bai) ]; meta.cluster_set
     counts            = MERGE_TSS_COUNTS.out.tsv                        // channel: [ val(meta), path(tsv) ]

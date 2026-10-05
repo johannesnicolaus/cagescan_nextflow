@@ -11,7 +11,8 @@ process POOL_CTSS {
     tuple val(meta), path(ctss, stageAs: 'input/*')
 
     output:
-    tuple val(meta), path("*.ctss.bed"), emit: ctss
+    tuple val(meta), path("*.ctss.bed")                   , emit: ctss
+    tuple val(meta), path("*.ctss.{plus,minus}.bedgraph"), emit: bedgraph
     tuple val("${task.process}"), val('python'), eval("python --version | sed 's/Python //'"), topic: versions, emit: versions_python
 
     when:
@@ -28,6 +29,6 @@ process POOL_CTSS {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.ctss.bed
+    touch ${prefix}.ctss.bed ${prefix}.ctss.plus.bedgraph ${prefix}.ctss.minus.bedgraph
     """
 }

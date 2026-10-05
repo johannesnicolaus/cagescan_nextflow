@@ -33,7 +33,8 @@ isoforms per TSS from the spliced pair alignments.
 8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
 9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
 10. Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))
-11. Report ([`MultiQC`](http://multiqc.info/))
+11. Stranded read-coverage bigWigs ([`samtools`](http://www.htslib.org/), [`bedtools genomecov`](https://bedtools.readthedocs.io/)) and an IGV session with genome, gene models, transcripts, TSS clusters and coverage
+12. Report ([`MultiQC`](http://multiqc.info/))
 
 > [!NOTE]
 > CAGEscan transcripts span from the TSS to the end of the sequenced fragment (roughly the insert size, a few hundred

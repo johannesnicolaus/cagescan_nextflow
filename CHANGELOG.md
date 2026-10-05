@@ -15,6 +15,7 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 - Sharp TSS clusters following RECLU (per-replicate paraclu hierarchy, TPM-per-base filter, hierarchical (log-)stability, reciprocal-overlap pairing and IDR) next to the broad pooled clusters; everything downstream runs for both sets. Optional `group` samplesheet column for replicates.
 - CTSS of spliced-leader READ1s whose leader end aligned to the splice acceptor are moved to the trans-splice site (up to 3 bases downstream).
 - Fixed the nf-core paraclu module sorting CTSS without strand (patched; plus and minus strand CTSS interleaved and fragmented paraclu's per-strand runs).
+- Stranded coverage bigWigs per sample, pooled TSS-signal bigWigs, and an `igv_session.xml` for genome browsing.
 - Simulated test data set (`tests/data/make_test_data.py`) with known TSSs and isoforms.
 
 ### `Fixed`

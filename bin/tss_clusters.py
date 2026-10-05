@@ -2,7 +2,8 @@
 """Helpers for building consensus TSS clusters from CTSS files.
 
   tss_clusters.py pool --prefix P a.ctss.bed b.ctss.bed ...
-      Sum CTSS counts across samples -> P.ctss.bed (same 6-column format).
+      Sum CTSS counts across samples -> P.ctss.bed (same 6-column format), and
+      per-strand bedGraphs P.ctss.plus.bedgraph / P.ctss.minus.bedgraph.
 
   tss_clusters.py annotate --prefix P --ctss pooled.ctss.bed paraclu.bed
       Turn paraclu output into named, correctly bounded TSS clusters, with
@@ -38,6 +39,11 @@ def pool(args):
     with open(f"{args.prefix}.ctss.bed", "w") as out:
         for (chrom, pos, strand), count in sorted(counts.items()):
             out.write(f"{chrom}\t{pos}\t{pos + 1}\t.\t{count}\t{strand}\n")
+    for strand, name in (("+", "plus"), ("-", "minus")):
+        with open(f"{args.prefix}.ctss.{name}.bedgraph", "w") as out:
+            for (chrom, pos, s), count in sorted(counts.items()):
+                if s == strand:
+                    out.write(f"{chrom}\t{pos}\t{pos + 1}\t{count}\n")
 
 
 def trim_tails(members, fraction):

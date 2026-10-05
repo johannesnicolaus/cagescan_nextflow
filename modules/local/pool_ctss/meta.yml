@@ -21,6 +21,16 @@ input:
         description: "Per-sample CTSS BED files"
         pattern: "*.ctss.bed"
 output:
+  bedgraph:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.ctss.{plus,minus}.bedgraph":
+          type: file
+          description: "Pooled per-strand CTSS bedGraphs"
+          pattern: "*.ctss.{plus,minus}.bedgraph"
   ctss:
     - - meta:
           type: map

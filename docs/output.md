@@ -14,6 +14,7 @@ Everything downstream of the TSS clusters is produced twice, once per cluster se
 `sharp` (RECLU, reproducible across replicates); see [usage](usage.md#broad-and-sharp-tss-clusters). `<set>` below
 stands for either, and output files carry the set in their name.
 
+- [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
 - [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
 - [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
@@ -25,6 +26,26 @@ stands for either, and output files carry the set in their name.
 - [StringTie assemblies](#stringtie-assemblies) - raw assemblies before TSS anchoring
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+
+### Genome browser
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome (`--fasta`), gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns), per million mapped read pairs. The strand is that of the RNA (CAGE READ1 is sense).
+- `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
+
+</details>
+
+Open `igv_session.xml` in IGV desktop (File > Open Session). Track paths inside the results directory are relative
+to the session file, so the results directory can be copied elsewhere (e.g. to a laptop); the genome and annotation are
+referenced by the absolute paths given to `--fasta` and `--gtf`, so copy those too and edit the two paths if needed.
+A gzipped `--fasta` must be bgzip-compressed and indexed for IGV.
+
+Coverage shows where the mapped read pairs lie, so transcription outside gene models (unannotated genes, 5'
+extensions, antisense or intergenic transcripts) is visible directly; the TSS signal shows where those RNAs start.
+Coverage of CAGEscan libraries decays with distance from the TSS (fragment length), so it is strongest near 5' ends.
 
 ### Transcripts
 

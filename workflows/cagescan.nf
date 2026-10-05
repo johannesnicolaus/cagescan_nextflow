@@ -21,10 +21,12 @@ include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { PREPARE_GENOME         } from '../subworkflows/local/prepare_genome'
 include { TSS_CLUSTERS           } from '../subworkflows/local/tss_clusters'
 include { BUILD_TRANSCRIPTS      } from '../subworkflows/local/build_transcripts'
+include { COVERAGE_TRACKS        } from '../subworkflows/local/coverage_tracks'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
+include { igvSessionXml          } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,6 +162,19 @@ workflow CAGESCAN {
         params.gtf as boolean
     )
     ch_multiqc_files = ch_multiqc_files.mix(BUILD_TRANSCRIPTS.out.multiqc_files)
+
+    //
+    // SUBWORKFLOW: Stranded read coverage tracks
+    //
+    COVERAGE_TRACKS(ch_bam_bai, TSS_CLUSTERS.out.ctss_stats, PREPARE_GENOME.out.sizes)
+
+    //
+    // IGV session with genome, gene models, transcripts, TSS clusters and coverage
+    //
+    ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') }
+        .combine(TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') })
+        .map { samples, sets -> igvSessionXml(samples.tokenize(','), sets.tokenize(','), params.fasta, params.gtf) }
+        .collectFile(name: 'igv_session.xml', storeDir: "${outdir}")
 
     //
     // Collate and save software versions
