@@ -1,0 +1,64 @@
+nextflow_process {
+
+    name "Test Process MERGE_COUNTS"
+    script "../main.nf"
+    process "MERGE_COUNTS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "merge_counts"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/modules/SAMPLE1.tss_counts.tsv", checkIfExists: true),
+                        file("${projectDir}/tests/data/modules/SAMPLE2.tss_counts.tsv", checkIfExists: true)
+                    ]
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/tss_clusters.tsv", checkIfExists: true)
+                input[2] = 'tss'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/modules/SAMPLE1.tss_counts.tsv", checkIfExists: true),
+                        file("${projectDir}/tests/data/modules/SAMPLE2.tss_counts.tsv", checkIfExists: true)
+                    ]
+                ]
+                input[1] = file("${projectDir}/tests/data/modules/tss_clusters.tsv", checkIfExists: true)
+                input[2] = 'tss'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

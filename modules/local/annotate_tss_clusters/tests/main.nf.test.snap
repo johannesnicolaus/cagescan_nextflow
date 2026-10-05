@@ -1,0 +1,116 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.tsv:md5,b2f159b09cdc1e9757476b6f83d74cdd"
+                    ]
+                ],
+                "2": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.tsv:md5,b2f159b09cdc1e9757476b6f83d74cdd"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:45:14.800499281",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.bed:md5,5445e9038c72a50334f4c72fcbe2c7f1"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.tsv:md5,e0bd02286cb84496a307bbb2df2068bf"
+                    ]
+                ],
+                "2": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.bed:md5,5445e9038c72a50334f4c72fcbe2c7f1"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_clusters.tsv:md5,e0bd02286cb84496a307bbb2df2068bf"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ANNOTATE_TSS_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T11:45:04.834208352",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

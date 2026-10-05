@@ -1,0 +1,39 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/luscombeu/cagescan/master/assets/schema_input.json",
+    "title": "luscombeu/cagescan pipeline - params.input schema",
+    "description": "Schema for the file provided with params.input",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "errorMessage": "Sample name must be provided and may only contain letters, digits, '_' and '-'",
+                "meta": [
+                    "id"
+                ]
+            },
+            "fastq_1": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "fastq_2": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
+                "errorMessage": "FastQ file for reads 2 must be provided (paired-end CAGE), cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            }
+        },
+        "required": [
+            "sample",
+            "fastq_1",
+            "fastq_2"
+        ]
+    }
+}

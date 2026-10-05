@@ -1,0 +1,52 @@
+name: annotate_tss_clusters
+description: "Name paraclu clusters, fix their BED end coordinate and find each cluster's dominant CTSS"
+keywords:
+  - cage
+  - tss
+  - paraclu
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - paraclu_bed:
+        type: file
+        description: "paraclu output BED"
+        pattern: "*.bed"
+    - ctss:
+        type: file
+        description: "Pooled CTSS BED"
+        pattern: "*.ctss.bed"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tss_clusters.bed":
+          type: file
+          description: "TSS clusters (BED9, thickStart = dominant CTSS)"
+          pattern: "*.tss_clusters.bed"
+  tsv:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tss_clusters.tsv":
+          type: file
+          description: "TSS cluster table (id, location, strand, peak, total count, width)"
+          pattern: "*.tss_clusters.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

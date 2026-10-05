@@ -1,0 +1,305 @@
+{
+    "@context": [
+        "https://w3id.org/ro/crate/1.2/context",
+        {
+            "GithubService": "https://w3id.org/ro/terms/test#GithubService",
+            "JenkinsService": "https://w3id.org/ro/terms/test#JenkinsService",
+            "PlanemoEngine": "https://w3id.org/ro/terms/test#PlanemoEngine",
+            "TestDefinition": "https://w3id.org/ro/terms/test#TestDefinition",
+            "TestInstance": "https://w3id.org/ro/terms/test#TestInstance",
+            "TestService": "https://w3id.org/ro/terms/test#TestService",
+            "TestSuite": "https://w3id.org/ro/terms/test#TestSuite",
+            "TravisService": "https://w3id.org/ro/terms/test#TravisService",
+            "definition": "https://w3id.org/ro/terms/test#definition",
+            "engineVersion": "https://w3id.org/ro/terms/test#engineVersion",
+            "instance": "https://w3id.org/ro/terms/test#instance",
+            "resource": "https://w3id.org/ro/terms/test#resource",
+            "runsOn": "https://w3id.org/ro/terms/test#runsOn"
+        }
+    ],
+    "@graph": [
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "creativeWorkStatus": "InProgress",
+            "datePublished": "2026-10-05T02:17:49+00:00",
+            "description": "# luscombeu/cagescan\n\n\n[![GitHub Actions CI Status](https://github.com/luscombeu/cagescan/actions/workflows/nf-test.yml/badge.svg)](https://github.com/luscombeu/cagescan/actions/workflows/nf-test.yml)\n[![GitHub Actions Linting Status](https://github.com/luscombeu/cagescan/actions/workflows/linting.yml/badge.svg)](https://github.com/luscombeu/cagescan/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)\n[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)\n\n[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)\n[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.1.0-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.1.0)\n[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)\n[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)\n[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)\n[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/luscombeu/cagescan)\n\n## Introduction\n\n**luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**\n(CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream).\n\nIt is a reference-guided re-implementation of the idea behind the original\n[CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline). That pipeline groups reads into molecules by UMI\nand assembles each molecule de novo. Without UMIs, the closest equivalent of a molecule is a **TSS cluster**, so this\npipeline maps the read pairs first, groups them by the TSS cluster that READ1 starts in, and builds one or more\nisoforms per TSS from the spliced pair alignments.\n\n1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))\n2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))\n3. Spliced paired alignment ([`STAR`](https://github.com/alexdobin/STAR)); local alignment soft-clips the non-templated 5' G or a spliced leader on READ1\n4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))\n5. CTSS extraction from READ1 5' ends, with a report of what was soft-clipped before the cap (extra G, linker, spliced leader)\n6. Consensus TSS clusters across samples ([`paraclu`](https://gitlab.com/mcfrith/paraclu)) and CTSS bigWigs ([`bedGraphToBigWig`](https://genome.ucsc.edu/goldenPath/help/bigWig.html))\n7. Grouping of read pairs by TSS cluster (READ1 5' end inside a cluster), per-sample TSS cluster counts, and FANTOM5-style CAGEscan clusters / meta-clusters ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147))\n8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))\n9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`\n10. Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))\n11. Report ([`MultiQC`](http://multiqc.info/))\n\n> [!NOTE]\n> CAGEscan transcripts span from the TSS to the end of the sequenced fragment (roughly the insert size, a few hundred\n> bases to ~1 kb). They are **5'-anchored transcript fragments**, not full-length transcripts.\n\n## Usage\n\n> [!NOTE]\n> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.\n\nPrepare a samplesheet with one row per pair of FASTQ files (rows with the same `sample` are treated as lanes and concatenated):\n\n`samplesheet.csv`:\n\n```csv\nsample,fastq_1,fastq_2\nCAGE_REP1,CAGE_REP1_R1.fastq.gz,CAGE_REP1_R2.fastq.gz\nCAGE_REP2,CAGE_REP2_R1.fastq.gz,CAGE_REP2_R2.fastq.gz\n```\n\n`fastq_1` must be READ1, i.e. the read that starts at the capped 5' end.\n\nNow, you can run the pipeline using:\n\n```bash\nnextflow run luscombeu/cagescan \\\n   -profile <docker/singularity/.../institute> \\\n   --input samplesheet.csv \\\n   --fasta genome.fa \\\n   --gtf annotation.gtf \\\n   --outdir <OUTDIR>\n```\n\n`--gtf` is optional. If you do not know the READ1 structure, run once without `--r1_5p_linker` and look at\n`ctss/<sample>.softclip_5p.tsv` (and the *CTSS extraction* table in the MultiQC report): a single `G` is the\nexpected non-templated base, a recurring longer sequence is a linker (`--r1_5p_linker`) or a spliced leader\n(`--sl_sequence`). See [usage](docs/usage.md) and [output](docs/output.md) for details.\n\n> [!WARNING]\n> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).\n\n## Credits\n\nluscombeu/cagescan was originally written by Johannes Nicolaus Wibisana.\n\nWe thank the following people for their extensive assistance in the development of this pipeline:\n\n- Martin C. Frith, for the original [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) whose BED conventions are reused here.\n\n## Contributions and Support\n\nIf you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).\n\n## Citations\n\n<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->\n<!-- If you use luscombeu/cagescan for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->\n\n\nAn extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.\n\nThis pipeline uses code and infrastructure developed and maintained by the [nf-core](https://nf-co.re) community, reused here under the [MIT license](https://github.com/nf-core/tools/blob/main/LICENSE).\n\n> **The nf-core framework for community-curated bioinformatics pipelines.**\n>\n> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.\n>\n> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).\n",
+            "hasPart": [
+                {
+                    "@id": "main.nf"
+                },
+                {
+                    "@id": "assets/"
+                },
+                {
+                    "@id": "conf/"
+                },
+                {
+                    "@id": "docs/"
+                },
+                {
+                    "@id": "modules/"
+                },
+                {
+                    "@id": "modules/nf-core/"
+                },
+                {
+                    "@id": "workflows/"
+                },
+                {
+                    "@id": "subworkflows/"
+                },
+                {
+                    "@id": "nextflow.config"
+                },
+                {
+                    "@id": "README.md"
+                },
+                {
+                    "@id": "nextflow_schema.json"
+                },
+                {
+                    "@id": "CHANGELOG.md"
+                },
+                {
+                    "@id": "LICENSE"
+                },
+                {
+                    "@id": "CITATIONS.md"
+                },
+                {
+                    "@id": "modules.json"
+                },
+                {
+                    "@id": "docs/usage.md"
+                },
+                {
+                    "@id": "docs/output.md"
+                },
+                {
+                    "@id": ".nf-core.yml"
+                },
+                {
+                    "@id": ".pre-commit-config.yaml"
+                },
+                {
+                    "@id": ".prettierignore"
+                }
+            ],
+            "isBasedOn": "https://github.com/luscombeu/cagescan",
+            "license": "MIT",
+            "mainEntity": {
+                "@id": "main.nf"
+            },
+            "mentions": [
+                {
+                    "@id": "#2016f104-95d1-4acb-b89c-ee3e28e2e869"
+                }
+            ],
+            "name": "luscombeu/cagescan"
+        },
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "about": {
+                "@id": "./"
+            },
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/ro/crate/1.2"
+                },
+                {
+                    "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+                }
+            ]
+        },
+        {
+            "@id": "main.nf",
+            "@type": [
+                "File",
+                "SoftwareSourceCode",
+                "ComputationalWorkflow"
+            ],
+            "contributor": [
+                {
+                    "@id": "https://orcid.org/0000-0002-2452-8702"
+                }
+            ],
+            "dateCreated": "",
+            "dateModified": "2026-10-05T11:17:49Z",
+            "dct:conformsTo": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE/",
+            "keywords": [
+                "nf-core",
+                "nextflow"
+            ],
+            "license": [
+                "MIT"
+            ],
+            "name": [
+                "luscombeu/cagescan"
+            ],
+            "programmingLanguage": {
+                "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow"
+            },
+            "sdPublisher": {
+                "@id": "https://nf-co.re/"
+            },
+            "url": [
+                "https://github.com/luscombeu/cagescan",
+                "https://nf-co.re/luscombeu/cagescan/dev/"
+            ],
+            "version": [
+                "1.0.0dev"
+            ]
+        },
+        {
+            "@id": "https://w3id.org/workflowhub/workflow-ro-crate#nextflow",
+            "@type": "ComputerLanguage",
+            "identifier": {
+                "@id": "https://www.nextflow.io/"
+            },
+            "name": "Nextflow",
+            "url": {
+                "@id": "https://www.nextflow.io/"
+            },
+            "version": "!>=25.10.4"
+        },
+        {
+            "@id": "#2016f104-95d1-4acb-b89c-ee3e28e2e869",
+            "@type": "TestSuite",
+            "instance": [
+                {
+                    "@id": "#59d15402-4d36-4139-b99a-58f06d01edb3"
+                }
+            ],
+            "mainEntity": {
+                "@id": "main.nf"
+            },
+            "name": "Test suite for luscombeu/cagescan"
+        },
+        {
+            "@id": "#59d15402-4d36-4139-b99a-58f06d01edb3",
+            "@type": "TestInstance",
+            "name": "GitHub Actions workflow for testing luscombeu/cagescan",
+            "resource": "repos/luscombeu/cagescan/actions/workflows/nf-test.yml",
+            "runsOn": {
+                "@id": "https://w3id.org/ro/terms/test#GithubService"
+            },
+            "url": "https://api.github.com"
+        },
+        {
+            "@id": "https://w3id.org/ro/terms/test#GithubService",
+            "@type": "TestService",
+            "name": "Github Actions",
+            "url": {
+                "@id": "https://github.com"
+            }
+        },
+        {
+            "@id": "assets/",
+            "@type": "Dataset",
+            "description": "Additional files"
+        },
+        {
+            "@id": "conf/",
+            "@type": "Dataset",
+            "description": "Configuration files"
+        },
+        {
+            "@id": "docs/",
+            "@type": "Dataset",
+            "description": "Markdown files for documenting the pipeline"
+        },
+        {
+            "@id": "modules/",
+            "@type": "Dataset",
+            "description": "Modules used by the pipeline"
+        },
+        {
+            "@id": "modules/nf-core/",
+            "@type": "Dataset",
+            "description": "nf-core modules"
+        },
+        {
+            "@id": "workflows/",
+            "@type": "Dataset",
+            "description": "Main pipeline workflows to be executed in main.nf"
+        },
+        {
+            "@id": "subworkflows/",
+            "@type": "Dataset",
+            "description": "Smaller subworkflows"
+        },
+        {
+            "@id": "nextflow.config",
+            "@type": "File",
+            "description": "Main Nextflow configuration file"
+        },
+        {
+            "@id": "README.md",
+            "@type": "File",
+            "description": "Basic pipeline usage information"
+        },
+        {
+            "@id": "nextflow_schema.json",
+            "@type": "File",
+            "description": "JSON schema for pipeline parameter specification"
+        },
+        {
+            "@id": "CHANGELOG.md",
+            "@type": "File",
+            "description": "Information on changes made to the pipeline"
+        },
+        {
+            "@id": "LICENSE",
+            "@type": "File",
+            "description": "The license - should be MIT"
+        },
+        {
+            "@id": "CITATIONS.md",
+            "@type": "File",
+            "description": "Citations needed when using the pipeline"
+        },
+        {
+            "@id": "modules.json",
+            "@type": "File",
+            "description": "Version information for modules from nf-core/modules"
+        },
+        {
+            "@id": "docs/usage.md",
+            "@type": "File",
+            "description": "Usage documentation"
+        },
+        {
+            "@id": "docs/output.md",
+            "@type": "File",
+            "description": "Output documentation"
+        },
+        {
+            "@id": ".nf-core.yml",
+            "@type": "File",
+            "description": "nf-core configuration file, configuring template features and linting rules"
+        },
+        {
+            "@id": ".pre-commit-config.yaml",
+            "@type": "File",
+            "description": "Configuration file for pre-commit hooks"
+        },
+        {
+            "@id": ".prettierignore",
+            "@type": "File",
+            "description": "Ignore file for prettier"
+        },
+        {
+            "@id": "https://nf-co.re/",
+            "@type": "Organization",
+            "name": "nf-core",
+            "url": "https://nf-co.re/"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-2452-8702",
+            "@type": "Person",
+            "name": "Johannes Nicolaus Wibisana"
+        }
+    ]
+}

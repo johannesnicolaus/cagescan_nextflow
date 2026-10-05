@@ -1,0 +1,44 @@
+name: merge_counts
+description: "Merge per-sample TSS cluster counts or StringTie transcript abundances into matrices"
+keywords:
+  - counts
+  - matrix
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - files:
+        type: file
+        description: "Per-sample count files"
+        pattern: "*.{tsv,gtf}"
+  - clusters:
+      type: file
+      description: "tss_clusters.tsv (mode 'tss' only)"
+      pattern: "*.tsv"
+  - mode:
+      type: string
+      description: "'tss' or 'transcripts'"
+output:
+  tsv:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.tsv":
+          type: file
+          description: "Count / CPM / TPM matrices"
+          pattern: "*.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

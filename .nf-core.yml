@@ -1,0 +1,48 @@
+repository_type: pipeline
+
+nf_core_version: 4.1.0
+
+lint:
+  files_unchanged:
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-cagescan_logo_light.png
+    - docs/images/nf-core-cagescan_logo_light.png
+    - docs/images/nf-core-cagescan_logo_dark.png
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - assets/email_template.txt
+    - docs/README.md
+    - docs/CONTRIBUTING.md
+    # template ignores every data/ dir, which would drop tests/data/
+    - .gitignore
+  nextflow_config:
+    - manifest.name
+    - manifest.homePage
+  multiqc_config:
+    - report_comment
+  files_exist:
+    - conf/igenomes.config
+    - conf/igenomes_ignored.config
+    - CODE_OF_CONDUCT.md
+    - assets/nf-core-cagescan_logo_light.png
+    - docs/images/nf-core-cagescan_logo_light.png
+    - docs/images/nf-core-cagescan_logo_dark.png
+    - .github/ISSUE_TEMPLATE/config.yml
+    - .github/workflows/awstest.yml
+    - .github/workflows/awsfulltest.yml
+
+template:
+  org: luscombeu
+  name: cagescan
+  description: Reconstruct 5'-anchored transcripts from paired-end CAGE (CAGEscan)
+    reads without UMIs
+  author: Johannes Nicolaus Wibisana
+  version: 1.0.0dev
+  force: true
+  outdir: .
+  skip_features:
+    - igenomes
+    - gpu
+    - codespaces
+    - seqera_platform
+  is_nfcore: false

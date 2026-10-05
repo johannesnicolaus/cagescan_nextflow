@@ -1,0 +1,84 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "MERGE_CAGESCAN_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "MERGE_CAGESCAN_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T12:19:24.593214451",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,8f195253e27757ea35b6e5fbb31e662e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "MERGE_CAGESCAN_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,8f195253e27757ea35b6e5fbb31e662e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "MERGE_CAGESCAN_CLUSTERS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T12:19:14.664856133",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

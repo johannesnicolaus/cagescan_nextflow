@@ -1,0 +1,212 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "test.tss.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_assign_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "4": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "5": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss.bam:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "test.tss.bam.bai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "cagescan_clusters": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "counts": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_assign_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T12:19:03.902348121",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss.bam:md5,975b1f39a90ec1d5f72a2094abedb558",
+                        "test.tss.bam.bai:md5,4a19413ce99d6d794796c2c5a21b6713"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,461d015e8624131f0fb52f33c1e7c9e6"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,92a53fd81293def40581b8b502cb0b8d"
+                    ]
+                ],
+                "3": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_assign_stats_mqc.tsv:md5,bc8e478cc0423c49d757b92ac8e87127"
+                    ]
+                ],
+                "4": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "5": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "bam": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss.bam:md5,975b1f39a90ec1d5f72a2094abedb558",
+                        "test.tss.bam.bai:md5,4a19413ce99d6d794796c2c5a21b6713"
+                    ]
+                ],
+                "cagescan_clusters": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.cagescan_clusters.bed12:md5,92a53fd81293def40581b8b502cb0b8d"
+                    ]
+                ],
+                "counts": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_counts.tsv:md5,461d015e8624131f0fb52f33c1e7c9e6"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_assign_stats_mqc.tsv:md5,bc8e478cc0423c49d757b92ac8e87127"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "ASSIGN_PAIRS_TO_TSS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T12:18:53.140707594",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
