@@ -48,7 +48,8 @@
                     "paraclu": {
                         "branch": "master",
                         "git_sha": "725cdde59374e46e2175c6cbd4f6fcdc5e5f4c36",
-                        "installed_by": ["modules"]
+                        "installed_by": ["modules"],
+                        "patch": "modules/nf-core/paraclu/paraclu.diff"
                     },
                     "samtools/collate": {
                         "branch": "master",

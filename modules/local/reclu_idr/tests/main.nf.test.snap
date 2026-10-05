@@ -1,0 +1,84 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu_idr.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "RECLU_IDR",
+                        "idr",
+                        "2.0.4.2"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu_idr.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_idr": [
+                    [
+                        "RECLU_IDR",
+                        "idr",
+                        "2.0.4.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:34:16.255749131",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
+                    ]
+                ],
+                "1": [
+                    [
+                        "RECLU_IDR",
+                        "idr",
+                        "2.0.4.2"
+                    ]
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
+                    ]
+                ],
+                "versions_idr": [
+                    [
+                        "RECLU_IDR",
+                        "idr",
+                        "2.0.4.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:34:06.488627776",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

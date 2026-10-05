@@ -1,0 +1,48 @@
+name: reclu_combine
+description: "Unite reproducible clusters across replicate pairs and keep the innermost (sharp TSS clusters)"
+keywords:
+  - cage
+  - tss
+  - reclu
+tools:
+  - idr:
+      description: Irreproducible Discovery Rate (Python package; used as a library by bin/reclu.py)
+      homepage: https://github.com/nboley/idr
+      licence:
+        - "GPL v2"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - idr:
+        type: file
+        description: "Pairwise IDR tables"
+        pattern: "*.reclu_idr.tsv"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.reclu_clusters.bed":
+          type: file
+          description: "Sharp clusters (paraclu-like BED)"
+          pattern: "*.reclu_clusters.bed"
+  stats:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.reclu_stats_mqc.tsv":
+          type: file
+          description: "MultiQC custom-content table"
+          pattern: "*.reclu_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

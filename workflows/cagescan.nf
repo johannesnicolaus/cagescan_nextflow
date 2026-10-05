@@ -54,10 +54,12 @@ workflow CAGESCAN {
     //
     // MODULE: Concatenate FastQ files from the same sample (multiple lanes)
     //
-    def ch_fastq = ch_samplesheet.branch { _meta, fastqs ->
-        single  : fastqs.size() == 2
-        multiple: true
-    }
+    def ch_fastq = ch_samplesheet
+        .map { meta, fastqs -> [meta + [group: meta.group ?: 'all'], fastqs] }
+        .branch { _meta, fastqs ->
+            single  : fastqs.size() == 2
+            multiple: true
+        }
     CAT_FASTQ(ch_fastq.multiple)
     def ch_reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
 
@@ -136,7 +138,13 @@ workflow CAGESCAN {
     //
     // SUBWORKFLOW: CTSS, consensus TSS clusters, group pairs by TSS
     //
-    TSS_CLUSTERS(ch_bam_bai, PREPARE_GENOME.out.sizes, params.paraclu_min_cluster)
+    TSS_CLUSTERS(
+        ch_bam_bai,
+        PREPARE_GENOME.out.sizes,
+        params.paraclu_min_cluster,
+        !params.skip_sharp_clusters,
+        params.reclu_paraclu_min
+    )
     ch_multiqc_files = ch_multiqc_files.mix(TSS_CLUSTERS.out.multiqc_files)
 
     //

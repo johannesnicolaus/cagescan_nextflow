@@ -8,6 +8,11 @@ Writes, into the output directory:
   samplesheet.csv      two samples (paths relative to the pipeline base dir)
   SAMPLE_R{1,2}.fastq.gz
 
+Besides six hand-designed genes (geneA-geneF, the truth checked by the tests)
+it adds --random-genes single-TSS genes with log-normal expression on chr3, so
+that replicate-level statistics (RECLU / IDR) have enough clusters to work on.
+The two samples are replicates of one group.
+
 Read structure: READ1 starts at the capped 5' end (a few bases of TSS jitter),
 with an extra non-templated G in half of the reads; one gene is trans-spliced
 to a spliced leader (SL) that precedes its READ1s.  READ2 is the reverse
@@ -46,6 +51,24 @@ GENES = [
 ]
 CHROM_LEN = {"chr1": 80000, "chr2": 50000}
 TSS_JITTER = [(-2, 0.05), (-1, 0.15), (0, 0.6), (1, 0.15), (2, 0.05)]
+
+
+def add_random_genes(rng, n, slot=6000):
+    """Append n random single-TSS genes (1-4 exons) on chr3, one per `slot` bases."""
+    if n <= 0:
+        return
+    CHROM_LEN["chr3"] = n * slot + slot
+    for i in range(n):
+        base = i * slot + rng.randint(500, 1500)
+        exons, pos = [], base
+        n_exons = rng.randint(1, 4)
+        for k in range(n_exons):
+            length = rng.randint(800, 1500) if k == n_exons - 1 else rng.randint(100, 400)
+            exons.append((pos, pos + length - 1))
+            pos += length + rng.randint(300, 900)
+        strand = rng.choice("+-")
+        weight = rng.lognormvariate(-2.5, 1.2)
+        GENES.append(("chr3", f"rnd{i + 1:03d}", strand, {f"rnd{i + 1:03d}.1": (exons, weight)}, False))
 
 
 def make_genome(rng):
@@ -128,12 +151,14 @@ def simulate_sample(name, genome, n_pairs, rng, outdir, expression_scale):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--outdir", default=os.path.dirname(os.path.abspath(__file__)))
-    parser.add_argument("--pairs", type=int, default=4000)
+    parser.add_argument("--pairs", type=int, default=12000)
+    parser.add_argument("--random-genes", type=int, default=150)
     parser.add_argument("--seed", type=int, default=1)
     args = parser.parse_args()
     rng = random.Random(args.seed)
     os.makedirs(args.outdir, exist_ok=True)
 
+    add_random_genes(rng, args.random_genes)
     genome = make_genome(rng)
     with open(os.path.join(args.outdir, "genome.fa"), "w") as out:
         for chrom, seq in genome.items():
@@ -155,9 +180,9 @@ def main():
     simulate_sample("SAMPLE2", genome, args.pairs, rng, args.outdir, {"geneA": 0.5, "geneF": 2.0})
 
     with open(os.path.join(args.outdir, "samplesheet.csv"), "w") as out:
-        out.write("sample,fastq_1,fastq_2\n")
+        out.write("sample,fastq_1,fastq_2,group\n")
         for name in ("SAMPLE1", "SAMPLE2"):
-            out.write(f"{name},tests/data/{name}_R1.fastq.gz,tests/data/{name}_R2.fastq.gz\n")
+            out.write(f"{name},tests/data/{name}_R1.fastq.gz,tests/data/{name}_R2.fastq.gz,A\n")
 
 
 if __name__ == "__main__":

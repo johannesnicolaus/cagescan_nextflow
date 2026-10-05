@@ -12,8 +12,8 @@ nextflow_pipeline {
                 // nf-test launches from its own directory, so write one with absolute paths.
                 def data_dir = "${projectDir}/tests/data"
                 def samplesheet = new File(new File(outputDir).parentFile, "samplesheet.csv")
-                samplesheet.text = "sample,fastq_1,fastq_2\n" + ['SAMPLE1', 'SAMPLE2'].collect { s ->
-                    "${s},${data_dir}/${s}_R1.fastq.gz,${data_dir}/${s}_R2.fastq.gz"
+                samplesheet.text = "sample,fastq_1,fastq_2,group\n" + ['SAMPLE1', 'SAMPLE2'].collect { s ->
+                    "${s},${data_dir}/${s}_R1.fastq.gz,${data_dir}/${s}_R2.fastq.gz,A"
                 }.join("\n") + "\n"
                 input  = samplesheet.toString()
                 outdir = "$outputDir"
@@ -25,15 +25,23 @@ nextflow_pipeline {
             def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             // stable_content: All files in ${params.outdir}/ with stable content
             def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
-            // Every simulated TSS must be recovered as a cluster peak
-            def peaks = path("${params.outdir}/tss_clusters/all_samples.tss_clusters.bed").readLines()
-                .collect { line -> def f = line.split('\t'); "${f[0]}:${f[6]}:${f[5]}" } as Set
+            // Every TSS of the hand-designed genes must be a broad cluster peak (+/- 1 nt: the non-templated
+            // G aligns where the genome has a G upstream of the TSS) and lie within 3 nt of a sharp cluster
+            def broad = path("${params.outdir}/tss_clusters/broad/all_samples.broad.tss_clusters.bed").readLines()
+                .collect { line -> line.split('\t') }
+            def sharp = path("${params.outdir}/tss_clusters/sharp/all_samples.sharp.tss_clusters.bed").readLines()
+                .collect { line -> line.split('\t') }
+            def is_peak = { t -> broad.any { f -> f[0] == t[0] && f[5] == t[5] && Math.abs((f[6] as int) - (t[1] as int)) <= 1 } }
             def truth = path("${projectDir}/tests/data/truth_tss.bed").readLines()
-                .collect { line -> def f = line.split('\t'); "${f[0]}:${f[1]}:${f[5]}" } as Set
+                .collect { line -> line.split('\t') }
+                .findAll { f -> f[3].startsWith('gene') }
+            def in_sharp = { t -> sharp.any { f -> f[0] == t[0] && f[5] == t[5] && (f[1] as int) - 3 <= (t[1] as int) && (t[1] as int) < (f[2] as int) + 3 } }
             assert workflow.success
             assertAll(
-                { assert peaks.containsAll(truth) },
-                { assert path("${params.outdir}/transcripts/merged/merged.transcripts.fasta").exists() },
+                { assert truth.every { t -> is_peak(t) } },
+                { assert truth.every { t -> in_sharp(t) } },
+                { assert path("${params.outdir}/transcripts/broad/merged/merged.broad.transcripts.fasta").exists() },
+                { assert path("${params.outdir}/transcripts/sharp/merged/merged.sharp.transcripts.fasta").exists() },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("${params.outdir}/pipeline_info/cagescan_software_mqc_versions.yml"),

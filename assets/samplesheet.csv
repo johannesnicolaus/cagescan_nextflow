@@ -1,4 +1,4 @@
-sample,fastq_1,fastq_2
-CAGE_REP1,/path/to/fastq/files/CAGE_REP1_L001_R1.fastq.gz,/path/to/fastq/files/CAGE_REP1_L001_R2.fastq.gz
-CAGE_REP1,/path/to/fastq/files/CAGE_REP1_L002_R1.fastq.gz,/path/to/fastq/files/CAGE_REP1_L002_R2.fastq.gz
-CAGE_REP2,/path/to/fastq/files/CAGE_REP2_L001_R1.fastq.gz,/path/to/fastq/files/CAGE_REP2_L001_R2.fastq.gz
+sample,fastq_1,fastq_2,group
+CAGE_REP1,/path/to/fastq/files/CAGE_REP1_L001_R1.fastq.gz,/path/to/fastq/files/CAGE_REP1_L001_R2.fastq.gz,ctrl
+CAGE_REP1,/path/to/fastq/files/CAGE_REP1_L002_R1.fastq.gz,/path/to/fastq/files/CAGE_REP1_L002_R2.fastq.gz,ctrl
+CAGE_REP2,/path/to/fastq/files/CAGE_REP2_L001_R1.fastq.gz,/path/to/fastq/files/CAGE_REP2_L001_R2.fastq.gz,ctrl

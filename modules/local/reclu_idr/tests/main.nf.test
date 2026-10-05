@@ -1,0 +1,60 @@
+nextflow_process {
+
+    name "Test Process RECLU_IDR"
+    script "../main.nf"
+    process "RECLU_IDR"
+
+    tag "modules"
+    tag "modules_local"
+    tag "reclu_idr"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.reclu.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE2.reclu.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            // enough pairs to fit the IDR model, and every pair has an IDR value
+            def rows = path(process.out.tsv[0][1]).readLines().tail().collect { line -> line.split('\t') }
+            assert rows.size() >= 50
+            assert rows.every { f -> f[7] != 'NA' && (f[7] as double) >= 0 && (f[7] as double) <= 1 }
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.reclu.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE2.reclu.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

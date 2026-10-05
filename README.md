@@ -28,7 +28,7 @@ isoforms per TSS from the spliced pair alignments.
 3. Spliced paired alignment ([`STAR`](https://github.com/alexdobin/STAR)); local alignment soft-clips the non-templated 5' G or a spliced leader on READ1
 4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
 5. CTSS extraction from READ1 5' ends, with a report of what was soft-clipped before the cap (extra G, linker, spliced leader)
-6. Consensus TSS clusters across samples ([`paraclu`](https://gitlab.com/mcfrith/paraclu)) and CTSS bigWigs ([`bedGraphToBigWig`](https://genome.ucsc.edu/goldenPath/help/bigWig.html))
+6. Two TSS cluster sets: **broad** clusters from CTSS pooled across samples ([`paraclu`](https://gitlab.com/mcfrith/paraclu)), and **sharp** clusters reproducible across replicates, following [RECLU](https://doi.org/10.1186/1471-2164-15-269) (paraclu hierarchy + [IDR](https://github.com/nboley/idr)); CTSS bigWigs ([`bedGraphToBigWig`](https://genome.ucsc.edu/goldenPath/help/bigWig.html)). All later steps run for both sets, so you can choose afterwards
 7. Grouping of read pairs by TSS cluster (READ1 5' end inside a cluster), per-sample TSS cluster counts, and FANTOM5-style CAGEscan clusters / meta-clusters ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147))
 8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
 9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
@@ -49,12 +49,13 @@ Prepare a samplesheet with one row per pair of FASTQ files (rows with the same `
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CAGE_REP1,CAGE_REP1_R1.fastq.gz,CAGE_REP1_R2.fastq.gz
-CAGE_REP2,CAGE_REP2_R1.fastq.gz,CAGE_REP2_R2.fastq.gz
+sample,fastq_1,fastq_2,group
+CAGE_REP1,CAGE_REP1_R1.fastq.gz,CAGE_REP1_R2.fastq.gz,ctrl
+CAGE_REP2,CAGE_REP2_R1.fastq.gz,CAGE_REP2_R2.fastq.gz,ctrl
 ```
 
-`fastq_1` must be READ1, i.e. the read that starts at the capped 5' end.
+`fastq_1` must be READ1, i.e. the read that starts at the capped 5' end. `group` (optional) names the condition each
+sample is a replicate of; sharp TSS clusters need at least two replicates in a group.
 
 Now, you can run the pipeline using:
 

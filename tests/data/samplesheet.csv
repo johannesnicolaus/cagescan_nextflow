@@ -1,3 +1,3 @@
-sample,fastq_1,fastq_2
-SAMPLE1,tests/data/SAMPLE1_R1.fastq.gz,tests/data/SAMPLE1_R2.fastq.gz
-SAMPLE2,tests/data/SAMPLE2_R1.fastq.gz,tests/data/SAMPLE2_R2.fastq.gz
+sample,fastq_1,fastq_2,group
+SAMPLE1,tests/data/SAMPLE1_R1.fastq.gz,tests/data/SAMPLE1_R2.fastq.gz,A
+SAMPLE2,tests/data/SAMPLE2_R1.fastq.gz,tests/data/SAMPLE2_R2.fastq.gz,A
