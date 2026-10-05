@@ -184,6 +184,14 @@
                     "minimum": 0,
                     "description": "Extend TSS clusters by this many bases when assigning READ1s and anchoring transcripts.",
                     "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "tss_merge_distance": {
+                    "type": "integer",
+                    "default": 20,
+                    "minimum": -1,
+                    "description": "Merge TSS clusters on the same strand separated by at most this many bases (-1: merge only overlapping clusters).",
+                    "help_text": "paraclu can split one TSS into neighbouring clusters, for example when the non-templated 5' G aligns to a genomic G for part of the reads.",
+                    "fa_icon": "fas fa-compress-arrows-alt"
                 }
             }
         },
@@ -210,6 +218,13 @@
                     "type": "boolean",
                     "description": "Also output assembled transcripts whose 5' end is not in a TSS cluster (prefixed `U_`).",
                     "fa_icon": "fas fa-unlink"
+                },
+                "derive_transcripts": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Derive transcripts for TSS clusters that lie inside an exon of another TSS's transcript.",
+                    "help_text": "StringTie cannot start a transcript inside continuously covered sequence, so e.g. a second TSS in the same first exon gets no assembled transcript. Derived transcripts start at the cluster peak and follow the structure of the enclosing transcript(s); they are marked anchored \"derived\" with derived_from <source>.",
+                    "fa_icon": "fas fa-code-branch"
                 }
             }
         },

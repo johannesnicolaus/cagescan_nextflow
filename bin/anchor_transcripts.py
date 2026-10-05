@@ -2,11 +2,25 @@
 """Anchor assembled transcripts to CAGE TSS clusters.
 
 Each transcript's 5' end is matched to a TSS cluster on the same strand
-(cluster extended by --window bases).  Anchored transcripts get their 5' end
-moved to the cluster's dominant CTSS, are renamed <tss_id>.<n> (n ordered by
-coverage) and grouped under gene_id <tss_id>, so a TSS with several isoforms
-yields several transcripts.  Transcripts that become identical after snapping
-are collapsed.  Unanchored transcripts are dropped unless --keep-unanchored.
+(cluster extended by --window bases; if several qualify, the one with the most
+CTSS reads wins).  Anchored transcripts get their 5' end moved to the cluster's
+dominant CTSS, are renamed <tss_id>.<n> (n ordered by coverage) and grouped
+under gene_id <tss_id>, so a TSS with several isoforms yields several
+transcripts.  Unanchored transcripts are dropped unless --keep-unanchored.
+
+Coverage of CAGEscan pairs decays with distance from the TSS, so StringTie
+3' ends only mark where coverage runs out.  A transcript that is a 3'
+truncation of another transcript of the same TSS (same introns as far as it
+goes, ending inside the other's exon) is therefore dropped.
+
+StringTie cannot start a transcript inside continuously covered sequence, so a
+TSS cluster lying inside an exon of another TSS's transcript (e.g. a second TSS
+in the same first exon) gets no transcript of its own; neither does a weaker
+cluster just upstream of a stronger one that took the transcript.  For such
+clusters, transcripts are derived from every anchored transcript with an exon
+containing the cluster peak (cut to start at the peak) or starting at most
+--window bases downstream of it (first exon extended to the peak).  They are
+marked anchored "derived" with derived_from <source>; disable with --no-derive.
 
 Outputs (PREFIX = --prefix):
   PREFIX.transcripts.gtf          anchored transcripts (GTF)
@@ -80,20 +94,79 @@ def read_clusters(path):
 
 
 def find_cluster(clusters, starts, chrom, pos, strand, window):
+    """Strongest cluster (most CTSS reads) within `window` of pos; ties go to the nearest."""
     key = (chrom, strand)
     if key not in clusters:
         return None
     i = bisect.bisect_right(starts[key], pos + window)
-    best, best_dist = None, None
+    best, best_rank = None, None
     for j in range(i - 1, -1, -1):
         cluster = clusters[key][j]
-        start, end = cluster[0], cluster[1]
+        start, end, total = cluster[0], cluster[1], cluster[4]
         if end + window <= pos:
             break
         dist = 0 if start <= pos < end else min(abs(pos - start), abs(pos - (end - 1)))
-        if best is None or dist < best_dist:
-            best, best_dist = cluster, dist
+        rank = (-total, dist)
+        if best is None or rank < best_rank:
+            best, best_rank = cluster, rank
     return best
+
+
+def three_prime(t):
+    return t["exons"][-1][1] if t["strand"] == "+" else -t["exons"][0][0]
+
+
+def is_3p_truncation(a, b):
+    """True if transcript a is b cut short at its 3' end (same strand assumed)."""
+    ea, eb = a["exons"], b["exons"]
+    if a["strand"] == "-":
+        ea, eb = ea[::-1], eb[::-1]  # transcript 5'->3' order
+    k = len(ea) - 1
+    if k >= len(eb):
+        return False
+    # Same splice junctions as far as a goes.
+    for i in range(k):
+        if a["strand"] == "+":
+            same = ea[i][1] == eb[i][1] and ea[i + 1][0] == eb[i + 1][0]
+        else:
+            same = ea[i][0] == eb[i][0] and ea[i + 1][1] == eb[i + 1][1]
+        if not same:
+            return False
+    # a's 3' end lies inside b's corresponding exon (and a's last exon has b's acceptor).
+    if a["strand"] == "+":
+        return eb[k][0] < ea[k][1] <= eb[k][1] and (k == 0 or ea[k][0] == eb[k][0])
+    return eb[k][0] <= ea[k][0] < eb[k][1] and (k == 0 or ea[k][1] == eb[k][1])
+
+
+def drop_truncations(transcripts):
+    """Keep transcripts that are not 3' truncations of another one (longest first, then best covered)."""
+    order = sorted(transcripts, key=lambda t: (-len(t["exons"]), -three_prime(t), -coverage(t), t["exons"]))
+    kept = []
+    for t in order:
+        if not any(t["exons"] == k["exons"] or is_3p_truncation(t, k) for k in kept):
+            kept.append(t)
+    return kept
+
+
+def start_at(t, peak, max_extension):
+    """Exons of t re-started at peak (transcript 5'->3').
+
+    peak inside an exon: t is cut so that it starts at peak.  peak upstream of
+    t's 5' end by at most max_extension bases: t's first exon is extended to
+    peak.  Otherwise None.
+    """
+    exons = t["exons"]
+    if t["strand"] == "+":
+        if exons[0][0] - max_extension <= peak < exons[0][0]:
+            return [(peak, exons[0][1])] + exons[1:]
+    elif exons[-1][1] <= peak < exons[-1][1] + max_extension:
+        return exons[:-1] + [(exons[-1][0], peak + 1)]
+    for i, (s, e) in enumerate(exons):
+        if s <= peak < e:
+            if t["strand"] == "+":
+                return [(peak, e)] + exons[i + 1:]
+            return exons[:i] + [(s, peak + 1)]
+    return None
 
 
 def five_prime(t):
@@ -145,7 +218,8 @@ def write_outputs(prefix, records):
                 ("tss_peak", t.get("tss_peak")),
                 ("tss_count", t.get("tss_count")),
                 ("tss_shift", t.get("tss_shift")),
-                ("anchored", "yes" if t.get("tss_id") else "no"),
+                ("anchored", "derived" if t.get("derived_from") else ("yes" if t.get("tss_id") else "no")),
+                ("derived_from", t.get("derived_from")),
             ] + [(k, t["attrs"].get(k)) for k in COPY_ATTRS]
             gtf.write(f"{chrom}\tcagescan\ttranscript\t{start + 1}\t{end}\t.\t{strand}\t.\t{gtf_attrs(base + extra)}\n")
             ordered = exons if strand == "+" else exons[::-1]
@@ -170,6 +244,8 @@ def main():
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--window", type=int, default=50, help="max distance between transcript 5' end and cluster (default: %(default)s)")
     parser.add_argument("--keep-unanchored", action="store_true", help="also output transcripts without a TSS cluster")
+    parser.add_argument("--no-derive", action="store_true", help="do not derive transcripts for TSS clusters inside exons of other transcripts")
+    parser.add_argument("--min-derived-length", type=int, default=50, help="minimum length of a derived transcript (default: %(default)s)")
     args = parser.parse_args()
 
     clusters = read_clusters(args.clusters)
@@ -189,22 +265,52 @@ def main():
         t["tss_count"] = total
         anchored.append(t)
 
-    # Collapse transcripts that became identical after snapping (keep the best covered).
-    unique = {}
-    for t in sorted(anchored, key=coverage, reverse=True):
-        unique.setdefault((t["tss_id"], t["chrom"], t["strand"], tuple(t["exons"])), t)
-    n_collapsed = len(anchored) - len(unique)
-
+    # Drop 3' truncations within each TSS: CAGEscan 3' ends are where coverage runs out.
     by_tss = collections.defaultdict(list)
-    for t in unique.values():
+    for t in anchored:
         by_tss[t["tss_id"]].append(t)
+    n_collapsed = 0
     records = []
     for tss_id, group in by_tss.items():
+        group = drop_truncations(group)
+        n_collapsed += len(by_tss[tss_id]) - len(group)
         group.sort(key=lambda t: (-coverage(t), t["exons"]))
         for n, t in enumerate(group, 1):
             t["gene_id"] = tss_id
             t["new_id"] = f"{tss_id}.{n}"
             records.append(t)
+
+    # Derive transcripts for TSS clusters inside exons of anchored transcripts.
+    derived = []
+    if not args.no_derive:
+        sources = collections.defaultdict(list)
+        for t in records:
+            sources[(t["chrom"], t["strand"])].append(t)
+        for (chrom, strand), key_clusters in clusters.items():
+            for _, _, tss_id, peak, total in key_clusters:
+                if tss_id in by_tss:
+                    continue
+                candidates = []
+                for src in sources.get((chrom, strand), []):
+                    exons = start_at(src, peak, args.window)
+                    if exons is None or sum(e - s for s, e in exons) < args.min_derived_length:
+                        continue
+                    candidates.append({
+                        "id": src["id"], "chrom": chrom, "strand": strand, "exons": exons,
+                        "attrs": {"cov": src["attrs"].get("cov", "0")},  # source coverage, for ordering only
+                        "gene_id": tss_id, "tss_id": tss_id,
+                        "tss_peak": f"{chrom}:{peak + 1}:{strand}", "tss_count": total, "tss_shift": None,
+                        "derived_from": src["new_id"],
+                    })
+                kept = drop_truncations(candidates)
+                kept.sort(key=lambda t: (-coverage(t), t["exons"]))
+                for n, t in enumerate(kept, 1):
+                    t["new_id"] = f"{tss_id}.{n}"
+                    t["attrs"] = {}
+                    derived.append(t)
+    n_derived_tss = len({t["tss_id"] for t in derived})
+    records.extend(derived)
+
     if args.keep_unanchored:
         for t in unanchored:
             t["gene_id"] = "U_" + t["attrs"].get("gene_id", t["id"])
@@ -218,11 +324,11 @@ def main():
     with open(f"{args.prefix}.anchor_stats_mqc.tsv", "w") as out:
         out.write("# id: 'anchor_stats'\n")
         out.write("# section_name: 'Transcript anchoring'\n")
-        out.write("# description: 'Assembled transcripts whose 5-prime end falls in a TSS cluster; their 5-prime end is moved to the dominant CTSS.'\n")
+        out.write("# description: 'Assembled transcripts whose 5-prime end falls in a TSS cluster (5-prime end moved to the dominant CTSS), and transcripts derived for TSS clusters lying inside exons of other transcripts.'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tAssembled\tAnchored\tCollapsed duplicates\tUnanchored\tUnanchored kept\tTSS clusters with transcripts\tTranscripts output\tMedian length\n")
+        out.write("Sample\tAssembled\tAnchored\tCollapsed 3' truncations\tUnanchored\tUnanchored kept\tTSS clusters with assembled transcripts\tTSS clusters with derived transcripts\tDerived transcripts\tTranscripts output\tMedian length\n")
         kept = len(unanchored) if args.keep_unanchored else 0
-        out.write(f"{args.prefix}\t{len(transcripts)}\t{len(anchored)}\t{n_collapsed}\t{len(unanchored)}\t{kept}\t{len(by_tss)}\t{len(records)}\t{median}\n")
+        out.write(f"{args.prefix}\t{len(transcripts)}\t{len(anchored)}\t{n_collapsed}\t{len(unanchored)}\t{kept}\t{len(by_tss)}\t{n_derived_tss}\t{len(derived)}\t{len(records)}\t{median}\n")
 
 
 if __name__ == "__main__":

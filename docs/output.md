@@ -46,8 +46,15 @@ GTF attributes:
 | `tss_peak` | dominant CTSS of the cluster (`chrom:position:strand`, 1-based); the transcript 5' end was moved here |
 | `tss_count` | pooled READ1 count of the cluster |
 | `tss_shift` | bases added (positive) or removed (negative) at the 5' end when snapping to the peak |
-| `anchored` | `yes`, or `no` for unanchored transcripts kept with `--keep_unanchored` (IDs prefixed `U_`) |
+| `anchored` | `yes` (assembled transcript starting in the cluster), `derived` (see below), or `no` for unanchored transcripts kept with `--keep_unanchored` (IDs prefixed `U_`) |
+| `derived_from` | for derived transcripts: the transcript whose structure was copied |
 | `cov`, `FPKM`, `TPM` | StringTie values from the assembly (merged set: from `stringtie --merge`) |
+
+Transcripts that are 3' truncations of another transcript of the same TSS are removed, because CAGEscan 3' ends only
+mark where read coverage runs out. A TSS cluster that lies inside an exon of another TSS's transcript, and so has no
+assembled transcript (StringTie cannot start a transcript inside continuously covered sequence), gets **derived**
+transcripts: copies of the enclosing transcript(s) starting at the cluster peak. See
+[usage](usage.md#why-stringtie-and-what-the-pipeline-corrects).
 
 The BED12 follows the original CAGEscan colour scheme (green: plus strand, purple: minus strand). The 5'-most block is
 drawn thick when the transcript is TSS-anchored, so `awk '$7 != $8'` keeps only TSS-anchored entries.
@@ -72,7 +79,8 @@ fragments (the library insert size), not necessarily to the polyadenylation site
 </details>
 
 TSS clusters are called with [paraclu](https://gitlab.com/mcfrith/paraclu) on the pooled CTSS
-(`--paraclu_min_cluster`, simplified with `paraclu-cut`). A READ1 is assigned to a cluster when its 5' end lies in
+(`--paraclu_min_cluster`, simplified with `paraclu-cut`); sparse tails are trimmed and clusters closer than
+`--tss_merge_distance` bases are merged. A READ1 is assigned to a cluster when its 5' end lies in
 the cluster extended by `--tss_window` bases on the same strand.
 
 ### CAGEscan clusters

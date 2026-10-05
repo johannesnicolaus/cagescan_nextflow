@@ -22,11 +22,44 @@ The original assembler gives up on inconsistent read layouts and the transcript 
 splicing, so per-TSS de novo assembly fails exactly where isoforms exist. Grouping the *aligned* pairs by TSS and
 assembling them with a splice-aware, isoform-aware assembler avoids that.
 
+### Why StringTie, and what the pipeline corrects
+
+StringTie is only trusted for what TSS-anchored CAGEscan pairs can support: the splice structure near the TSS.
+
+- **Its input is pre-filtered.** StringTie only sees pairs whose READ1 5' end lies in a TSS cluster, so every fragment
+  it assembles starts at a capped 5' end.
+- **It knows the strand.** CAGE READ1 is sense to the RNA (`--fr`), and STAR adds the `XS` intron-motif tag, so sense and
+  antisense transcription are kept apart.
+- **It uses both mates of a pair.** READ1 and READ2 are one fragment, which links exons across the unsequenced insert;
+  isoforms are paths through the splice graph built from junction-spanning reads.
+- **It does not decide 5' ends.** StringTie starts a transcript at the most upstream read start; the pipeline moves
+  every 5' end to the dominant CTSS of its TSS cluster (`tss_shift` records by how much).
+
+On simulated data (`tests/data/make_test_data.py`, `tests/data/make_edge_case_data.py`) StringTie recovered exon
+skipping near the TSS, alternative first exons, and all four combinations of two independent alternative exons
+(including two at 10% each), with 100% intron-chain sensitivity and precision. It also showed four problems; the
+first three are corrected by the pipeline:
+
+| StringTie behaviour on CAGEscan data | Correction |
+| --- | --- |
+| A TSS inside continuously covered sequence (e.g. a second TSS in the same first exon) gets no transcript. | A transcript is **derived** for every TSS cluster lying inside an exon of an anchored transcript, starting at the cluster peak (`anchored "derived"`, `derived_from`; `--derive_transcripts false` to disable). |
+| 3' ends sit where coverage runs out (coverage decays with fragment length), and one TSS can get several 3'-truncated copies of the same structure. | Transcripts that are 3' truncations of another transcript of the same TSS are dropped. 3' ends remain approximate. |
+| paraclu can split one TSS (e.g. when the extra G aligns to a genomic G for part of the reads), and the transcript may anchor to the minor piece. | Clusters closer than `--tss_merge_distance` (20 bp) are merged, and transcripts anchor to the strongest cluster within `--tss_window`. |
+| Isoform abundances assume uniform coverage, which CAGEscan does not have (one 4-isoform test gene: estimated 0.55/0.08/0.20/0.17 vs true 0.40/0.10/0.10/0.40). | Not corrected: use `tss_clusters/*.tss_cluster_counts.tsv` for expression; transcript TPMs are approximate. |
+
+Splicing further downstream than the library insert size is never observed; that is a limit of CAGEscan data.
+
+Derived transcripts assume that the downstream TSS shares the structure of the enclosing transcript. TSS clusters
+inside exons can also come from CAGE artefacts (e.g. "exon painting"), so treat `anchored "derived"` transcripts as
+lower confidence.
+
 ### READ1 structure, linkers and spliced leaders
 
 Reverse transcriptase usually adds a non-templated G at the cap, so many READ1s start with one extra G. STAR's local
 alignment soft-clips it, and the CTSS is taken from the first *aligned* READ1 base. When the genome itself has a G
-at that position, the extra G aligns and the CTSS shifts 1 base upstream. This is a known limitation of CAGE.
+at that position, the extra G aligns and the CTSS shifts 1 base upstream. This is a known limitation of CAGE: with a
+genomic G upstream of the TSS, the dominant CTSS (and so the transcript 5' end) can be 1 base upstream of the true TSS.
+Neighbouring clusters created by this shift are merged (`--tss_merge_distance`).
 
 If you are unsure what precedes the cap in your reads, run the pipeline once with defaults and check
 `ctss/<sample>.softclip_5p.tsv` and the *CTSS extraction* table in the MultiQC report:
