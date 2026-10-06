@@ -1,0 +1,90 @@
+{
+    "simulated genome - stub": {
+        "content": [
+            {
+                "0": [
+                    "igv_session.xml:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ],
+                "1": [
+                    [
+                        "genome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "genome.fa.fai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        "IGV_SESSION",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "files": [
+                    [
+                        "genome.fa:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "genome.fa.fai:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "session": [
+                    "igv_session.xml:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ],
+                "versions_python": [
+                    [
+                        "IGV_SESSION",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-06T11:08:34.982868587",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated genome": {
+        "content": [
+            {
+                "0": [
+                    "igv_session.xml:md5,a1719c8830a60e71dad93726a196f73e"
+                ],
+                "1": [
+                    [
+                        "annotation.gtf:md5,492ec921bcde3bc7759b061564f90290",
+                        "genome.fa:md5,49a231f531a5bcf89730b5313b335621",
+                        "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad"
+                    ]
+                ],
+                "2": [
+                    [
+                        "IGV_SESSION",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "files": [
+                    [
+                        "annotation.gtf:md5,492ec921bcde3bc7759b061564f90290",
+                        "genome.fa:md5,49a231f531a5bcf89730b5313b335621",
+                        "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad"
+                    ]
+                ],
+                "session": [
+                    "igv_session.xml:md5,a1719c8830a60e71dad93726a196f73e"
+                ],
+                "versions_python": [
+                    [
+                        "IGV_SESSION",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-06T11:08:25.845908366",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

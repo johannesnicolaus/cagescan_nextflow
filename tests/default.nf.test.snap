@@ -40,6 +40,9 @@
                 "GFFREAD_GFF3": {
                     "gffread": "0.12.7"
                 },
+                "IGV_SESSION": {
+                    "python": "3.12.14"
+                },
                 "MERGE_CAGESCAN_CLUSTERS": {
                     "python": "3.12.14"
                 },
@@ -184,6 +187,10 @@
                 "gffcompare/sharp/merged_sharp.merged.sharp.transcripts.gtf.tmap",
                 "gffcompare/sharp/merged_sharp.stats",
                 "gffcompare/sharp/merged_sharp.tracking",
+                "igv",
+                "igv/annotation.gtf",
+                "igv/genome.fa",
+                "igv/genome.fa.fai",
                 "igv_session.xml",
                 "multiqc",
                 "multiqc/multiqc_data",
@@ -523,7 +530,10 @@
                 "SAMPLE1.softclip_5p.tsv:md5,c0a53c46d48f1328132224cc4865b871",
                 "SAMPLE2.ctss.bed:md5,10542e9482fd0f65b99502f68b3c9f57",
                 "SAMPLE2.softclip_5p.tsv:md5,deb6ba6cd3dbc70536ce5226cc4f2131",
-                "igv_session.xml:md5,3596c6c46db664bcdbaee7a137fd5f93",
+                "annotation.gtf:md5,492ec921bcde3bc7759b061564f90290",
+                "genome.fa:md5,49a231f531a5bcf89730b5313b335621",
+                "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad",
+                "igv_session.xml:md5,a1719c8830a60e71dad93726a196f73e",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
@@ -613,7 +623,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
             ]
         ],
-        "timestamp": "2026-10-05T20:47:49.058930854",
+        "timestamp": "2026-10-06T11:10:36.175420886",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

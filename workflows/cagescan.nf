@@ -22,11 +22,11 @@ include { PREPARE_GENOME         } from '../subworkflows/local/prepare_genome'
 include { TSS_CLUSTERS           } from '../subworkflows/local/tss_clusters'
 include { BUILD_TRANSCRIPTS      } from '../subworkflows/local/build_transcripts'
 include { COVERAGE_TRACKS        } from '../subworkflows/local/coverage_tracks'
+include { IGV_SESSION            } from '../modules/local/igv_session/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
-include { igvSessionXml          } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -169,12 +169,14 @@ workflow CAGESCAN {
     COVERAGE_TRACKS(ch_bam_bai, TSS_CLUSTERS.out.ctss_stats, PREPARE_GENOME.out.sizes)
 
     //
-    // IGV session with genome, gene models, transcripts, TSS clusters and coverage
+    // MODULE: self-contained IGV session (genome, gene models, transcripts, TSS clusters, coverage)
     //
-    ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') }
-        .combine(TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') })
-        .map { samples, sets -> igvSessionXml(samples.tokenize(','), sets.tokenize(','), params.fasta, params.gtf) }
-        .collectFile(name: 'igv_session.xml', storeDir: "${outdir}")
+    IGV_SESSION(
+        PREPARE_GENOME.out.fasta.combine(PREPARE_GENOME.out.fai).map { meta, fasta, _fai_meta, fai -> [meta, fasta, fai] },
+        PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf },
+        ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') },
+        TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') }
+    )
 
     //
     // Collate and save software versions

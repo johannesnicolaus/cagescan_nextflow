@@ -224,37 +224,6 @@ def toolBibliographyText() {
     return reference_text
 }
 
-//
-// IGV session (relative paths inside --outdir; genome and annotation by absolute path)
-//
-def igvSessionXml(samples, sets, fasta, gtf) {
-    def tracks = []
-    if (gtf) {
-        tracks << [file(gtf).toString(), 'Gene models (--gtf)', 'displayMode="EXPANDED"']
-    }
-    sets.each { set ->
-        tracks << ["transcripts/${set}/merged/merged.${set}.transcripts.bed12", "Transcripts (${set} TSS clusters)", 'displayMode="EXPANDED"']
-        tracks << ["tss_clusters/${set}/all_samples.${set}.tss_clusters.bed", "TSS clusters (${set})", 'displayMode="COLLAPSED"']
-    }
-    tracks << ['ctss/bigwig/all_samples.ctss.plus.bigWig', 'TSS signal + (all samples)', 'color="200,0,0" autoScale="true" autoscaleGroup="ctss"']
-    tracks << ['ctss/bigwig/all_samples.ctss.minus.bigWig', 'TSS signal - (all samples)', 'color="0,0,200" autoScale="true" autoscaleGroup="ctss"']
-    samples.each { sample ->
-        tracks << ["coverage/${sample}.coverage.plus.bigWig", "${sample} coverage +", "color=\"200,0,0\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
-        tracks << ["coverage/${sample}.coverage.minus.bigWig", "${sample} coverage -", "color=\"0,0,200\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
-    }
-    def xml = new StringBuilder()
-    xml << '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
-    xml << "<Session genome=\"${file(fasta).toString()}\" locus=\"All\" relativePath=\"true\" version=\"8\">\n"
-    xml << '    <Resources>\n'
-    tracks.each { t -> xml << "        <Resource path=\"${t[0]}\"/>\n" }
-    xml << '    </Resources>\n'
-    xml << '    <Panel name="DataPanel">\n'
-    tracks.each { t -> xml << "        <Track id=\"${t[0]}\" name=\"${t[1]}\" ${t[2]}/>\n" }
-    xml << '    </Panel>\n'
-    xml << '</Session>\n'
-    return xml.toString()
-}
-
 def methodsDescriptionText(mqc_methods_yaml) {
     // Convert  to a named map so can be used as with familiar NXF ${workflow} variable syntax in the MultiQC YML file
     def meta = [:]

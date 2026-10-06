@@ -10,7 +10,7 @@
 
 ## Pipeline tools
 
-- [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (concept and BED conventions)
+- [UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (BED conventions; developed after the MOIRAI workflow of Bertin et al. 2017)
 
   > Frith MC. CAGEscan pipeline. https://gitlab.com/mcfrith/cagescan-pipeline
 
