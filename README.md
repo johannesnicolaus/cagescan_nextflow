@@ -17,11 +17,17 @@
 **luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**
 (CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream).
 
-It is a reference-guided re-implementation of the idea behind the original
-[CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline). That pipeline groups reads into molecules by UMI
-and assembles each molecule de novo. Without UMIs, the closest equivalent of a molecule is a **TSS cluster**, so this
-pipeline maps the read pairs first, groups them by the TSS cluster that READ1 starts in, and builds one or more
-isoforms per TSS from the spliced pair alignments.
+CAGEscan was introduced by [Plessy et al. (2010)](https://doi.org/10.1038/nmeth.1470): paired-end sequencing of
+random-primed nanoCAGE libraries links each TSS to the body of its transcript. This pipeline follows the original
+CAGEscan processing workflow of [Bertin et al. (2017)](https://doi.org/10.1038/sdata.2017.147), built for the FANTOM5
+CAGEscan libraries with the MOIRAI workflow system: read pairs are aligned to the genome, and pairs whose READ1 starts
+in the same CAGE TSS cluster are assembled into "CAGEscan clusters". The later
+[UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (developed after the MOIRAI version, even
+if its release came first) instead groups reads into molecules by UMI and assembles each molecule de novo; without
+UMIs that is not possible, so, like the original workflow, this pipeline maps the read pairs first and groups them by
+the TSS cluster that READ1 starts in. It then also resolves isoforms per TSS from the spliced pair alignments.
+
+![luscombeu/cagescan metro map](docs/images/cagescan_metro_map.svg)
 
 1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
 2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
@@ -84,7 +90,8 @@ luscombeu/cagescan was originally written by Johannes Nicolaus Wibisana.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-- Martin C. Frith, for the original [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) whose BED conventions are reused here.
+- Nicolas Bertin, Charles Plessy and colleagues, for CAGEscan ([Plessy et al. 2010](https://doi.org/10.1038/nmeth.1470)) and the original CAGEscan processing workflow ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) that this pipeline follows.
+- Martin C. Frith, for the [UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline), whose BED conventions are reused here.
 
 ## Contributions and Support
 

@@ -33,16 +33,21 @@ stands for either, and output files carry the set in their name.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome (`--fasta`), gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `igv/genome.fa`, `igv/genome.fa.fai`, `igv/annotation.gtf`: copies of the genome, its index and the annotation used by the session.
 - `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns), per million mapped read pairs. The strand is that of the RNA (CAGE READ1 is sense).
 - `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
 
 </details>
 
-Open `igv_session.xml` in IGV desktop (File > Open Session). Track paths inside the results directory are relative
-to the session file, so the results directory can be copied elsewhere (e.g. to a laptop); the genome and annotation are
-referenced by the absolute paths given to `--fasta` and `--gtf`, so copy those too and edit the two paths if needed.
-A gzipped `--fasta` must be bgzip-compressed and indexed for IGV.
+Open `igv_session.xml` in IGV desktop (File > Open Session). All paths in the session are relative to it, so it works
+anywhere as long as the session, `igv/` and the track files keep their relative locations. To browse on a laptop,
+copy the session, `igv/`, `coverage/`, `ctss/bigwig/`, `tss_clusters/`, `transcripts/` (and `erna/` if present); the
+BAM files are not needed:
+
+```bash
+rsync -av --prune-empty-dirs --include='*/' --include='igv_session.xml' --include='igv/*' --include='*.bigWig' --include='*.bed' --include='*.bed12' --exclude='*' cluster:/path/to/results/ results_igv/
+```
 
 Coverage shows where the mapped read pairs lie, so transcription outside gene models (unannotated genes, 5'
 extensions, antisense or intergenic transcripts) is visible directly; the TSS signal shows where those RNAs start.

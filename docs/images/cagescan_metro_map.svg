@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" width="1400" height="760">
+<style>
+text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #212529; }
+.title { font-size: 26px; font-weight: 700; }
+.st { font-size: 14px; font-weight: 700; text-anchor: middle; }
+.sub { font-size: 11px; fill: #495057; text-anchor: middle; }
+.term { font-size: 13px; font-weight: 700; fill: #fff; text-anchor: middle; }
+.leg { font-size: 12px; }
+.subl { font-size: 12px; fill: #495057; text-anchor: start; }
+</style>
+<rect width="1400" height="760" fill="#ffffff"/>
+<path d="M 70 120 L 660 120" fill="none" stroke="#1c7ed6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 660 120 L 1230 120" fill="none" stroke="#9c36b5" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 660 120 C 705 120 705 270 750 270 L 1330 270" fill="none" stroke="#e03131" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 900 270 C 940 270 940 350 980 350 L 1330 350" fill="none" stroke="#f08c00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1330 270 C 1385 270 1385 520 1330 520 L 330 520" fill="none" stroke="#e03131" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1330 350 C 1360 350 1360 536 1330 536 L 330 536" fill="none" stroke="#f08c00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 830 545 L 830 660" fill="none" stroke="#d6336c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8"/>
+<rect x="10.0" y="104" width="120" height="32" rx="8" fill="#495057"/>
+<text x="70" y="125" class="term">FASTQ pairs</text>
+<text x="70" y="152" class="sub">samplesheet (+ group)</text>
+<circle cx="185" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="185" y="98" class="st">cat · FastQC</text>
+<text x="185" y="150" class="sub">merge lanes, read QC</text>
+<circle cx="295" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="295" y="98" class="st">cutadapt</text>
+<text x="295" y="150" class="sub">5' linker</text>
+<circle cx="395" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="395" y="98" class="st">fastp</text>
+<text x="395" y="150" class="sub">adapters · quality</text>
+<circle cx="485" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="485" y="98" class="st">SortMeRNA</text>
+<text x="485" y="150" class="sub">rRNA</text>
+<circle cx="565" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="565" y="98" class="st">STAR</text>
+<text x="565" y="150" class="sub">spliced alignment</text>
+<circle cx="660" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="660" y="98" class="st">samtools</text>
+<text x="660" y="150" class="sub">stats</text>
+<circle cx="790" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="790" y="98" class="st">samtools view</text>
+<text x="790" y="150" class="sub">primary, MAPQ</text>
+<circle cx="930" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="930" y="98" class="st">bedtools genomecov</text>
+<text x="930" y="150" class="sub">per strand, per million pairs</text>
+<circle cx="1080" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1080" y="98" class="st">bedGraphToBigWig</text>
+<rect x="1155.0" y="104" width="150" height="32" rx="8" fill="#9c36b5"/>
+<text x="1230" y="125" class="term">IGV session</text>
+<text x="1230" y="152" class="sub">genome · annotation · all tracks</text>
+<circle cx="790" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="790" y="302" class="st">CTSS</text>
+<text x="790" y="317" class="sub">READ1 5' ends; soft-clip report</text>
+<text x="790" y="330" class="sub">extra G · linker · spliced leader</text>
+<circle cx="880" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="880" y="248" class="st">pool</text>
+<text x="880" y="233" class="sub">all samples</text>
+<circle cx="1020" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1020" y="248" class="st">paraclu</text>
+<text x="1020" y="233" class="sub">pooled CTSS</text>
+<circle cx="1160" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1160" y="248" class="st">trim · merge</text>
+<text x="1160" y="233" class="sub">tails, &lt; 20 bp gaps</text>
+<circle cx="1010" cy="350" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1010" y="382" class="st">paraclu</text>
+<text x="1010" y="397" class="sub">per replicate</text>
+<circle cx="1110" cy="350" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1110" y="382" class="st">TPM / base</text>
+<text x="1110" y="397" class="sub">(log) stability</text>
+<circle cx="1210" cy="350" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1210" y="382" class="st">pair · IDR</text>
+<text x="1210" y="397" class="sub">within a group</text>
+<circle cx="1300" cy="350" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1300" y="382" class="st">innermost</text>
+<text x="1300" y="397" class="sub">≤ 200 bp</text>
+<rect x="1239" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1250" y="568" class="st">assign pairs</text>
+<text x="1250" y="583" class="sub">READ1 in a TSS cluster</text>
+<text x="1250" y="596" class="sub">counts · CAGEscan clusters</text>
+<rect x="1099" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="1110" y="498" class="st">StringTie</text>
+<text x="1110" y="483" class="sub">per sample, stranded</text>
+<rect x="959" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="970" y="568" class="st">merge</text>
+<text x="970" y="583" class="sub">all samples</text>
+<rect x="819" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="830" y="498" class="st">anchor</text>
+<text x="830" y="483" class="sub">5' end → cluster peak</text>
+<text x="830" y="470" class="sub">derive · collapse 3' ends</text>
+<rect x="679" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="690" y="568" class="st">gffread</text>
+<text x="690" y="583" class="sub">GTF · GFF3 · FASTA · BED12</text>
+<rect x="539" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="550" y="498" class="st">StringTie -e</text>
+<text x="550" y="483" class="sub">quantification</text>
+<rect x="409" y="509" width="22" height="38" rx="11" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="420" y="568" class="st">gffcompare</text>
+<text x="420" y="583" class="sub">vs --gtf</text>
+<rect x="230.0" y="512" width="120" height="32" rx="8" fill="#2f9e44"/>
+<text x="290" y="533" class="term">transcripts</text>
+<text x="290" y="560" class="sub">per TSS, per set</text>
+<circle cx="830" cy="660" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="830" y="692" class="st">find eRNA</text>
+<text x="830" y="707" class="sub">divergent non-SL pairs · distal</text>
+<text x="830" y="720" class="sub">balanced · unspliced · vs convergent</text>
+<text x="845" y="625" class="subl">find_eRNA branch</text>
+<text x="40" y="44" class="title">luscombeu/cagescan</text>
+<text x="40" y="66" class="subl">paired-end CAGE (CAGEscan) without UMIs → TSS clusters → 5'-anchored transcripts</text>
+<line x1="40" y1="640" x2="74" y2="640" stroke="#1c7ed6" stroke-width="8" stroke-linecap="round"/>
+<text x="86" y="644" class="leg">reads and alignment</text>
+<line x1="40" y1="660" x2="74" y2="660" stroke="#9c36b5" stroke-width="8" stroke-linecap="round"/>
+<text x="86" y="664" class="leg">coverage and genome browser</text>
+<line x1="40" y1="680" x2="74" y2="680" stroke="#e03131" stroke-width="8" stroke-linecap="round"/>
+<text x="86" y="684" class="leg">broad TSS clusters (pooled)</text>
+<line x1="40" y1="700" x2="74" y2="700" stroke="#f08c00" stroke-width="8" stroke-linecap="round"/>
+<text x="86" y="704" class="leg">sharp TSS clusters (RECLU, replicates)</text>
+<line x1="40" y1="720" x2="74" y2="720" stroke="#d6336c" stroke-width="8" stroke-linecap="round" stroke-dasharray="8 6"/>
+<text x="86" y="724" class="leg">eRNA candidates (find_eRNA)</text>
+<circle cx="340" cy="640" r="7" fill="#fff" stroke="#212529" stroke-width="2.5" stroke-dasharray="4 3"/>
+<text x="354" y="644" class="leg">optional step</text>
+<text x="340" y="664" class="leg" text-anchor="start">Downstream of the TSS clusters every step</text>
+<text x="340" y="680" class="leg" text-anchor="start">runs once per cluster set (red and orange).</text>
+<text x="340" y="700" class="leg" text-anchor="start">QC of every step → MultiQC.</text>
+</svg>

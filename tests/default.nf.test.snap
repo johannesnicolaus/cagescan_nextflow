@@ -43,6 +43,9 @@
                 "GFFREAD_GFF3": {
                     "gffread": "0.12.7"
                 },
+                "IGV_SESSION": {
+                    "python": "3.12.14"
+                },
                 "MERGE_CAGESCAN_CLUSTERS": {
                     "python": "3.12.14"
                 },
@@ -196,6 +199,10 @@
                 "gffcompare/sharp/merged_sharp.merged.sharp.transcripts.gtf.tmap",
                 "gffcompare/sharp/merged_sharp.stats",
                 "gffcompare/sharp/merged_sharp.tracking",
+                "igv",
+                "igv/annotation.gtf",
+                "igv/genome.fa",
+                "igv/genome.fa.fai",
                 "igv_session.xml",
                 "multiqc",
                 "multiqc/multiqc_data",
@@ -549,7 +556,10 @@
                 "all_samples.sharp.erna_candidates.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "all_samples.sharp.erna_candidates.tsv:md5,6e996a1e1b19be70c6ab35398ea08960",
                 "all_samples.sharp.erna_stats_mqc.tsv:md5,0820b40740986ea161b409630fe6ad8b",
-                "igv_session.xml:md5,bde621a930936773a4c9f6ac89a29181",
+                "annotation.gtf:md5,492ec921bcde3bc7759b061564f90290",
+                "genome.fa:md5,49a231f531a5bcf89730b5313b335621",
+                "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad",
+                "igv_session.xml:md5,9327e8d0085e6ab6972fa0923c98a98b",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
@@ -641,7 +651,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
             ]
         ],
-        "timestamp": "2026-10-05T21:34:01.046610764",
+        "timestamp": "2026-10-06T11:30:13.518487452",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
