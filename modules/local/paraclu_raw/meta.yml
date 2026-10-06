@@ -1,0 +1,42 @@
+name: paraclu_raw
+description: "Full (uncut) paraclu cluster hierarchy from a CTSS BED file"
+keywords:
+  - cage
+  - tss
+  - paraclu
+  - cluster
+tools:
+  - paraclu:
+      description: Finds clusters in data attached to sequences
+      homepage: https://gitlab.com/mcfrith/paraclu
+      licence:
+        - "GPL v3-or-later"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - ctss:
+        type: file
+        description: "CTSS BED (chrom, pos0, pos0+1, ., count, strand)"
+        pattern: "*.ctss.bed"
+  - min_value:
+      type: integer
+      description: "paraclu minValue (minimum total count of a cluster)"
+output:
+  clusters:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.paraclu.txt":
+          type: file
+          description: "Raw paraclu output, all nested clusters"
+          pattern: "*.paraclu.txt"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

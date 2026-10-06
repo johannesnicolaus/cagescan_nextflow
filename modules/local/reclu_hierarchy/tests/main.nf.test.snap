@@ -1,0 +1,84 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "RECLU_HIERARCHY",
+                        "python",
+                        "3.9.2"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "RECLU_HIERARCHY",
+                        "python",
+                        "3.9.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:33:47.105314241",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu.bed:md5,dd0d66e090671557066d7b47a98677dc"
+                    ]
+                ],
+                "1": [
+                    [
+                        "RECLU_HIERARCHY",
+                        "python",
+                        "3.9.2"
+                    ]
+                ],
+                "bed": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.reclu.bed:md5,dd0d66e090671557066d7b47a98677dc"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "RECLU_HIERARCHY",
+                        "python",
+                        "3.9.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:33:37.353148319",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

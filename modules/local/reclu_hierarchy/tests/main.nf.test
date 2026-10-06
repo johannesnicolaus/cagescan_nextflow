@@ -1,0 +1,61 @@
+nextflow_process {
+
+    name "Test Process RECLU_HIERARCHY"
+    script "../main.nf"
+    process "RECLU_HIERARCHY"
+
+    tag "modules"
+    tag "modules_local"
+    tag "reclu_hierarchy"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.paraclu.txt", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.ctss.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            // no singletons, every cluster passes the TPM-per-base filter
+            def rows = path(process.out.bed[0][1]).readLines().collect { line -> line.split('\t') }
+            assert rows.size() > 0
+            assert rows.every { f -> (f[2] as int) - (f[1] as int) > 1 }
+            assert rows.every { f -> (f[6] as double) / ((f[2] as int) - (f[1] as int)) >= 0.1 }
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.paraclu.txt", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/reclu_SAMPLE1.ctss.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

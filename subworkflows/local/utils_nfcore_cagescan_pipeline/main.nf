@@ -190,6 +190,7 @@ def toolCitationText() {
             "SAMtools (Danecek et al. 2021),",
             "pysam,",
             "paraclu (Frith et al. 2008),",
+            params.skip_sharp_clusters ? "" : "RECLU (Ohmiya et al. 2014) with IDR (Li et al. 2011),",
             "StringTie (Pertea et al. 2015),",
             "GffRead and GffCompare (Pertea and Pertea 2020),",
             "bedGraphToBigWig (Kent et al. 2010),",
@@ -210,6 +211,8 @@ def toolBibliographyText() {
             "<li>Dobin A, Davis CA, Schlesinger F, et al. (2013). STAR: ultrafast universal RNA-seq aligner. Bioinformatics, 29(1), 15-21. doi: 10.1093/bioinformatics/bts635</li>",
             "<li>Danecek P, Bonfield JK, Liddle J, et al. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>",
             "<li>Frith MC, Valen E, Krogh A, Hayashizaki Y, Carninci P, Sandelin A. (2008). A code for transcription initiation in mammalian genomes. Genome Research, 18(1), 1-12. doi: 10.1101/gr.6831208</li>",
+            params.skip_sharp_clusters ? "" : "<li>Ohmiya H, Vitezic M, Frith MC, et al. (2014). RECLU: a pipeline to discover reproducible transcriptional start sites and their alternative regulation using capped analysis of gene expression (CAGE). BMC Genomics, 15, 269. doi: 10.1186/1471-2164-15-269</li>",
+            params.skip_sharp_clusters ? "" : "<li>Li Q, Brown JB, Huang H, Bickel PJ. (2011). Measuring reproducibility of high-throughput experiments. Annals of Applied Statistics, 5(3), 1752-1779. doi: 10.1214/11-AOAS466</li>",
             "<li>Pertea M, Pertea GM, Antonescu CM, et al. (2015). StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology, 33(3), 290-295. doi: 10.1038/nbt.3122</li>",
             "<li>Pertea G, Pertea M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9, 304. doi: 10.12688/f1000research.23297.2</li>",
             "<li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351</li>",
@@ -219,6 +222,37 @@ def toolBibliographyText() {
         ].findAll { text -> text }.join(' ').trim()
 
     return reference_text
+}
+
+//
+// IGV session (relative paths inside --outdir; genome and annotation by absolute path)
+//
+def igvSessionXml(samples, sets, fasta, gtf) {
+    def tracks = []
+    if (gtf) {
+        tracks << [file(gtf).toString(), 'Gene models (--gtf)', 'displayMode="EXPANDED"']
+    }
+    sets.each { set ->
+        tracks << ["transcripts/${set}/merged/merged.${set}.transcripts.bed12", "Transcripts (${set} TSS clusters)", 'displayMode="EXPANDED"']
+        tracks << ["tss_clusters/${set}/all_samples.${set}.tss_clusters.bed", "TSS clusters (${set})", 'displayMode="COLLAPSED"']
+    }
+    tracks << ['ctss/bigwig/all_samples.ctss.plus.bigWig', 'TSS signal + (all samples)', 'color="200,0,0" autoScale="true" autoscaleGroup="ctss"']
+    tracks << ['ctss/bigwig/all_samples.ctss.minus.bigWig', 'TSS signal - (all samples)', 'color="0,0,200" autoScale="true" autoscaleGroup="ctss"']
+    samples.each { sample ->
+        tracks << ["coverage/${sample}.coverage.plus.bigWig", "${sample} coverage +", "color=\"200,0,0\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
+        tracks << ["coverage/${sample}.coverage.minus.bigWig", "${sample} coverage -", "color=\"0,0,200\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
+    }
+    def xml = new StringBuilder()
+    xml << '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
+    xml << "<Session genome=\"${file(fasta).toString()}\" locus=\"All\" relativePath=\"true\" version=\"8\">\n"
+    xml << '    <Resources>\n'
+    tracks.each { t -> xml << "        <Resource path=\"${t[0]}\"/>\n" }
+    xml << '    </Resources>\n'
+    xml << '    <Panel name="DataPanel">\n'
+    tracks.each { t -> xml << "        <Track id=\"${t[0]}\" name=\"${t[1]}\" ${t[2]}/>\n" }
+    xml << '    </Panel>\n'
+    xml << '</Session>\n'
+    return xml.toString()
 }
 
 def methodsDescriptionText(mqc_methods_yaml) {

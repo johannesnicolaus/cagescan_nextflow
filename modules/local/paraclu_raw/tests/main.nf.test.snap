@@ -1,0 +1,84 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.paraclu.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "PARACLU_RAW",
+                        "paraclu",
+                        "10"
+                    ]
+                ],
+                "clusters": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.paraclu.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_paraclu": [
+                    [
+                        "PARACLU_RAW",
+                        "paraclu",
+                        "10"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:33:06.544636328",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.paraclu.txt:md5,7c4d2e38381065f01065336595fd6494"
+                    ]
+                ],
+                "1": [
+                    [
+                        "PARACLU_RAW",
+                        "paraclu",
+                        "10"
+                    ]
+                ],
+                "clusters": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.paraclu.txt:md5,7c4d2e38381065f01065336595fd6494"
+                    ]
+                ],
+                "versions_paraclu": [
+                    [
+                        "PARACLU_RAW",
+                        "paraclu",
+                        "10"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-05T14:32:56.731029025",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

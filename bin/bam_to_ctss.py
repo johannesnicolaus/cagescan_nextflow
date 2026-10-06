@@ -6,6 +6,10 @@ mapped READ1 that passes the MAPQ filter we record its 5' genomic position and
 strand.  The soft-clipped 5' sequence (if any) is tallied, because it reveals
 what precedes the cap in the read: nothing, the non-templated extra G added by
 reverse transcriptase, a leftover linker, or a spliced-leader (SL) sequence.
+When the last bases of the SL also match the genome (the acceptor ...AG / ...CAG
+resembles the SL's 3' end), STAR aligns them and the read's 5' end lands inside
+the acceptor; the CTSS of such SL reads is moved downstream past those bases, to
+the trans-splice site.
 
 Outputs (PREFIX = --prefix):
   PREFIX.ctss.bed            chrom, pos0, pos0+1, ., count, strand
@@ -29,31 +33,38 @@ def revcomp(seq):
 
 
 def five_prime(read):
-    """Return (pos0, strand, softclipped 5' sequence in read orientation)."""
+    """Return (pos0, strand, softclipped 5' sequence, first aligned bases), all in read orientation."""
     cigar = [op for op in (read.cigartuples or []) if op[0] != 5]  # hard clips are not in the sequence
     seq = read.query_sequence or ""
     if read.is_reverse:
         clip = cigar[-1][1] if cigar and cigar[-1][0] == 4 else 0
-        return read.reference_end - 1, "-", revcomp(seq[len(seq) - clip:]) if clip else ""
+        oriented = revcomp(seq)
+        return read.reference_end - 1, "-", oriented[:clip], oriented[clip:clip + 8]
     clip = cigar[0][1] if cigar and cigar[0][0] == 4 else 0
-    return read.reference_start, "+", seq[:clip]
+    return read.reference_start, "+", seq[:clip], seq[clip:clip + 8]
 
 
-def is_sl(clip, sl_sequence, min_overlap, max_aligned=3):
-    """True if the soft clip ends with (a suffix of) the spliced-leader sequence.
+def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
+    """Number of spliced-leader 3' bases aligned to the genome, or None if the read has no SL.
 
-    The last few SL bases can align to the genome by chance, so the clip may end
-    up to `max_aligned` bases before the SL's own 3' end.
+    The soft clip must end with (a suffix of) the SL.  The SL's last bases often
+    match the genome, because the trans-splice acceptor (...AG, ...CAG) resembles
+    the SL's own 3' end (...AACAG); then the clip stops up to `max_aligned` bases
+    early and those SL bases start the alignment.
     """
     if not sl_sequence or len(clip) < min_overlap:
-        return False
-    clip = clip.upper()
+        return None
+    clip, aligned = clip.upper(), aligned.upper()
     for k in range(max_aligned + 1):
         sl = sl_sequence[:len(sl_sequence) - k]
         n = min(len(clip), len(sl))
-        if n >= min_overlap and clip[-n:] == sl[-n:]:
-            return True
-    return False
+        if n >= min_overlap and clip[-n:] == sl[-n:] and aligned[:k] == sl_sequence[len(sl_sequence) - k:]:
+            return k
+    return None
+
+
+def shift_downstream(pos, strand, k):
+    return pos + k if strand == "+" else pos - k
 
 
 def is_usable_read1(read, min_mapq):
@@ -87,22 +98,27 @@ def main():
 
     ctss = collections.Counter()
     clips = collections.Counter()
-    n_used = n_noclip = n_g = n_sl = 0
+    n_used = n_noclip = n_g = n_sl = n_sl_shifted = 0
 
     with pysam.AlignmentFile(args.bam, "rb") as bam:
         for read in bam.fetch(until_eof=True):
             if not is_usable_read1(read, args.min_mapq):
                 continue
-            pos, strand, clip = five_prime(read)
+            pos, strand, clip, aligned = five_prime(read)
+            clip = clip.upper()
+            k = sl_aligned(clip, aligned, sl_sequence, args.sl_min_overlap)
+            if k is not None:
+                n_sl += 1
+                if k:
+                    # SL bases aligned to the acceptor: the trans-splice site is k bases downstream
+                    pos = shift_downstream(pos, strand, k)
+                    n_sl_shifted += 1
             ctss[(read.reference_name, pos, strand)] += 1
             n_used += 1
-            clip = clip.upper()
             if not clip:
                 n_noclip += 1
             elif clip == "G":
                 n_g += 1
-            if is_sl(clip, sl_sequence, args.sl_min_overlap):
-                n_sl += 1
             clips[clip[-args.max_clip_report:] if clip else "-"] += 1
 
     with open(f"{args.prefix}.ctss.bed", "w") as out:
@@ -125,9 +141,9 @@ def main():
         out.write("# section_name: 'CTSS extraction'\n")
         out.write("# description: 'READ1 5-prime ends used as CAGE TSSs, and what was soft-clipped before them (extra G, linker, spliced leader).'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL clip (%)\n")
+        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL clip (%)\tSL end aligned, CTSS moved (%)\n")
         other = n_used - n_noclip - n_g
-        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\n")
+        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_shifted)}\n")
 
     if n_used == 0:
         print(f"WARNING: no usable READ1 alignments found in {args.bam}", file=sys.stderr)

@@ -28,6 +28,14 @@
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
                 "errorMessage": "FastQ file for reads 2 must be provided (paired-end CAGE), cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+            },
+            "group": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "errorMessage": "Group may only contain letters, digits, '_' and '-'",
+                "meta": [
+                    "group"
+                ]
             }
         },
         "required": [

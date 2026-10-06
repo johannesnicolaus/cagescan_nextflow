@@ -22,6 +22,38 @@ The original assembler gives up on inconsistent read layouts and the transcript 
 splicing, so per-TSS de novo assembly fails exactly where isoforms exist. Grouping the *aligned* pairs by TSS and
 assembling them with a splice-aware, isoform-aware assembler avoids that.
 
+### Broad and sharp TSS clusters
+
+TSS clusters decide which read pairs build which transcripts, and there is no single right granularity. The pipeline
+therefore builds two cluster sets and runs everything downstream for both (`transcripts/broad/`,
+`transcripts/sharp/`, ...), so you can choose afterwards:
+
+| | broad (`TC...`) | sharp (`TS...`) |
+| --- | --- | --- |
+| Method | paraclu on CTSS pooled across all samples, simplified with paraclu-cut; sparse tails trimmed; clusters closer than `--tss_merge_distance` merged | [RECLU](https://doi.org/10.1186/1471-2164-15-269) (Ohmiya et al. 2014): full paraclu hierarchy per replicate, TPM-per-base filter, hierarchical stability, replicate pairing (>= 90% reciprocal overlap) and IDR, <= 200 bp, innermost reproducible clusters |
+| Recruits | every TSS region with enough pooled reads, as one cluster (up to 200 bp) | only TSSs reproducible across replicates, split into their narrow cores (typically a few bp) |
+| Needs replicates | no | yes, >= 2 per group |
+| Use for | maximum sensitivity; one model per promoter region | high-confidence, fine-grained TSSs; alternative TSSs a few bases apart kept separate |
+
+Replicates are defined by the optional `group` column of the samplesheet (default: all samples are replicates of one
+group). RECLU runs every pair of replicates within a group and unites the reproducible clusters of all pairs and
+groups, so a TSS that is reproducible in only one condition is kept. Groups with a single sample contribute nothing to
+the sharp set; with no group of two or more samples, the sharp set is skipped with a warning. `--skip_sharp_clusters`
+turns it off.
+
+**Deviation from RECLU.** RECLU ranks clusters for IDR by their hierarchical stability: a cluster's paraclu
+stability (max density / min density) plus that of every cluster containing it. A stability depends on the distance
+to the nearest stray CTSS, so it varies by large factors between replicates, and the strongest TSSs can come out
+irreproducible. By default (`--reclu_score log-stability`) the pipeline sums the log stabilities instead. On simulated
+replicates this recovered 109 of 157 TSSs, against 24 with RECLU's plain sum (`stability`) and 78 with expression
+(`tpm`); none of the three produced false clusters. The IDR model is fitted with the
+[idr](https://github.com/nboley/idr) package's own functions; its command-line peak merging is not used, because it
+would collapse RECLU's nested clusters. With fewer than `--reclu_min_pairs` paired clusters, no model is fitted and
+pairs are kept on overlap alone (reported in the MultiQC table).
+
+`--reclu_min_tpm_per_base` (0.1, as in RECLU) is relative to sequencing depth: in very small libraries one read
+already exceeds it, so the filter has no effect there.
+
 ### Why StringTie, and what the pipeline corrects
 
 StringTie is only trusted for what TSS-anchored CAGEscan pairs can support: the splice structure near the TSS.
@@ -45,7 +77,7 @@ first three are corrected by the pipeline:
 | A TSS inside continuously covered sequence (e.g. a second TSS in the same first exon) gets no transcript. | A transcript is **derived** for every TSS cluster lying inside an exon of an anchored transcript, starting at the cluster peak (`anchored "derived"`, `derived_from`; `--derive_transcripts false` to disable). |
 | 3' ends sit where coverage runs out (coverage decays with fragment length), and one TSS can get several 3'-truncated copies of the same structure. | Transcripts that are 3' truncations of another transcript of the same TSS are dropped. 3' ends remain approximate. |
 | paraclu can split one TSS (e.g. when the extra G aligns to a genomic G for part of the reads), and the transcript may anchor to the minor piece. | Clusters closer than `--tss_merge_distance` (20 bp) are merged, and transcripts anchor to the strongest cluster within `--tss_window`. |
-| Isoform abundances assume uniform coverage, which CAGEscan does not have (one 4-isoform test gene: estimated 0.55/0.08/0.20/0.17 vs true 0.40/0.10/0.10/0.40). | Not corrected: use `tss_clusters/*.tss_cluster_counts.tsv` for expression; transcript TPMs are approximate. |
+| Isoform abundances assume uniform coverage, which CAGEscan does not have (one 4-isoform test gene: estimated 0.55/0.08/0.20/0.17 vs true 0.40/0.10/0.10/0.40). | Not corrected: use `tss_clusters/<set>/*.tss_cluster_counts.tsv` for expression; transcript TPMs are approximate. |
 
 Splicing further downstream than the library insert size is never observed; that is a limit of CAGEscan data.
 
@@ -69,6 +101,14 @@ If you are unsure what precedes the cap in your reads, run the pipeline once wit
 | `-` (none) or `G` | READ1 starts at the cap (± extra G) | nothing |
 | a constant longer sequence, e.g. `...TATAGGG` | a 5' linker is still present | `--r1_5p_linker TATAGGG` (cutadapt removes it and everything before it) |
 | a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL-clipped READ1s are counted per sample and per TSS cluster |
+
+With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site. The last bases of a spliced leader
+often also match the genome, because the splice acceptor (`...AG`, `...CAG`) resembles the leader's 3' end (e.g.
+`...AACAG` in *Oikopleura dioica*). STAR then aligns those leader bases, and the read's 5' end lands up to 3 bases
+upstream, inside the acceptor. Such reads are recognised (soft clip ending in the leader minus its last k bases, and
+the first k aligned bases equal to the leader's last k bases) and their CTSS is moved k bases downstream. On
+*O. dioica* embryo CAGE this put 97% of trans-spliced TSS peaks exactly on annotated 5' ends, against 0% (62% at -2,
+35% at -3) without the correction.
 | fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
 READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the RNA are tolerated by the reverse
@@ -117,13 +157,23 @@ CAGE_REP1,CAGE_REP1_L004_R1.fastq.gz,CAGE_REP1_L004_R2.fastq.gz
 
 ### Full samplesheet
 
-Reads must be paired-end. `fastq_1` must be READ1, the read that starts at the capped 5' end.
+Reads must be paired-end. `fastq_1` must be READ1, the read that starts at the capped 5' end. The optional `group`
+column names the condition a sample is a replicate of; it is only used for the sharp (RECLU) TSS clusters.
+
+```csv title="samplesheet.csv"
+sample,fastq_1,fastq_2,group
+LIVER_REP1,LIVER_REP1_R1.fastq.gz,LIVER_REP1_R2.fastq.gz,liver
+LIVER_REP2,LIVER_REP2_R1.fastq.gz,LIVER_REP2_R2.fastq.gz,liver
+BRAIN_REP1,BRAIN_REP1_R1.fastq.gz,BRAIN_REP1_R2.fastq.gz,brain
+BRAIN_REP2,BRAIN_REP2_R1.fastq.gz,BRAIN_REP2_R2.fastq.gz,brain
+```
 
 | Column    | Description                                                                                                                                  |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sample`  | Sample name: letters, digits, `_` and `-` only. Identical for multiple sequencing runs of the same library.                                  |
 | `fastq_1` | Full path to the gzipped READ1 FastQ file (cap side). Extension ".fastq.gz" or ".fq.gz".                                                     |
 | `fastq_2` | Full path to the gzipped READ2 FastQ file. Extension ".fastq.gz" or ".fq.gz".                                                                |
+| `group`   | Optional. Condition the sample is a replicate of (letters, digits, `_`, `-`). Default: all samples form one group.                           |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 

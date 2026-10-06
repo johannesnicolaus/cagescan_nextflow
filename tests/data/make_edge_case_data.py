@@ -28,5 +28,5 @@ sim.GENES = [
         "geneD.00": ([(5001, 5150), (7001, 7120), (9001, 10500)], 0.4)}, False),
 ]
 sim.CHROM_LEN = {"chr1": 50000, "chr2": 15000}
-sys.argv = ["x", "--outdir", sys.argv[1], "--pairs", "6000", "--seed", "7"]
+sys.argv = ["x", "--outdir", sys.argv[1], "--pairs", "6000", "--seed", "7", "--random-genes", "0"]
 sim.main()

@@ -14,9 +14,9 @@ alignment/*.{bam,bai}
 alignment/star/log/*.{out,tab}
 alignment/samtools_stats/*.stats
 ctss/bigwig/*.bigWig
-gffcompare/*
-quantification/*/*.ballgown/*.ctab
-quantification/*/*.{gtf,txt}
-stringtie/assembly/*.gtf
+gffcompare/*/*
+quantification/*/*/*.ballgown/*.ctab
+quantification/*/*/*.{gtf,txt}
+stringtie/*/*.gtf
 trimming/fastp/*.{html,json,log}
-tss_clusters/tss_anchored_bam/*.{bam,bai}
+tss_clusters/*/tss_anchored_bam/*.{bam,bai}

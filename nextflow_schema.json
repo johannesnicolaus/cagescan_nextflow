@@ -23,7 +23,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "A comma-separated file with a header row and the columns `sample,fastq_1,fastq_2`. Reads must be paired-end CAGE (READ1 starts at the capped 5' end). Rows with the same sample name are treated as lanes and concatenated.",
+                    "help_text": "A comma-separated file with a header row and the columns `sample,fastq_1,fastq_2`, plus an optional `group` column naming the condition each sample is a replicate of (used for sharp RECLU clusters; default: all samples are one group). Reads must be paired-end CAGE (READ1 starts at the capped 5' end). Rows with the same sample name are treated as lanes and concatenated.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -192,6 +192,75 @@
                     "description": "Merge TSS clusters on the same strand separated by at most this many bases (-1: merge only overlapping clusters).",
                     "help_text": "paraclu can split one TSS into neighbouring clusters, for example when the non-templated 5' G aligns to a genomic G for part of the reads.",
                     "fa_icon": "fas fa-compress-arrows-alt"
+                }
+            }
+        },
+        "sharp_tss_cluster_options": {
+            "title": "Sharp TSS cluster options (RECLU)",
+            "type": "object",
+            "fa_icon": "fas fa-bullseye",
+            "description": "Reproducible, narrow TSS clusters following RECLU (Ohmiya et al. 2014). Built in addition to the broad pooled-paraclu clusters; transcripts are built for both sets.",
+            "properties": {
+                "skip_sharp_clusters": {
+                    "type": "boolean",
+                    "description": "Do not build sharp (RECLU) clusters; only the broad set is used.",
+                    "fa_icon": "fas fa-fast-forward"
+                },
+                "reclu_paraclu_min": {
+                    "type": "integer",
+                    "default": 2,
+                    "minimum": 1,
+                    "description": "paraclu minValue (minimum total CTSS count) for the per-replicate cluster hierarchy.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "reclu_min_tpm_per_base": {
+                    "type": "number",
+                    "default": 0.1,
+                    "minimum": 0,
+                    "description": "Keep replicate clusters with at least this many tags per million per base.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "reclu_score": {
+                    "type": "string",
+                    "default": "log-stability",
+                    "enum": [
+                        "log-stability",
+                        "stability",
+                        "tpm"
+                    ],
+                    "description": "Cluster score whose reproducibility IDR tests.",
+                    "help_text": "`stability` is RECLU's hierarchical stability (a cluster's paraclu stability plus that of all clusters containing it). A paraclu stability depends on the distance to the nearest stray CTSS and varies by large factors between replicates, so by default the log stabilities are summed (`log-stability`). On simulated replicates this recovered 109 of 157 TSSs versus 24 for `stability` and 78 for `tpm`, with no false clusters in any mode.",
+                    "fa_icon": "fas fa-sort-numeric-up"
+                },
+                "reclu_min_overlap": {
+                    "type": "number",
+                    "default": 0.9,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Minimum reciprocal overlap to pair clusters of two replicates.",
+                    "fa_icon": "fas fa-object-group"
+                },
+                "reclu_max_idr": {
+                    "type": "number",
+                    "default": 0.1,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Keep paired clusters with an irreproducible discovery rate below this value.",
+                    "fa_icon": "fas fa-check-double"
+                },
+                "reclu_max_length": {
+                    "type": "integer",
+                    "default": 200,
+                    "minimum": 1,
+                    "description": "Discard reproducible clusters longer than this.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "reclu_min_pairs": {
+                    "type": "integer",
+                    "default": 50,
+                    "minimum": 2,
+                    "description": "Minimum number of paired clusters to fit the IDR model; with fewer, pairs are kept on overlap alone.",
+                    "fa_icon": "fas fa-sort-amount-up"
                 }
             }
         },
@@ -404,6 +473,9 @@
         },
         {
             "$ref": "#/$defs/tss_options"
+        },
+        {
+            "$ref": "#/$defs/sharp_tss_cluster_options"
         },
         {
             "$ref": "#/$defs/transcript_options"

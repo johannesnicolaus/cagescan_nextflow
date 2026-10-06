@@ -10,6 +10,11 @@ The directories listed below will be created in the results directory after the 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
+Everything downstream of the TSS clusters is produced twice, once per cluster set: `broad` (pooled paraclu) and
+`sharp` (RECLU, reproducible across replicates); see [usage](usage.md#broad-and-sharp-tss-clusters). `<set>` below
+stands for either, and output files carry the set in their name.
+
+- [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
 - [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
 - [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
@@ -22,21 +27,41 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
+### Genome browser
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome (`--fasta`), gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns), per million mapped read pairs. The strand is that of the RNA (CAGE READ1 is sense).
+- `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
+
+</details>
+
+Open `igv_session.xml` in IGV desktop (File > Open Session). Track paths inside the results directory are relative
+to the session file, so the results directory can be copied elsewhere (e.g. to a laptop); the genome and annotation are
+referenced by the absolute paths given to `--fasta` and `--gtf`, so copy those too and edit the two paths if needed.
+A gzipped `--fasta` must be bgzip-compressed and indexed for IGV.
+
+Coverage shows where the mapped read pairs lie, so transcription outside gene models (unannotated genes, 5'
+extensions, antisense or intergenic transcripts) is visible directly; the TSS signal shows where those RNAs start.
+Coverage of CAGEscan libraries decays with distance from the TSS (fragment length), so it is strongest near 5' ends.
+
 ### Transcripts
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `transcripts/merged/` - consensus transcript set across all samples (use this one for most analyses)
-  - `merged.transcripts.gtf`: TSS-anchored transcripts.
-  - `merged.transcripts.gff3`: the same in GFF3 (gffread).
-  - `merged.transcripts.bed12`: the same in BED12, for genome browsers.
-  - `merged.transcripts.fasta`: spliced transcript sequences (gffread `-w`).
-- `transcripts/<sample>/` - the same four files for each sample's own assembly.
+- `transcripts/<set>/merged/` - consensus transcript set across all samples (use this one for most analyses)
+  - `merged.<set>.transcripts.gtf`: TSS-anchored transcripts.
+  - `merged.<set>.transcripts.gff3`: the same in GFF3 (gffread).
+  - `merged.<set>.transcripts.bed12`: the same in BED12, for genome browsers.
+  - `merged.<set>.transcripts.fasta`: spliced transcript sequences (gffread `-w`).
+- `transcripts/<set>/<sample>/` - the same four files for each sample's own assembly.
 
 </details>
 
-Transcripts are grouped by TSS cluster: `gene_id` is the TSS cluster ID (e.g. `TC000012`) and `transcript_id` is
+Transcripts are grouped by TSS cluster: `gene_id` is the TSS cluster ID (`TC000012` for broad, `TS000012` for sharp clusters) and `transcript_id` is
 `<tss_id>.<n>`, numbered by decreasing StringTie coverage, so a TSS with several isoforms has several transcripts.
 GTF attributes:
 
@@ -69,16 +94,20 @@ fragments (the library insert size), not necessarily to the polyadenylation site
 
 - `tss_clusters/`
   - `all_samples.ctss.bed`: CTSS counts pooled across samples (input to paraclu).
-  - `all_samples.tss_clusters.bed`: consensus TSS clusters (BED9; `thickStart` is the dominant CTSS, `score` the pooled count capped at 1000).
-  - `all_samples.tss_clusters.tsv`: cluster table: `tss_id`, location (1-based), strand, peak (1-based), total count, width.
-  - `all_samples.tss_cluster_counts.tsv`: READ1 counts per cluster (rows) and sample (columns).
-  - `all_samples.tss_cluster_cpm.tsv`: the same, as counts per million TSS-assigned READ1s.
-  - `all_samples.tss_cluster_sl_counts.tsv`: READ1s per cluster whose soft-clipped 5' end matches `--sl_sequence` (only written when SL reads are found). Divide by the counts matrix to get the trans-spliced fraction of each TSS.
-  - `tss_anchored_bam/<sample>.tss.bam(.bai)`: read pairs whose READ1 5' end falls in a TSS cluster, tagged with `TC:Z:<tss_id>`. These are the reads used to build transcripts.
+- `tss_clusters/<set>/`
+  - `all_samples.<set>.tss_clusters.bed`: TSS clusters (BED9; `thickStart` is the dominant CTSS, `score` the pooled count capped at 1000).
+  - `all_samples.<set>.tss_clusters.tsv`: cluster table: `tss_id`, location (1-based), strand, peak (1-based), total count, width.
+  - `all_samples.<set>.tss_cluster_counts.tsv`: READ1 counts per cluster (rows) and sample (columns).
+  - `all_samples.<set>.tss_cluster_cpm.tsv`: the same, as counts per million TSS-assigned READ1s.
+  - `all_samples.<set>.tss_cluster_sl_counts.tsv`: READ1s per cluster whose soft-clipped 5' end matches `--sl_sequence` (only written when SL reads are found). Divide by the counts matrix to get the trans-spliced fraction of each TSS.
+  - `tss_anchored_bam/<sample>.<set>.tss.bam(.bai)`: read pairs whose READ1 5' end falls in a TSS cluster, tagged with `TC:Z:<tss_id>`. These are the reads used to build transcripts.
+- `tss_clusters/sharp/` additionally
+  - `all_samples.reclu_clusters.bed`: the reproducible innermost RECLU clusters before naming (0-based first/last CTSS positions).
+  - `reclu_idr/<group>.<rep1>_vs_<rep2>.reclu_idr.tsv`: every pair of replicate clusters with >= 90% reciprocal overlap, their scores in each replicate, and local and global IDR.
 
 </details>
 
-TSS clusters are called with [paraclu](https://gitlab.com/mcfrith/paraclu) on the pooled CTSS
+Broad TSS clusters are called with [paraclu](https://gitlab.com/mcfrith/paraclu) on the pooled CTSS
 (`--paraclu_min_cluster`, simplified with `paraclu-cut`); sparse tails are trimmed and clusters closer than
 `--tss_merge_distance` bases are merged. A READ1 is assigned to a cluster when its 5' end lies in
 the cluster extended by `--tss_window` bases on the same strand.
@@ -88,9 +117,9 @@ the cluster extended by `--tss_window` bases on the same strand.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `cagescan_clusters/`
-  - `<sample>.cagescan_clusters.bed12`: for each TSS cluster, the union of the aligned blocks of all its read pairs. Score = number of pairs (capped at 1000); thickStart/thickEnd = the TSS cluster.
-  - `all_samples.cagescan_clusters.bed12`: meta-clusters combining all samples. Score = number of samples contributing.
+- `cagescan_clusters/<set>/`
+  - `<sample>.<set>.cagescan_clusters.bed12`: for each TSS cluster, the union of the aligned blocks of all its read pairs. Score = number of pairs (capped at 1000); thickStart/thickEnd = the TSS cluster.
+  - `all_samples.<set>.cagescan_clusters.bed12`: meta-clusters combining all samples. Score = number of samples contributing.
 
 </details>
 
@@ -117,21 +146,21 @@ look like introns. Use [Transcripts](#transcripts) for isoform structures.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `quantification/`
-  - `all_samples.transcript_tpm.tsv`, `all_samples.transcript_cov.tsv`: abundance of the merged transcripts per sample (StringTie `-e` on the TSS-anchored BAMs).
+- `quantification/<set>/`
+  - `all_samples.<set>.transcript_tpm.tsv`, `all_samples.<set>.transcript_cov.tsv`: abundance of the merged transcripts per sample (StringTie `-e` on the TSS-anchored BAMs).
   - `<sample>/`: StringTie `-e` output for each sample (`*.quant.transcripts.gtf`, gene (= TSS cluster) abundance, ballgown tables, coverage GTF).
 
 </details>
 
-For TSS-level expression, prefer `tss_clusters/all_samples.tss_cluster_counts.tsv` (one count per capped 5' end).
+For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_cluster_counts.tsv` (one count per capped 5' end).
 
 ### gffcompare
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `gffcompare/` (only with `--gtf`)
-  - `merged.stats`, `merged.annotated.gtf`, `merged.tracking`, `merged.loci`, `*.tmap`, `*.refmap`: [gffcompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml) comparison of the merged transcripts with the reference. Class codes in `*.tmap` tell known (`=`, `c`) from novel isoforms (`j`, `k`, `o`, `u`, ...). Because transcripts are 5' fragments, many match the reference as `c` (contained).
+- `gffcompare/<set>/` (only with `--gtf`)
+  - `merged_<set>.stats`, `merged_<set>.annotated.gtf`, `merged_<set>.tracking`, `merged_<set>.loci`, `*.tmap`, `*.refmap`: [gffcompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml) comparison of the merged transcripts with the reference. Class codes in `*.tmap` tell known (`=`, `c`) from novel isoforms (`j`, `k`, `o`, `u`, ...). Because transcripts are 5' fragments, many match the reference as `c` (contained).
 
 </details>
 
@@ -164,9 +193,9 @@ For TSS-level expression, prefer `tss_clusters/all_samples.tss_cluster_counts.ts
 <details markdown="1">
 <summary>Output files</summary>
 
-- `stringtie/assembly/`
-  - `<sample>.transcripts.gtf`: per-sample StringTie assembly of the TSS-anchored pairs, before anchoring.
-  - `merged.gtf`: `stringtie --merge` of the per-sample assemblies, before anchoring.
+- `stringtie/<set>/`
+  - `<sample>.<set>.transcripts.gtf`: per-sample StringTie assembly of the TSS-anchored pairs, before anchoring.
+  - `merged.<set>.gtf`: `stringtie --merge` of the per-sample assemblies, before anchoring.
 
 </details>
 
@@ -184,7 +213,7 @@ For TSS-level expression, prefer `tss_clusters/all_samples.tss_cluster_counts.ts
 
 [MultiQC](http://multiqc.info) is a visualization tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in the report data directory.
 
-Results generated by MultiQC collate pipeline QC from supported tools (FastQC, fastp, cutadapt, SortMeRNA, STAR, samtools) and three pipeline-specific tables: *CTSS extraction* (READ1s used and their 5' soft clips), *TSS cluster assignment* and *Transcript anchoring*. The pipeline has special steps which also allow the software versions to be reported in the MultiQC output for future traceability. For more information about how to use MultiQC reports, see <http://multiqc.info>.
+Results generated by MultiQC collate pipeline QC from supported tools (FastQC, fastp, cutadapt, SortMeRNA, STAR, samtools) and four pipeline-specific tables: *CTSS extraction* (READ1s used and their 5' soft clips), *Sharp TSS clusters (RECLU)* (pairs and reproducible clusters per replicate pair), *TSS cluster assignment* and *Transcript anchoring* (one row per sample and cluster set). The pipeline has special steps which also allow the software versions to be reported in the MultiQC output for future traceability. For more information about how to use MultiQC reports, see <http://multiqc.info>.
 
 ### Pipeline information
 

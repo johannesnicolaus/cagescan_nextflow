@@ -30,6 +30,10 @@
 
   > Chen S, Zhou Y, Chen Y, Gu J. fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics. 2018 Sep 1;34(17):i884-i890. doi: 10.1093/bioinformatics/bty560.
 
+- [BEDTools](https://pubmed.ncbi.nlm.nih.gov/20110278/)
+
+  > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033.
+
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
   > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
@@ -45,6 +49,14 @@
 - [paraclu](https://pubmed.ncbi.nlm.nih.gov/18032727/)
 
   > Frith MC, Valen E, Krogh A, Hayashizaki Y, Carninci P, Sandelin A. A code for transcription initiation in mammalian genomes. Genome Res. 2008 Jan;18(1):1-12. doi: 10.1101/gr.6831208.
+
+- [RECLU](https://pubmed.ncbi.nlm.nih.gov/24779366/)
+
+  > Ohmiya H, Vitezic M, Frith MC, Itoh M, Carninci P, Forrest AR, Hayashizaki Y, Lassmann T; FANTOM Consortium. RECLU: a pipeline to discover reproducible transcriptional start sites and their alternative regulation using capped analysis of gene expression (CAGE). BMC Genomics. 2014 Apr 29;15:269. doi: 10.1186/1471-2164-15-269.
+
+- [IDR](https://doi.org/10.1214/11-AOAS466)
+
+  > Li Q, Brown JB, Huang H, Bickel PJ. Measuring reproducibility of high-throughput experiments. Ann Appl Stat. 2011;5(3):1752-1779. doi: 10.1214/11-AOAS466.
 
 - [pysam](https://github.com/pysam-developers/pysam)
 

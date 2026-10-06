@@ -1,0 +1,42 @@
+name: reclu_hierarchy
+description: "Filter one replicate's paraclu hierarchy by TPM per base and score clusters by hierarchical stability (RECLU)"
+keywords:
+  - cage
+  - tss
+  - reclu
+tools:
+  - idr:
+      description: Irreproducible Discovery Rate (Python package; used as a library by bin/reclu.py)
+      homepage: https://github.com/nboley/idr
+      licence:
+        - "GPL v2"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - paraclu:
+        type: file
+        description: "Raw paraclu output"
+        pattern: "*.paraclu.txt"
+    - ctss:
+        type: file
+        description: "CTSS BED of the replicate"
+        pattern: "*.ctss.bed"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.reclu.bed":
+          type: file
+          description: "Scored replicate clusters"
+          pattern: "*.reclu.bed"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

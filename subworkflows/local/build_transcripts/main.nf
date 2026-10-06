@@ -15,8 +15,8 @@ include { GFFCOMPARE                                   } from '../../../modules/
 workflow BUILD_TRANSCRIPTS {
 
     take:
-    ch_tss_bam      // channel: [ val(meta), path(bam), path(bai) ] TSS-anchored pairs
-    ch_clusters_tsv // channel: path(tss_clusters.tsv)
+    ch_tss_bam      // channel: [ val(meta), path(bam), path(bai) ] TSS-anchored pairs; meta.cluster_set
+    ch_clusters_tsv // channel: [ val(cluster_set), path(tss_clusters.tsv) ]
     ch_fasta        // channel: [ val(meta), path(fasta) ]
     ch_fai          // channel: [ val(meta), path(fai) ]
     ch_gtf          // channel: [ val(meta), path(gtf) ] or [ val(meta), [] ]
@@ -37,23 +37,28 @@ workflow BUILD_TRANSCRIPTS {
     )
 
     //
-    // Consensus transcript set across samples
+    // Consensus transcript set across samples, per cluster set
     //
     STRINGTIE_MERGE(
         STRINGTIE_ASSEMBLE.out.transcript_gtf
-            .map { _meta, gtf -> gtf }
-            .collect()
-            .map { gtfs -> [[id: 'merged'], gtfs] },
+            .map { meta, gtf -> [meta.cluster_set, gtf] }
+            .groupTuple()
+            .map { set, gtfs -> [[id: 'merged', cluster_set: set], gtfs] },
         use_guide ? ch_gtf : channel.value([[:], []])
     )
 
     //
-    // Anchor per-sample and merged transcripts to TSS clusters
+    // Anchor per-sample and merged transcripts to the TSS clusters of their set
     //
-    ANCHOR_TRANSCRIPTS(
-        STRINGTIE_ASSEMBLE.out.transcript_gtf.mix(STRINGTIE_MERGE.out.merged_gtf),
-        ch_clusters_tsv
-    )
+    def ch_anchor = STRINGTIE_ASSEMBLE.out.transcript_gtf
+        .mix(STRINGTIE_MERGE.out.merged_gtf)
+        .map { meta, gtf -> [meta.cluster_set, meta, gtf] }
+        .combine(ch_clusters_tsv, by: 0)
+        .multiMap { _set, meta, gtf, tsv ->
+            gtf:      [meta, gtf]
+            clusters: tsv
+        }
+    ANCHOR_TRANSCRIPTS(ch_anchor.gtf, ch_anchor.clusters)
     def ch_anchored_gtf = ANCHOR_TRANSCRIPTS.out.gtf
     def ch_merged_gtf   = ch_anchored_gtf.filter { meta, _gtf -> meta.id == 'merged' }
 
@@ -64,18 +69,21 @@ workflow BUILD_TRANSCRIPTS {
     GFFREAD_FASTA(ch_anchored_gtf, ch_fasta.map { _meta, fasta -> fasta })
 
     //
-    // Quantify the merged transcript set in every sample
+    // Quantify the merged transcript set of each cluster set in every sample
     //
-    STRINGTIE_QUANT(
-        ch_tss_bam.map { meta, bam, _bai -> [meta, bam, []] },
-        'expression-estimation',
-        ch_merged_gtf.map { _meta, gtf -> gtf }.first()
-    )
+    def ch_quant = ch_tss_bam
+        .map { meta, bam, _bai -> [meta.cluster_set, meta, bam] }
+        .combine(ch_merged_gtf.map { meta, gtf -> [meta.cluster_set, gtf] }, by: 0)
+        .multiMap { _set, meta, bam, gtf ->
+            bam: [meta, bam, []]
+            gtf: gtf
+        }
+    STRINGTIE_QUANT(ch_quant.bam, 'expression-estimation', ch_quant.gtf)
     MERGE_TRANSCRIPT_COUNTS(
         STRINGTIE_QUANT.out.transcript_gtf
-            .map { _meta, gtf -> gtf }
-            .collect()
-            .map { gtfs -> [[id: 'all_samples'], gtfs] },
+            .map { meta, gtf -> [meta.cluster_set, gtf] }
+            .groupTuple()
+            .map { set, gtfs -> [[id: 'all_samples', cluster_set: set], gtfs] },
         [],
         'transcripts'
     )

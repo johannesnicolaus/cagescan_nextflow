@@ -12,9 +12,31 @@
                 ],
                 "1": [
                     [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "test.ctss.plus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
+                    ]
+                ],
+                "2": [
+                    [
                         "POOL_CTSS",
                         "python",
                         "3.12.14"
+                    ]
+                ],
+                "bedgraph": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "test.ctss.plus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
                     ]
                 ],
                 "ctss": [
@@ -34,7 +56,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-05T11:46:36.110546386",
+        "timestamp": "2026-10-05T20:45:29.799995441",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -53,9 +75,31 @@
                 ],
                 "1": [
                     [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,50518550c3c88eb4b9badaac539db9c7",
+                            "test.ctss.plus.bedgraph:md5,78152dabab323ed9c8a126fb0f1f54f2"
+                        ]
+                    ]
+                ],
+                "2": [
+                    [
                         "POOL_CTSS",
                         "python",
                         "3.12.14"
+                    ]
+                ],
+                "bedgraph": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.ctss.minus.bedgraph:md5,50518550c3c88eb4b9badaac539db9c7",
+                            "test.ctss.plus.bedgraph:md5,78152dabab323ed9c8a126fb0f1f54f2"
+                        ]
                     ]
                 ],
                 "ctss": [
@@ -75,7 +119,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-05T11:46:27.191370206",
+        "timestamp": "2026-10-05T20:45:19.824621724",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -1,0 +1,44 @@
+name: reclu_idr
+description: "Pair the clusters of two replicates by reciprocal overlap and estimate their IDR (RECLU)"
+keywords:
+  - cage
+  - tss
+  - reclu
+  - idr
+  - reproducibility
+tools:
+  - idr:
+      description: Irreproducible Discovery Rate (Python package; used as a library by bin/reclu.py)
+      homepage: https://github.com/nboley/idr
+      licence:
+        - "GPL v2"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - rep1:
+        type: file
+        description: "Replicate 1 clusters"
+        pattern: "*.reclu.bed"
+    - rep2:
+        type: file
+        description: "Replicate 2 clusters"
+        pattern: "*.reclu.bed"
+output:
+  tsv:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.reclu_idr.tsv":
+          type: file
+          description: "Paired clusters with local and global IDR"
+          pattern: "*.reclu_idr.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"
