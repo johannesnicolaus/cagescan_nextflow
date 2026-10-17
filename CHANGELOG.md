@@ -22,7 +22,7 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 
 ### `Fixed`
 
-- Integer and number options given on the command line (e.g. `--min_mapq 5`) failed parameter validation with Nextflow 26.04, which passes them as strings: command-line values are now cast to the schema types (nf-schema 2.7.3).
+- Integer and number options given on the command line (e.g. `--min_mapq 5`) failed parameter validation with Nextflow 26.04, which passes them as strings: the boolean and numeric parameters are now declared with types in a `params` block in `main.nf`, so Nextflow converts command-line values (`--sl_split false` was the truthy string `'false'`). Requires Nextflow >= 26.04.
 
 ### `Dependencies`
 
