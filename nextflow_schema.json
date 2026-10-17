@@ -182,8 +182,23 @@
                     "type": "string",
                     "pattern": "^[ACGTNacgtn]+$",
                     "description": "Spliced-leader sequence (5'->3'), for organisms with SL trans-splicing.",
-                    "help_text": "READ1s whose soft-clipped 5' sequence ends with the SL are counted as trans-spliced; their fraction is reported per sample and per TSS cluster.",
+                    "help_text": "READ1s that start with the SL (found before alignment, see `--sl_trim`) or whose soft-clipped 5' sequence ends with it are counted as trans-spliced; their fraction is reported per sample and per TSS cluster, and their TSS is the trans-splice site.",
                     "fa_icon": "fas fa-link"
+                },
+                "sl_trim": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Find the SL at the start of READ1 before alignment, allowing mismatches, trim it and mark the pair as trans-spliced (cutadapt).",
+                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start within the first base of READ1 (room for the extra G). Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence`.",
+                    "fa_icon": "fas fa-cut"
+                },
+                "sl_max_error_rate": {
+                    "type": "number",
+                    "default": 0.15,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "Maximum fraction of mismatches and indels in the SL match of `--sl_trim` (cutadapt `-e`).",
+                    "fa_icon": "fas fa-percentage"
                 },
                 "paraclu_min_cluster": {
                     "type": "integer",

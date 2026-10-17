@@ -7,6 +7,7 @@ include { CAT_FASTQ              } from '../modules/nf-core/cat/fastq/main'
 include { SEQTK_SAMPLE           } from '../modules/nf-core/seqtk/sample/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { CUTADAPT               } from '../modules/nf-core/cutadapt/main'
+include { CUTADAPT as CUTADAPT_SL } from '../modules/nf-core/cutadapt/main'
 include { FASTP                  } from '../modules/nf-core/fastp/main'
 include { SORTMERNA              } from '../modules/nf-core/sortmerna/main'
 include { STAR_ALIGN             } from '../modules/nf-core/star/align/main'
@@ -89,6 +90,15 @@ workflow CAGESCAN {
         CUTADAPT(ch_reads)
         ch_reads = CUTADAPT.out.reads
         ch_multiqc_files = ch_multiqc_files.mix(CUTADAPT.out.log.map { _meta, log -> log })
+    }
+
+    //
+    // MODULE: Find and trim the spliced leader at the READ1 5' end; trans-spliced pairs are renamed 'SL:<name>'
+    //
+    if (params.sl_sequence && params.sl_trim) {
+        CUTADAPT_SL(ch_reads)
+        ch_reads = CUTADAPT_SL.out.reads
+        ch_multiqc_files = ch_multiqc_files.mix(CUTADAPT_SL.out.log.map { _meta, log -> log })
     }
 
     //

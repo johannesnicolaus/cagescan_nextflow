@@ -100,16 +100,34 @@ If you are unsure what precedes the cap in your reads, run the pipeline once wit
 | --- | --- | --- |
 | `-` (none) or `G` | READ1 starts at the cap (± extra G) | nothing |
 | a constant longer sequence, e.g. `...TATAGGG` | a 5' linker is still present | `--r1_5p_linker TATAGGG` (cutadapt removes it and everything before it) |
-| a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL-clipped READ1s are counted per sample and per TSS cluster |
+| a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL READ1s are counted per sample and per TSS cluster |
+| fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
-With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site. The last bases of a spliced leader
+With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site, and SL reads are recognised in two
+ways.
+
+1. **Before alignment** (`--sl_trim`, on by default). Following
+   [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe), which splits raw read pairs by the
+   presence of the SL at the start of READ1 (with TagDust2), cutadapt looks for the SL at the start of READ1 (after at
+   most one base, the extra G), allowing mismatches and indels (`--sl_max_error_rate`, default 0.15), trims it, and
+   prefixes the names of these pairs with `SL:` (other pairs get `no_adapter:`). The trimmed READ1 starts at the
+   trans-splice site. Logs are in `trimming/spliced_leader/`.
+2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
+   leader, or with `--sl_trim false`); exact match only.
+
+Why both: with the soft-clip match alone, 11-15% of SL READ1s were missed on *O. dioica* MGI and Illumina CAGE,
+because of sequencing errors in the 40-nt leader, and a further ~5% because STAR aligned the leader's last 4-27 bases to
+the genome with mismatches. On 500,000 raw pairs per library, the cutadapt step called the same SL reads as
+splitSpliceLeaderPE/TagDust2 (99.6% and 99.98% of TagDust2's SL reads; identical trimmed sequences for >99.9%),
+in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtered as low complexity.
+
+The last bases of a spliced leader
 often also match the genome, because the splice acceptor (`...AG`, `...CAG`) resembles the leader's 3' end (e.g.
 `...AACAG` in *Oikopleura dioica*). STAR then aligns those leader bases, and the read's 5' end lands up to 3 bases
 upstream, inside the acceptor. Such reads are recognised (soft clip ending in the leader minus its last k bases, and
 the first k aligned bases equal to the leader's last k bases) and their CTSS is moved k bases downstream. On
 *O. dioica* embryo CAGE this put 97% of trans-spliced TSS peaks exactly on annotated 5' ends, against 0% (62% at -2,
 35% at -3) without the correction.
-| fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
 READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the RNA are tolerated by the reverse
 transcriptase. FANTOM5 CAGEscan ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) trimmed the first 6

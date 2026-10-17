@@ -26,6 +26,7 @@ text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #21252
 <circle cx="295" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
 <text x="295" y="98" class="st">cutadapt</text>
 <text x="295" y="150" class="sub">5' linker</text>
+<text x="295" y="163" class="sub">spliced leader</text>
 <circle cx="395" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
 <text x="395" y="98" class="st">fastp</text>
 <text x="395" y="150" class="sub">adapters · quality</text>

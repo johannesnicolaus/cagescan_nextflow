@@ -22,6 +22,10 @@
 
   > Bertin N, Mendez M, Hasegawa A, Lizio M, Abugessaisa I, Severin J, Sakai-Ohno M, Lassmann T, Kasukawa T, Kawaji H, Hayashizaki Y, Forrest ARR, Carninci P, Plessy C. Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Sci Data. 2017 Oct 3;4:170147. doi: 10.1038/sdata.2017.147.
 
+- [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe) (splitting read pairs by spliced leader before alignment)
+
+  > Plessy C. splitSpliceLeaderPE: split paired-end reads by spliced leader. https://github.com/oist/plessy_splitspliceleaderpe
+
 - [cutadapt](https://doi.org/10.14806/ej.17.1.200)
 
   > Martin M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal. 2011;17(1):10-12. doi: 10.14806/ej.17.1.200.
