@@ -18,7 +18,7 @@ these are not isoform-resolved.
 
 Outputs (PREFIX = --prefix):
   PREFIX.tss.bam                  TSS-anchored pairs (coordinate-sorted, indexed)
-  PREFIX.tss_counts.tsv           tss_id, READ1 count, SL-clipped READ1 count
+  PREFIX.tss_counts.tsv           tss_id, READ1 count, SL READ1 count
   PREFIX.cagescan_clusters.bed12  union of pair blocks per TSS cluster
   PREFIX.tss_assign_stats_mqc.tsv one-row summary table for MultiQC
 """
@@ -69,6 +69,19 @@ def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
 
 def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
+
+SL_TRIMMED = "SL:"  # read-name prefix of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
+
+
+def sl_status(read, clip, aligned, sl_sequence, min_overlap):
+    """SL bases aligned to the genome (0-3) if READ1 carries the spliced leader, else None.
+
+    A READ1 whose SL was trimmed before alignment starts at the trans-splice site.
+    Otherwise the SL is recognised in the soft clip (see sl_aligned).
+    """
+    if read.query_name.startswith(SL_TRIMMED):
+        return 0
+    return sl_aligned(clip, aligned, sl_sequence, min_overlap)
 
 
 def is_primary(read):
@@ -182,7 +195,7 @@ def main():
                 continue
             n_read1 += 1
             pos, strand, clip, aligned = five_prime(read)
-            k = sl_aligned(clip, aligned, sl_sequence, args.sl_min_overlap)
+            k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
             if k:
                 pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py
             tss_id = index.find(read.reference_name, pos, strand)

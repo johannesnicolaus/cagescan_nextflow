@@ -7,6 +7,52 @@
 ----------------------------------------------------------------------------------------
 */
 
+//
+// Typed declarations of the boolean and numeric parameters (defaults: nextflow.config). From Nextflow 26.04
+// command-line values arrive as strings unless declared with a type here ('--flag false' would be truthy).
+//
+params {
+    subsample_reads          : Integer = 10000000
+    subsample_seed           : Integer = 100
+    linker_discard_untrimmed : Boolean = true
+    r1_trim_front            : Integer = 0
+    r2_trim_front            : Integer = 0
+    skip_fastqc              : Boolean = false
+    skip_fastp               : Boolean = false
+    min_mapq                 : Integer = 10
+    dedup                    : Boolean = false
+    sl_split                 : Boolean = true
+    save_sl_split_reads      : Boolean = true
+    sl_max_error_rate        : Float   = 0.15
+    paraclu_min_cluster      : Integer = 30
+    tss_window               : Integer = 50
+    tss_merge_distance       : Integer = 20
+    skip_sharp_clusters      : Boolean = false
+    reclu_paraclu_min        : Integer = 2
+    reclu_min_tpm_per_base   : Float   = 0.1
+    reclu_min_overlap        : Float   = 0.9
+    reclu_max_idr            : Float   = 0.1
+    reclu_max_length         : Integer = 200
+    reclu_min_pairs          : Integer = 50
+    min_transcript_length    : Integer = 100
+    stringtie_guide          : Boolean = false
+    keep_unanchored          : Boolean = false
+    derive_transcripts       : Boolean = true
+    find_erna                : Boolean = true
+    erna_min_reads           : Float   = 10.0
+    erna_max_sl_fraction     : Float   = 0.1
+    erna_min_distance        : Integer = 50
+    erna_max_distance        : Integer = 400
+    erna_distal_distance     : Integer = 500
+    erna_max_directionality  : Float   = 0.8
+    version                  : Boolean = false
+    plaintext_email          : Boolean = false
+    monochrome_logs          : Boolean = false
+    validate_params          : Boolean = true
+    help_full                : Boolean = false
+    show_hidden              : Boolean = false
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS

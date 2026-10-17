@@ -20,3 +20,4 @@ quantification/*/*/*.{gtf,txt}
 stringtie/*/*.gtf
 trimming/fastp/*.{html,json,log}
 tss_clusters/*/tss_anchored_bam/*.{bam,bai}
+sl_split/*.log

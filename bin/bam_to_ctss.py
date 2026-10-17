@@ -9,7 +9,8 @@ reverse transcriptase, a leftover linker, or a spliced-leader (SL) sequence.
 When the last bases of the SL also match the genome (the acceptor ...AG / ...CAG
 resembles the SL's 3' end), STAR aligns them and the read's 5' end lands inside
 the acceptor; the CTSS of such SL reads is moved downstream past those bases, to
-the trans-splice site.
+the trans-splice site.  Read pairs whose name starts with 'SL:' had the SL found
+and trimmed before alignment (cutadapt); their READ1 starts at the trans-splice site.
 
 Outputs (PREFIX = --prefix):
   PREFIX.ctss.bed            chrom, pos0, pos0+1, ., count, strand
@@ -66,6 +67,19 @@ def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
 def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
 
+SL_TRIMMED = "SL:"  # read-name prefix of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
+
+
+def sl_status(read, clip, aligned, sl_sequence, min_overlap):
+    """SL bases aligned to the genome (0-3) if READ1 carries the spliced leader, else None.
+
+    A READ1 whose SL was trimmed before alignment starts at the trans-splice site.
+    Otherwise the SL is recognised in the soft clip (see sl_aligned).
+    """
+    if read.query_name.startswith(SL_TRIMMED):
+        return 0
+    return sl_aligned(clip, aligned, sl_sequence, min_overlap)
+
 
 def is_usable_read1(read, min_mapq):
     if read.is_unmapped or read.is_secondary or read.is_supplementary:
@@ -98,7 +112,7 @@ def main():
 
     ctss = collections.Counter()
     clips = collections.Counter()
-    n_used = n_noclip = n_g = n_sl = n_sl_shifted = 0
+    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_shifted = 0
 
     with pysam.AlignmentFile(args.bam, "rb") as bam:
         for read in bam.fetch(until_eof=True):
@@ -106,9 +120,11 @@ def main():
                 continue
             pos, strand, clip, aligned = five_prime(read)
             clip = clip.upper()
-            k = sl_aligned(clip, aligned, sl_sequence, args.sl_min_overlap)
+            k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
             if k is not None:
                 n_sl += 1
+                if read.query_name.startswith(SL_TRIMMED):
+                    n_sl_trimmed += 1
                 if k:
                     # SL bases aligned to the acceptor: the trans-splice site is k bases downstream
                     pos = shift_downstream(pos, strand, k)
@@ -141,9 +157,9 @@ def main():
         out.write("# section_name: 'CTSS extraction'\n")
         out.write("# description: 'READ1 5-prime ends used as CAGE TSSs, and what was soft-clipped before them (extra G, linker, spliced leader).'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL clip (%)\tSL end aligned, CTSS moved (%)\n")
+        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL end aligned, CTSS moved (%)\n")
         other = n_used - n_noclip - n_g
-        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_shifted)}\n")
+        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_shifted)}\n")
 
     if n_used == 0:
         print(f"WARNING: no usable READ1 alignments found in {args.bam}", file=sys.stderr)

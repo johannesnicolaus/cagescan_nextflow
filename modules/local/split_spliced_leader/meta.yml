@@ -1,0 +1,84 @@
+name: split_spliced_leader
+description: "Split paired-end CAGE reads by the presence of a spliced leader (SL) at the READ1 5' end, trimming the SL (cutadapt)"
+keywords:
+  - cage
+  - spliced leader
+  - trans-splicing
+  - cutadapt
+tools:
+  - cutadapt:
+      description: Cutadapt finds and removes adapter sequences, primers, poly-A tails and other types of unwanted sequence from your high-throughput sequencing reads.
+      homepage: https://cutadapt.readthedocs.io/en/stable/index.html
+      doi: 10.14806/ej.17.1.200
+      licence:
+        - "MIT"
+      identifier: biotools:cutadapt
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - reads:
+        type: file
+        description: "READ1 and READ2 FASTQ files"
+        pattern: "*.{fastq,fq}.gz"
+  - sl_sequence:
+      type: string
+      description: "Spliced-leader sequence, 5'->3'"
+output:
+  sl:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.SL_{1,2}.fastq.gz":
+          type: file
+          description: "Pairs whose READ1 starts with the SL (SL trimmed; read names prefixed with SL:)"
+          pattern: "*.SL_{1,2}.fastq.gz"
+  nosl:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.noSL_{1,2}.fastq.gz":
+          type: file
+          description: "Other pairs (read names prefixed with no_adapter:)"
+          pattern: "*.noSL_{1,2}.fastq.gz"
+  log:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.sl_split.log":
+          type: file
+          description: "cutadapt report"
+          pattern: "*.sl_split.log"
+  versions_cutadapt:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - cutadapt:
+          type: string
+          description: The name of the tool
+      - cutadapt --version:
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - cutadapt:
+          type: string
+          description: The name of the tool
+      - cutadapt --version:
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

@@ -24,6 +24,7 @@ include { TSS_CLUSTERS           } from '../subworkflows/local/tss_clusters'
 include { BUILD_TRANSCRIPTS      } from '../subworkflows/local/build_transcripts'
 include { COVERAGE_TRACKS        } from '../subworkflows/local/coverage_tracks'
 include { FIND_ERNA              } from '../modules/local/find_erna/main'
+include { SPLIT_SPLICED_LEADER   } from '../modules/local/split_spliced_leader/main'
 include { IGV_SESSION            } from '../modules/local/igv_session/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -112,6 +113,18 @@ workflow CAGESCAN {
         SORTMERNA(ch_reads, channel.value([[id: 'rrna'], rrna_fastas]), channel.value([[:], []]))
         ch_reads = SORTMERNA.out.reads
         ch_multiqc_files = ch_multiqc_files.mix(SORTMERNA.out.log.map { _meta, log -> log })
+    }
+
+    //
+    // MODULE: Split read pairs by the spliced leader at the READ1 5' end (SL trimmed; pairs renamed SL:<name>).
+    //         Both sets are aligned together (STAR takes comma-separated READ1 and READ2 file lists).
+    //
+    if (params.sl_sequence && params.sl_split) {
+        SPLIT_SPLICED_LEADER(ch_reads, params.sl_sequence)
+        ch_reads = SPLIT_SPLICED_LEADER.out.sl
+            .join(SPLIT_SPLICED_LEADER.out.nosl, failOnDuplicate: true, failOnMismatch: true)
+            .map { meta, sl, nosl -> [meta, [sl[0], sl[1], nosl[0], nosl[1]]] }
+        ch_multiqc_files = ch_multiqc_files.mix(SPLIT_SPLICED_LEADER.out.log.map { _meta, log -> log })
     }
 
     //
