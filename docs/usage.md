@@ -103,17 +103,21 @@ If you are unsure what precedes the cap in your reads, run the pipeline once wit
 | a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL READ1s are counted per sample and per TSS cluster |
 | fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
+Spliced-leader handling is only for organisms with SL trans-splicing (e.g. tunicates, nematodes, flatworms,
+trypanosomes) and is off unless `--sl_sequence` is given; without it, no reads are split and no TSS is moved.
 With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site, and SL reads are recognised in two
 ways.
 
-1. **Before alignment** (`--sl_trim`, on by default). Following
+1. **Before alignment** (`--sl_split`, on by default). As in
    [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe), which splits raw read pairs by the
-   presence of the SL at the start of READ1 (with TagDust2), cutadapt looks for the SL at the start of READ1 (after at
-   most one base, the extra G), allowing mismatches and indels (`--sl_max_error_rate`, default 0.15), trims it, and
-   prefixes the names of these pairs with `SL:` (other pairs get `no_adapter:`). The trimmed READ1 starts at the
-   trans-splice site. Logs are in `trimming/spliced_leader/`.
+   presence of the SL at the start of READ1 (with TagDust2), the pairs are split into an SL and a non-SL set
+   (cutadapt): the SL must start at READ1 base 1 or 2 (room for the extra G), mismatches and indels are allowed
+   (`--sl_max_error_rate`, default 0.15), and the SL is trimmed, so the trimmed READ1 starts at the trans-splice site.
+   SL pairs are renamed `SL:<name>`, the others `no_adapter:<name>`. Both sets are then aligned together, and the
+   read names carry the SL status into the BAM files (`samtools view -e 'qname=~"^SL:"'` selects trans-spliced pairs).
+   The split FASTQ files and cutadapt logs are in `sl_split/` (FASTQs only with `--save_sl_split_reads`, default on).
 2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
-   leader, or with `--sl_trim false`); exact match only.
+   leader, or with `--sl_split false`); exact match only.
 
 Why both: with the soft-clip match alone, 11-15% of SL READ1s were missed on *O. dioica* MGI and Illumina CAGE,
 because of sequencing errors in the 40-nt leader, and a further ~5% because STAR aligned the leader's last 4-27 bases to

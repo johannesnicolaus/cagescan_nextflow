@@ -25,9 +25,6 @@
                 "COVERAGE_BIGWIG": {
                     "ucsc": 482
                 },
-                "CUTADAPT_SL": {
-                    "cutadapt": 5.2
-                },
                 "FASTP": {
                     "fastp": "1.3.6"
                 },
@@ -93,6 +90,9 @@
                 },
                 "SEQTK_SAMPLE": {
                     "seqtk": "1.4-r122"
+                },
+                "SPLIT_SPLICED_LEADER": {
+                    "cutadapt": 5.2
                 },
                 "STAR_ALIGN": {
                     "gawk": "5.1.0",
@@ -453,6 +453,17 @@
                 "quantification/sharp/SAMPLE2/SAMPLE2.sharp.quant.transcripts.gtf",
                 "quantification/sharp/all_samples.sharp.transcript_cov.tsv",
                 "quantification/sharp/all_samples.sharp.transcript_tpm.tsv",
+                "sl_split",
+                "sl_split/SAMPLE1.SL_1.fastq.gz",
+                "sl_split/SAMPLE1.SL_2.fastq.gz",
+                "sl_split/SAMPLE1.noSL_1.fastq.gz",
+                "sl_split/SAMPLE1.noSL_2.fastq.gz",
+                "sl_split/SAMPLE1.sl_split.log",
+                "sl_split/SAMPLE2.SL_1.fastq.gz",
+                "sl_split/SAMPLE2.SL_2.fastq.gz",
+                "sl_split/SAMPLE2.noSL_1.fastq.gz",
+                "sl_split/SAMPLE2.noSL_2.fastq.gz",
+                "sl_split/SAMPLE2.sl_split.log",
                 "stringtie",
                 "stringtie/broad",
                 "stringtie/broad/SAMPLE1.broad.transcripts.gtf",
@@ -503,9 +514,6 @@
                 "trimming/fastp/SAMPLE2.fastp.html",
                 "trimming/fastp/SAMPLE2.fastp.json",
                 "trimming/fastp/SAMPLE2.fastp.log",
-                "trimming/spliced_leader",
-                "trimming/spliced_leader/SAMPLE1.sl.cutadapt.log",
-                "trimming/spliced_leader/SAMPLE2.sl.cutadapt.log",
                 "tss_clusters",
                 "tss_clusters/all_samples.ctss.bed",
                 "tss_clusters/all_samples.ctss.minus.bedgraph",
@@ -559,11 +567,11 @@
                 "genome.fa:md5,49a231f531a5bcf89730b5313b335621",
                 "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad",
                 "igv_session.xml:md5,a1719c8830a60e71dad93726a196f73e",
-                "cutadapt_filtered_reads_plot.txt:md5,225e8d40f8df67cb5b00e714b854a235",
-                "cutadapt_trimmed_sequences_plot_default_Counts.txt:md5,0d7819b8462b7374370f612a59862501",
-                "cutadapt_trimmed_sequences_plot_default_Obs_Exp.txt:md5,ae5c3e06c8635d89d28ee93a54eab59f",
-                "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,593dff8df75243dd295b1ab137399a91",
-                "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,eca235aa55791a0d551a85d0576b8ed4",
+                "cutadapt_filtered_reads_plot.txt:md5,ad1f1ec55b5c67d126dd265fb96a5aad",
+                "cutadapt_trimmed_sequences_plot_default_Counts.txt:md5,85d167c263f5f401a2d22f237c8b6296",
+                "cutadapt_trimmed_sequences_plot_default_Obs_Exp.txt:md5,1dc39c24cdaf813d77e710941d849561",
+                "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
+                "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
                 "fastp-seq-content-gc-plot_Read_2_Before_filtering.txt:md5,43ab7dbc200813ab478d2d1e6014df9d",
                 "fastp-seq-content-n-plot_Read_1_After_filtering.txt:md5,24bb87efc0c15b577722f46e2329e2a7",
@@ -587,10 +595,10 @@
                 "multiqc_anchor_stats.txt:md5,e13c5cf3101c2f1e1adb65dc555404d6",
                 "multiqc_citations.txt:md5,728400da3e52c09441f2f6927ed0b36e",
                 "multiqc_ctss_stats.txt:md5,c705fc6ba57fbac22849c0283e92739d",
-                "multiqc_cutadapt.txt:md5,f38b83da3a7b4359e8c1d6db74e53e91",
-                "multiqc_fastp.txt:md5,ceeffc869d311c1b7c52ba66f5f6ab8a",
+                "multiqc_cutadapt.txt:md5,cf85b4fcfb992ee02da47febbe86ea1e",
+                "multiqc_fastp.txt:md5,9a03d5a5fcde000c45449944e56fab04",
                 "multiqc_fastqc.txt:md5,5d0a077bb6cc205b8ab570aa82c0f1bb",
-                "multiqc_general_stats.txt:md5,4ec40b6789dc1f12ac1086a56c63c6d8",
+                "multiqc_general_stats.txt:md5,6ba45a7b585c65b9f217ff86b7e2e267",
                 "multiqc_reclu_stats.txt:md5,fc5c1909411e88f9e0dfbd0d8a603697",
                 "multiqc_samtools_flagstat.txt:md5,286232404c170535ae39e9c772684460",
                 "multiqc_samtools_idxstats.txt:md5,c5be55753ad4a58f70b5a4903d8eaf55",
@@ -611,6 +619,14 @@
                 "all_samples.broad.transcript_tpm.tsv:md5,f3cec2043d17151f46b9fd474a567f4c",
                 "all_samples.sharp.transcript_cov.tsv:md5,32310656c6938f9bffda4f4ae52724db",
                 "all_samples.sharp.transcript_tpm.tsv:md5,e317d5602ee59315af086e4efd947ade",
+                "SAMPLE1.SL_1.fastq.gz:md5,0d32617f04679a4791f4119f9a2d091a",
+                "SAMPLE1.SL_2.fastq.gz:md5,2acb24f1fb695dd74a55c4306b9965a5",
+                "SAMPLE1.noSL_1.fastq.gz:md5,5bd1b90f48fceccb3d0b1fc935dfda4d",
+                "SAMPLE1.noSL_2.fastq.gz:md5,c1864e33a60dd99c3863d6e39530e60b",
+                "SAMPLE2.SL_1.fastq.gz:md5,9bb691f8bd0a14410c01de48cd4cda65",
+                "SAMPLE2.SL_2.fastq.gz:md5,c640f0ae6c25f3ba7d9636f7209235e9",
+                "SAMPLE2.noSL_1.fastq.gz:md5,31d9ee330a02a9b375fa8ae3562b51f2",
+                "SAMPLE2.noSL_2.fastq.gz:md5,5084968574cc1fa42e70e5779cb57f05",
                 "SAMPLE1.broad.transcripts.bed12:md5,6adf133cffe6bf73fd9ead34c89f93ad",
                 "SAMPLE1.broad.transcripts.fasta:md5,21f4535f738dfc5339568f8b066da079",
                 "SAMPLE1.broad.transcripts.gff3:md5,f8ac6d728499ab15ec45f4b821d5a5a2",
@@ -635,8 +651,6 @@
                 "merged.sharp.transcripts.fasta:md5,77d55d1698fb58f203b3597c7f31b6ed",
                 "merged.sharp.transcripts.gff3:md5,7493aa2b669601df257cc48e802dfb12",
                 "merged.sharp.transcripts.gtf:md5,22ee987d549b35fa8578a4c27598c1a4",
-                "SAMPLE1.sl.cutadapt.log:md5,5c0567ed274748d85e2224ad00d9d159",
-                "SAMPLE2.sl.cutadapt.log:md5,724e706fa44f0e57a5f08aa3a63ecaec",
                 "all_samples.ctss.bed:md5,73ca384987a3e1fa201bdcdb4e594b15",
                 "all_samples.ctss.minus.bedgraph:md5,140b5b28aebf05e2ca2e5a9fe5051857",
                 "all_samples.ctss.plus.bedgraph:md5,766e8cf398162ae0f43d968c13d93a75",
@@ -654,7 +668,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,df7b6584d0670efc4e9c86cc64aa414b"
             ]
         ],
-        "timestamp": "2026-10-17T21:59:30.997123656",
+        "timestamp": "2026-10-17T22:14:41.45521314",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

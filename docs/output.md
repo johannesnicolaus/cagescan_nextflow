@@ -189,7 +189,11 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 - `fastqc/`: FastQC reports of the reads entering the pipeline (after `--subsample_reads`; subsampled reads are not saved).
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
-- `trimming/spliced_leader/`: cutadapt logs of the spliced-leader search (only with `--sl_sequence`; `Read 1 with adapter` = trans-spliced pairs).
+- `sl_split/` (only with `--sl_sequence`): read pairs split by the spliced leader at the READ1 start.
+  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL:`.
+  - `<sample>.noSL_{1,2}.fastq.gz`: the other pairs, names prefixed with `no_adapter:`.
+  - `<sample>.sl_split.log`: cutadapt report (`Read 1 with adapter` = trans-spliced pairs).
+  The FASTQ files are saved with `--save_sl_split_reads` (default); they come after subsampling and trimming.
 - `sortmerna/`: SortMeRNA logs (only with `--ribo_database_manifest`).
 
 </details>

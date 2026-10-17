@@ -1,0 +1,71 @@
+nextflow_process {
+
+    name "Test Process SPLIT_SPLICED_LEADER"
+    script "../main.nf"
+    process "SPLIT_SPLICED_LEADER"
+
+    tag "modules"
+    tag "modules_local"
+    tag "split_spliced_leader"
+
+    test("simulated CAGE") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/SAMPLE1_R1.fastq.gz", checkIfExists: true),
+                        file("${projectDir}/tests/data/SAMPLE1_R2.fastq.gz", checkIfExists: true)
+                    ]
+                ]
+                input[1] = 'GGTTTAATTACCCAAGTTTGAG'
+                """
+            }
+        }
+
+        then {
+            def sl   = process.out.sl[0][1].collect { f -> path(f).linesGzip }
+            def nosl = process.out.nosl[0][1].collect { f -> path(f).linesGzip }
+            assertAll(
+                { assert process.success },
+                // 12,000 simulated pairs; READ1s of the trans-spliced gene start with the SL
+                { assert sl[0].size() == sl[1].size() && sl[0].size() > 0 },
+                { assert (sl[0].size() + nosl[0].size()) / 4 == 12000 },
+                { assert sl.every { lines -> lines[0].startsWith('@SL:') } },
+                { assert nosl.every { lines -> lines[0].startsWith('@no_adapter:') } },
+                // the SL is trimmed from READ1
+                { assert !sl[0].withIndex().any { line, i -> i % 4 == 1 && line.startsWith('GGTTTAATTACCCAAG') } },
+                { assert snapshot((sl[0].size() / 4) as int, (nosl[0].size() / 4) as int, process.out.findAll { key, val -> key.startsWith('versions') }).match() }
+            )
+        }
+    }
+
+    test("simulated CAGE - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/SAMPLE1_R1.fastq.gz", checkIfExists: true),
+                        file("${projectDir}/tests/data/SAMPLE1_R2.fastq.gz", checkIfExists: true)
+                    ]
+                ]
+                input[1] = 'GGTTTAATTACCCAAGTTTGAG'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

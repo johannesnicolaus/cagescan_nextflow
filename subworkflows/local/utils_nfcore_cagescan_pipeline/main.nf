@@ -184,7 +184,7 @@ def toolCitationText() {
             "Tools used in the workflow included:",
             params.skip_fastqc ? "" : "FastQC (Andrews 2010),",
             params.subsample_reads ? "seqtk (Li)," : "",
-            params.r1_5p_linker || (params.sl_sequence && params.sl_trim) ? "cutadapt (Martin 2011)," : "",
+            params.r1_5p_linker || (params.sl_sequence && params.sl_split) ? "cutadapt (Martin 2011)," : "",
             params.skip_fastp ? "" : "fastp (Chen et al. 2018),",
             params.ribo_database_manifest ? "SortMeRNA (Kopylova et al. 2012)," : "",
             "STAR (Dobin et al. 2013),",

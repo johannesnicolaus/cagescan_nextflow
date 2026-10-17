@@ -70,7 +70,7 @@ def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
 def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
 
-SL_TRIMMED = "SL:"  # read-name prefix of pairs whose SL was trimmed before alignment (CUTADAPT_SL)
+SL_TRIMMED = "SL:"  # read-name prefix of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
 
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
