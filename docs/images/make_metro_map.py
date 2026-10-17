@@ -55,7 +55,7 @@ line("M 830 545 L 830 660", GOLD, width=8, dash="10 8")
 
 # ---------------------------------------------------------------- stations
 terminus(70, 120, 120, "FASTQ pairs", GREY, "samplesheet (+ group)")
-station(185, 120, "cat · FastQC", "merge lanes, read QC", sub_below=True)
+station(185, 120, "cat · seqtk", ["lanes · subsample", "FastQC"], sub_below=True)
 station(295, 120, "cutadapt", "5' linker", optional=True, sub_below=True)
 station(395, 120, "fastp", "adapters · quality", sub_below=True)
 station(485, 120, "SortMeRNA", "rRNA", optional=True, sub_below=True)

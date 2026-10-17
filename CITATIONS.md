@@ -34,6 +34,10 @@
 
   > Andersson R, Gebhard C, Miguel-Escalada I, et al. An atlas of active enhancers across human cell types and tissues. Nature. 2014 Mar 27;507(7493):455-461. doi: 10.1038/nature12787.
 
+- [seqtk](https://github.com/lh3/seqtk)
+
+  > Li H. seqtk: toolkit for processing sequences in FASTA/Q formats. https://github.com/lh3/seqtk
+
 - [BEDTools](https://pubmed.ncbi.nlm.nih.gov/20110278/)
 
   > Quinlan AR, Hall IM. BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics. 2010 Mar 15;26(6):841-2. doi: 10.1093/bioinformatics/btq033.

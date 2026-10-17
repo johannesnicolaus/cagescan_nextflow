@@ -72,7 +72,7 @@ workflow PIPELINE_INITIALISATION {
         before_text,
         after_text,
         command,
-        false
+        true // cast command-line values to the schema types (Nextflow >= 26.04 passes them as strings)
     )
 
     //
@@ -183,6 +183,7 @@ def toolCitationText() {
     def citation_text = [
             "Tools used in the workflow included:",
             params.skip_fastqc ? "" : "FastQC (Andrews 2010),",
+            params.subsample_reads ? "seqtk (Li)," : "",
             params.r1_5p_linker ? "cutadapt (Martin 2011)," : "",
             params.skip_fastp ? "" : "fastp (Chen et al. 2018),",
             params.ribo_database_manifest ? "SortMeRNA (Kopylova et al. 2012)," : "",

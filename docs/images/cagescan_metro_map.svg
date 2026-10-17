@@ -20,8 +20,9 @@ text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #21252
 <text x="70" y="125" class="term">FASTQ pairs</text>
 <text x="70" y="152" class="sub">samplesheet (+ group)</text>
 <circle cx="185" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
-<text x="185" y="98" class="st">cat · FastQC</text>
-<text x="185" y="150" class="sub">merge lanes, read QC</text>
+<text x="185" y="98" class="st">cat · seqtk</text>
+<text x="185" y="150" class="sub">lanes · subsample</text>
+<text x="185" y="163" class="sub">FastQC</text>
 <circle cx="295" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
 <text x="295" y="98" class="st">cutadapt</text>
 <text x="295" y="150" class="sub">5' linker</text>

@@ -30,7 +30,7 @@ the TSS cluster that READ1 starts in. It then also resolves isoforms per TSS fro
 ![luscombeu/cagescan metro map](docs/images/cagescan_metro_map.svg)
 
 1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
+2. Random subsampling to at most `--subsample_reads` read pairs per sample (default 10 M; [`seqtk`](https://github.com/lh3/seqtk)), optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
 3. Spliced paired alignment ([`STAR`](https://github.com/alexdobin/STAR)); local alignment soft-clips the non-templated 5' G or a spliced leader on READ1
 4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
 5. CTSS extraction from READ1 5' ends, with a report of what was soft-clipped before the cap (extra G, linker, spliced leader)

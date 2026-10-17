@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { CAT_FASTQ              } from '../modules/nf-core/cat/fastq/main'
+include { SEQTK_SAMPLE           } from '../modules/nf-core/seqtk/sample/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { CUTADAPT               } from '../modules/nf-core/cutadapt/main'
 include { FASTP                  } from '../modules/nf-core/fastp/main'
@@ -65,6 +66,14 @@ workflow CAGESCAN {
         }
     CAT_FASTQ(ch_fastq.multiple)
     def ch_reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
+
+    //
+    // MODULE: Randomly subsample read pairs (samples with fewer pairs are kept whole)
+    //
+    if (params.subsample_reads) {
+        SEQTK_SAMPLE(ch_reads.map { meta, reads -> [meta, reads, params.subsample_reads] })
+        ch_reads = SEQTK_SAMPLE.out.reads
+    }
 
     //
     // MODULE: Run FastQC on raw reads

@@ -89,6 +89,20 @@
             "fa_icon": "fas fa-cut",
             "description": "Linker, adapter, quality and rRNA filtering of the reads.",
             "properties": {
+                "subsample_reads": {
+                    "type": "integer",
+                    "default": 10000000,
+                    "minimum": 0,
+                    "description": "Randomly keep at most this many read pairs per sample (seqtk sample). Set to 0 to use all reads.",
+                    "help_text": "Samples with fewer read pairs are used whole. Subsampling happens after merging lanes and before any other step, and keeps READ1 and READ2 in sync. Use `--subsample_reads 0` for full depth: rare TSSs, weak (e.g. enhancer) transcription and transcript structures of lowly expressed genes need depth.",
+                    "fa_icon": "fas fa-random"
+                },
+                "subsample_seed": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Random seed for `--subsample_reads`.",
+                    "fa_icon": "fas fa-seedling"
+                },
                 "r1_5p_linker": {
                     "type": "string",
                     "pattern": "^[ACGTNacgtn]+$",
