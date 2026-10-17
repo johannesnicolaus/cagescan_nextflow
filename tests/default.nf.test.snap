@@ -88,6 +88,9 @@
                 "SAMTOOLS_VIEW": {
                     "samtools": 1.24
                 },
+                "SEQTK_SAMPLE": {
+                    "seqtk": "1.4-r122"
+                },
                 "STAR_ALIGN": {
                     "gawk": "5.1.0",
                     "samtools": 1.21,
@@ -623,7 +626,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,e99ab1187d95f88d2c7b9f7b8e8803c0"
             ]
         ],
-        "timestamp": "2026-10-06T11:10:36.175420886",
+        "timestamp": "2026-10-17T20:54:29.385545603",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

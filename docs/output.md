@@ -186,7 +186,7 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastqc/`: FastQC reports of the raw reads.
+- `fastqc/`: FastQC reports of the reads entering the pipeline (after `--subsample_reads`; subsampled reads are not saved).
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
 - `sortmerna/`: SortMeRNA logs (only with `--ribo_database_manifest`).

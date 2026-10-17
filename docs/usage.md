@@ -115,6 +115,18 @@ READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the
 transcriptase. FANTOM5 CAGEscan ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) trimmed the first 6
 bases of READ2 for random hexamers; use `--r2_trim_front 6` (or the length of your random primer) to do the same.
 
+### Subsampling
+
+By default each sample is randomly subsampled to at most 10 million read pairs (`--subsample_reads 10000000`, seqtk
+`sample` with the same seed for READ1 and READ2, so pairs stay together; samples with fewer pairs are used whole).
+This bounds run time and disk use for very large libraries (an MGI lane can hold several hundred million pairs per
+sample; the BAMs need about 0.4 GB per million pairs). Subsampling is the first step after merging lanes, so FastQC,
+the alignment statistics and all counts refer to the subsampled reads; CPM/TPM values stay comparable between samples.
+
+10 M pairs are enough to place the TSSs of moderately and highly expressed genes and to build their transcripts. Use
+`--subsample_reads 0` (all reads) when depth matters: weak TSSs, enhancer RNAs, lowly expressed genes, or quantifying
+rare isoforms. Change `--subsample_seed` to draw a different random subset.
+
 ### Relation to the FANTOM5 CAGEscan workflow
 
 The FANTOM5 CAGEscan libraries ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) had no UMIs either.

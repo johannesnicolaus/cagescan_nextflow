@@ -16,9 +16,12 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 - CTSS of spliced-leader READ1s whose leader end aligned to the splice acceptor are moved to the trans-splice site (up to 3 bases downstream).
 - Fixed the nf-core paraclu module sorting CTSS without strand (patched; plus and minus strand CTSS interleaved and fragmented paraclu's per-strand runs).
 - Stranded coverage bigWigs per sample, pooled TSS-signal bigWigs, and an `igv_session.xml` for genome browsing.
+- Random subsampling of read pairs per sample with seqtk, `--subsample_reads` (default 10,000,000; 0 = all reads) and `--subsample_seed`.
 - Simulated test data set (`tests/data/make_test_data.py`) with known TSSs and isoforms.
 
 ### `Fixed`
+
+- Integer and number options given on the command line (e.g. `--min_mapq 5`) failed parameter validation with Nextflow 26.04, which passes them as strings: command-line values are now cast to the schema types (nf-schema 2.7.3).
 
 ### `Dependencies`
 
