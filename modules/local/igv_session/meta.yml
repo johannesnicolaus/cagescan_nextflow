@@ -1,0 +1,50 @@
+name: igv_session
+description: "Self-contained IGV session: copies genome, index and annotation into igv/ and references all tracks by relative path"
+keywords:
+  - igv
+  - genome browser
+  - session
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory
+      homepage: https://www.python.org
+      licence:
+        - "PSF"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: Genome meta map
+    - fasta:
+        type: file
+        description: Genome FASTA
+        pattern: "*.{fa,fasta,fna}"
+    - fai:
+        type: file
+        description: FASTA index
+        pattern: "*.fai"
+  - gtf:
+      type: file
+      description: Reference annotation GTF (optional)
+      pattern: "*.gtf"
+  - samples:
+      type: string
+      description: Comma-separated sample names
+  - sets:
+      type: string
+      description: Comma-separated TSS cluster sets
+output:
+  session:
+    - igv_session.xml:
+        type: file
+        description: IGV session with relative paths
+        pattern: "igv_session.xml"
+  files:
+    - igv/*:
+        type: file
+        description: Genome, index and annotation referenced by the session
+        pattern: "igv/*"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

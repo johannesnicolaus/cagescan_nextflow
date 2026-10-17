@@ -1,0 +1,107 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.SL_1.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                            "test.SL_2.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+                        ]
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.noSL_1.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                            "test.noSL_2.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+                        ]
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.sl_split.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        "SPLIT_SPLICED_LEADER",
+                        "cutadapt",
+                        "5.2"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.sl_split.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "nosl": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.noSL_1.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                            "test.noSL_2.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+                        ]
+                    ]
+                ],
+                "sl": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        [
+                            "test.SL_1.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940",
+                            "test.SL_2.fastq.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
+                        ]
+                    ]
+                ],
+                "versions_cutadapt": [
+                    [
+                        "SPLIT_SPLICED_LEADER",
+                        "cutadapt",
+                        "5.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-17T22:10:31.579854433",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            266,
+            11734,
+            {
+                "versions_cutadapt": [
+                    [
+                        "SPLIT_SPLICED_LEADER",
+                        "cutadapt",
+                        "5.2"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-17T22:10:21.068637455",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

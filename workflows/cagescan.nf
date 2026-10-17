@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { CAT_FASTQ              } from '../modules/nf-core/cat/fastq/main'
+include { SEQTK_SAMPLE           } from '../modules/nf-core/seqtk/sample/main'
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { CUTADAPT               } from '../modules/nf-core/cutadapt/main'
 include { FASTP                  } from '../modules/nf-core/fastp/main'
@@ -22,11 +23,13 @@ include { PREPARE_GENOME         } from '../subworkflows/local/prepare_genome'
 include { TSS_CLUSTERS           } from '../subworkflows/local/tss_clusters'
 include { BUILD_TRANSCRIPTS      } from '../subworkflows/local/build_transcripts'
 include { COVERAGE_TRACKS        } from '../subworkflows/local/coverage_tracks'
+include { FIND_ERNA              } from '../modules/local/find_erna/main'
+include { SPLIT_SPLICED_LEADER   } from '../modules/local/split_spliced_leader/main'
+include { IGV_SESSION            } from '../modules/local/igv_session/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
-include { igvSessionXml          } from '../subworkflows/local/utils_nfcore_cagescan_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,6 +69,14 @@ workflow CAGESCAN {
     def ch_reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
 
     //
+    // MODULE: Randomly subsample read pairs (samples with fewer pairs are kept whole)
+    //
+    if (params.subsample_reads) {
+        SEQTK_SAMPLE(ch_reads.map { meta, reads -> [meta, reads, params.subsample_reads] })
+        ch_reads = SEQTK_SAMPLE.out.reads
+    }
+
+    //
     // MODULE: Run FastQC on raw reads
     //
     if (!params.skip_fastqc) {
@@ -102,6 +113,18 @@ workflow CAGESCAN {
         SORTMERNA(ch_reads, channel.value([[id: 'rrna'], rrna_fastas]), channel.value([[:], []]))
         ch_reads = SORTMERNA.out.reads
         ch_multiqc_files = ch_multiqc_files.mix(SORTMERNA.out.log.map { _meta, log -> log })
+    }
+
+    //
+    // MODULE: Split read pairs by the spliced leader at the READ1 5' end (SL trimmed; pairs renamed SL:<name>).
+    //         Both sets are aligned together (STAR takes comma-separated READ1 and READ2 file lists).
+    //
+    if (params.sl_sequence && params.sl_split) {
+        SPLIT_SPLICED_LEADER(ch_reads, params.sl_sequence)
+        ch_reads = SPLIT_SPLICED_LEADER.out.sl
+            .join(SPLIT_SPLICED_LEADER.out.nosl, failOnDuplicate: true, failOnMismatch: true)
+            .map { meta, sl, nosl -> [meta, [sl[0], sl[1], nosl[0], nosl[1]]] }
+        ch_multiqc_files = ch_multiqc_files.mix(SPLIT_SPLICED_LEADER.out.log.map { _meta, log -> log })
     }
 
     //
@@ -164,17 +187,31 @@ workflow CAGESCAN {
     ch_multiqc_files = ch_multiqc_files.mix(BUILD_TRANSCRIPTS.out.multiqc_files)
 
     //
+    // MODULE: Enhancer-RNA-like divergent TSS pairs, per cluster set
+    //
+    if (params.find_erna) {
+        def ch_erna = TSS_CLUSTERS.out.clusters_tsv
+            .join(TSS_CLUSTERS.out.counts.map { meta, files -> [meta.cluster_set, files] })
+            .join(BUILD_TRANSCRIPTS.out.gtf.filter { meta, _gtf -> meta.id == 'merged' }.map { meta, gtf -> [meta.cluster_set, gtf] })
+            .map { set, tsv, files, gtf -> [[id: 'all_samples', cluster_set: set], tsv, files, gtf] }
+        FIND_ERNA(ch_erna, PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf })
+        ch_multiqc_files = ch_multiqc_files.mix(FIND_ERNA.out.stats.map { _meta, stats -> stats })
+    }
+
+    //
     // SUBWORKFLOW: Stranded read coverage tracks
     //
     COVERAGE_TRACKS(ch_bam_bai, TSS_CLUSTERS.out.ctss_stats, PREPARE_GENOME.out.sizes)
 
     //
-    // IGV session with genome, gene models, transcripts, TSS clusters and coverage
+    // MODULE: self-contained IGV session (genome, gene models, transcripts, TSS clusters, coverage)
     //
-    ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') }
-        .combine(TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') })
-        .map { samples, sets -> igvSessionXml(samples.tokenize(','), sets.tokenize(','), params.fasta, params.gtf) }
-        .collectFile(name: 'igv_session.xml', storeDir: "${outdir}")
+    IGV_SESSION(
+        PREPARE_GENOME.out.fasta.combine(PREPARE_GENOME.out.fai).map { meta, fasta, _fai_meta, fai -> [meta, fasta, fai] },
+        PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf },
+        ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') },
+        TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') }
+    )
 
     //
     // Collate and save software versions

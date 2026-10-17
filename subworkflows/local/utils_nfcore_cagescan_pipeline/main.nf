@@ -72,7 +72,7 @@ workflow PIPELINE_INITIALISATION {
         before_text,
         after_text,
         command,
-        false
+        true // cast command-line values to the schema types (Nextflow >= 26.04 passes them as strings)
     )
 
     //
@@ -183,7 +183,8 @@ def toolCitationText() {
     def citation_text = [
             "Tools used in the workflow included:",
             params.skip_fastqc ? "" : "FastQC (Andrews 2010),",
-            params.r1_5p_linker ? "cutadapt (Martin 2011)," : "",
+            params.subsample_reads ? "seqtk (Li)," : "",
+            params.r1_5p_linker || (params.sl_sequence && params.sl_split) ? "cutadapt (Martin 2011)," : "",
             params.skip_fastp ? "" : "fastp (Chen et al. 2018),",
             params.ribo_database_manifest ? "SortMeRNA (Kopylova et al. 2012)," : "",
             "STAR (Dobin et al. 2013),",
@@ -195,6 +196,7 @@ def toolCitationText() {
             "GffRead and GffCompare (Pertea and Pertea 2020),",
             "bedGraphToBigWig (Kent et al. 2010),",
             "following the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017),",
+            params.find_erna ? "eRNA-like divergent TSS pairs as defined by Andersson et al. (2014)," : "",
             "MultiQC (Ewels et al. 2016)",
             "."
         ].findAll { text -> text }.join(' ').trim()
@@ -218,41 +220,11 @@ def toolBibliographyText() {
             "<li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351</li>",
             "<li>Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470</li>",
             "<li>Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147</li>",
+            params.find_erna ? "<li>Andersson R, Gebhard C, Miguel-Escalada I, et al. (2014). An atlas of active enhancers across human cell types and tissues. Nature, 507, 455-461. doi: 10.1038/nature12787</li>" : "",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].findAll { text -> text }.join(' ').trim()
 
     return reference_text
-}
-
-//
-// IGV session (relative paths inside --outdir; genome and annotation by absolute path)
-//
-def igvSessionXml(samples, sets, fasta, gtf) {
-    def tracks = []
-    if (gtf) {
-        tracks << [file(gtf).toString(), 'Gene models (--gtf)', 'displayMode="EXPANDED"']
-    }
-    sets.each { set ->
-        tracks << ["transcripts/${set}/merged/merged.${set}.transcripts.bed12", "Transcripts (${set} TSS clusters)", 'displayMode="EXPANDED"']
-        tracks << ["tss_clusters/${set}/all_samples.${set}.tss_clusters.bed", "TSS clusters (${set})", 'displayMode="COLLAPSED"']
-    }
-    tracks << ['ctss/bigwig/all_samples.ctss.plus.bigWig', 'TSS signal + (all samples)', 'color="200,0,0" autoScale="true" autoscaleGroup="ctss"']
-    tracks << ['ctss/bigwig/all_samples.ctss.minus.bigWig', 'TSS signal - (all samples)', 'color="0,0,200" autoScale="true" autoscaleGroup="ctss"']
-    samples.each { sample ->
-        tracks << ["coverage/${sample}.coverage.plus.bigWig", "${sample} coverage +", "color=\"200,0,0\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
-        tracks << ["coverage/${sample}.coverage.minus.bigWig", "${sample} coverage -", "color=\"0,0,200\" autoScale=\"true\" autoscaleGroup=\"${sample}\""]
-    }
-    def xml = new StringBuilder()
-    xml << '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
-    xml << "<Session genome=\"${file(fasta).toString()}\" locus=\"All\" relativePath=\"true\" version=\"8\">\n"
-    xml << '    <Resources>\n'
-    tracks.each { t -> xml << "        <Resource path=\"${t[0]}\"/>\n" }
-    xml << '    </Resources>\n'
-    xml << '    <Panel name="DataPanel">\n'
-    tracks.each { t -> xml << "        <Track id=\"${t[0]}\" name=\"${t[1]}\" ${t[2]}/>\n" }
-    xml << '    </Panel>\n'
-    xml << '</Session>\n'
-    return xml.toString()
 }
 
 def methodsDescriptionText(mqc_methods_yaml) {

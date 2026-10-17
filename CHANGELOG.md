@@ -16,9 +16,14 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 - CTSS of spliced-leader READ1s whose leader end aligned to the splice acceptor are moved to the trans-splice site (up to 3 bases downstream).
 - Fixed the nf-core paraclu module sorting CTSS without strand (patched; plus and minus strand CTSS interleaved and fragmented paraclu's per-strand runs).
 - Stranded coverage bigWigs per sample, pooled TSS-signal bigWigs, and an `igv_session.xml` for genome browsing.
+- eRNA candidates: divergent, distal, balanced, unspliced pairs of non-SL TSS clusters per cluster set, with convergent pairs as a control (`erna/`, MultiQC table, IGV track).
+- Read pairs split into SL and non-SL sets before alignment, by the spliced leader at the READ1 start, allowing mismatches, with the SL trimmed (cutadapt; `--sl_split`, `--sl_max_error_rate`, `--save_sl_split_reads`), following splitSpliceLeaderPE; recovers 15-20% more SL reads on *O. dioica* CAGE than the soft-clip match.
+- Random subsampling of read pairs per sample with seqtk, `--subsample_reads` (default 10,000,000; 0 = all reads) and `--subsample_seed`.
 - Simulated test data set (`tests/data/make_test_data.py`) with known TSSs and isoforms.
 
 ### `Fixed`
+
+- Integer and number options given on the command line (e.g. `--min_mapq 5`) failed parameter validation with Nextflow 26.04, which passes them as strings: the boolean and numeric parameters are now declared with types in a `params` block in `main.nf`, so Nextflow converts command-line values (`--sl_split false` was the truthy string `'false'`). Requires Nextflow >= 26.04.
 
 ### `Dependencies`
 

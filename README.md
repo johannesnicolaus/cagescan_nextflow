@@ -5,7 +5,7 @@
 [![GitHub Actions Linting Status](https://github.com/luscombeu/cagescan/actions/workflows/linting.yml/badge.svg)](https://github.com/luscombeu/cagescan/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
-[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/version-%E2%89%A526.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
 [![nf-core template version](https://img.shields.io/badge/nf--core_template-4.1.0-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.1.0)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
@@ -17,14 +17,20 @@
 **luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**
 (CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream).
 
-It is a reference-guided re-implementation of the idea behind the original
-[CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline). That pipeline groups reads into molecules by UMI
-and assembles each molecule de novo. Without UMIs, the closest equivalent of a molecule is a **TSS cluster**, so this
-pipeline maps the read pairs first, groups them by the TSS cluster that READ1 starts in, and builds one or more
-isoforms per TSS from the spliced pair alignments.
+CAGEscan was introduced by [Plessy et al. (2010)](https://doi.org/10.1038/nmeth.1470): paired-end sequencing of
+random-primed nanoCAGE libraries links each TSS to the body of its transcript. This pipeline follows the original
+CAGEscan processing workflow of [Bertin et al. (2017)](https://doi.org/10.1038/sdata.2017.147), built for the FANTOM5
+CAGEscan libraries with the MOIRAI workflow system: read pairs are aligned to the genome, and pairs whose READ1 starts
+in the same CAGE TSS cluster are assembled into "CAGEscan clusters". The later
+[UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (developed after the MOIRAI version, even
+if its release came first) instead groups reads into molecules by UMI and assembles each molecule de novo; without
+UMIs that is not possible, so, like the original workflow, this pipeline maps the read pairs first and groups them by
+the TSS cluster that READ1 starts in. It then also resolves isoforms per TSS from the spliced pair alignments.
+
+![luscombeu/cagescan metro map](docs/images/cagescan_metro_map.svg)
 
 1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
+2. Random subsampling to at most `--subsample_reads` read pairs per sample (default 10 M; [`seqtk`](https://github.com/lh3/seqtk)), spliced-leader detection and trimming at the READ1 start (with `--sl_sequence`), optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)) and optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna))
 3. Spliced paired alignment ([`STAR`](https://github.com/alexdobin/STAR)); local alignment soft-clips the non-templated 5' G or a spliced leader on READ1
 4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
 5. CTSS extraction from READ1 5' ends, with a report of what was soft-clipped before the cap (extra G, linker, spliced leader)
@@ -33,8 +39,9 @@ isoforms per TSS from the spliced pair alignments.
 8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
 9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
 10. Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))
-11. Stranded read-coverage bigWigs ([`samtools`](http://www.htslib.org/), [`bedtools genomecov`](https://bedtools.readthedocs.io/)) and an IGV session with genome, gene models, transcripts, TSS clusters and coverage
-12. Report ([`MultiQC`](http://multiqc.info/))
+11. Enhancer-RNA-like divergent TSS pairs (non-SL, distal, balanced, unspliced; convergent pairs as control)
+12. Stranded read-coverage bigWigs ([`samtools`](http://www.htslib.org/), [`bedtools genomecov`](https://bedtools.readthedocs.io/)) and an IGV session with genome, gene models, transcripts, TSS clusters and coverage
+13. Report ([`MultiQC`](http://multiqc.info/))
 
 > [!NOTE]
 > CAGEscan transcripts span from the TSS to the end of the sequenced fragment (roughly the insert size, a few hundred
@@ -83,7 +90,8 @@ luscombeu/cagescan was originally written by Johannes Nicolaus Wibisana.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-- Martin C. Frith, for the original [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) whose BED conventions are reused here.
+- Nicolas Bertin, Charles Plessy and colleagues, for CAGEscan ([Plessy et al. 2010](https://doi.org/10.1038/nmeth.1470)) and the original CAGEscan processing workflow ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) that this pipeline follows.
+- Martin C. Frith, for the [UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline), whose BED conventions are reused here.
 
 ## Contributions and Support
 

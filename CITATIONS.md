@@ -10,7 +10,7 @@
 
 ## Pipeline tools
 
-- [CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (concept and BED conventions)
+- [UMI-based CAGEscan pipeline](https://gitlab.com/mcfrith/cagescan-pipeline) (BED conventions; developed after the MOIRAI workflow of Bertin et al. 2017)
 
   > Frith MC. CAGEscan pipeline. https://gitlab.com/mcfrith/cagescan-pipeline
 
@@ -22,6 +22,10 @@
 
   > Bertin N, Mendez M, Hasegawa A, Lizio M, Abugessaisa I, Severin J, Sakai-Ohno M, Lassmann T, Kasukawa T, Kawaji H, Hayashizaki Y, Forrest ARR, Carninci P, Plessy C. Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Sci Data. 2017 Oct 3;4:170147. doi: 10.1038/sdata.2017.147.
 
+- [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe) (splitting read pairs by spliced leader before alignment)
+
+  > Plessy C. splitSpliceLeaderPE: split paired-end reads by spliced leader. https://github.com/oist/plessy_splitspliceleaderpe
+
 - [cutadapt](https://doi.org/10.14806/ej.17.1.200)
 
   > Martin M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal. 2011;17(1):10-12. doi: 10.14806/ej.17.1.200.
@@ -29,6 +33,14 @@
 - [fastp](https://pubmed.ncbi.nlm.nih.gov/30423086/)
 
   > Chen S, Zhou Y, Chen Y, Gu J. fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics. 2018 Sep 1;34(17):i884-i890. doi: 10.1093/bioinformatics/bty560.
+
+- [Enhancer RNA definition from CAGE](https://pubmed.ncbi.nlm.nih.gov/24670763/)
+
+  > Andersson R, Gebhard C, Miguel-Escalada I, et al. An atlas of active enhancers across human cell types and tissues. Nature. 2014 Mar 27;507(7493):455-461. doi: 10.1038/nature12787.
+
+- [seqtk](https://github.com/lh3/seqtk)
+
+  > Li H. seqtk: toolkit for processing sequences in FASTA/Q formats. https://github.com/lh3/seqtk
 
 - [BEDTools](https://pubmed.ncbi.nlm.nih.gov/20110278/)
 

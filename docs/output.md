@@ -15,6 +15,7 @@ Everything downstream of the TSS clusters is produced twice, once per cluster se
 stands for either, and output files carry the set in their name.
 
 - [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
+- [eRNA candidates](#erna-candidates) - enhancer-RNA-like divergent TSS pairs
 - [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
 - [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
@@ -32,20 +33,39 @@ stands for either, and output files carry the set in their name.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome (`--fasta`), gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `igv/genome.fa`, `igv/genome.fa.fai`, `igv/annotation.gtf`: copies of the genome, its index and the annotation used by the session.
 - `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns), per million mapped read pairs. The strand is that of the RNA (CAGE READ1 is sense).
 - `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
 
 </details>
 
-Open `igv_session.xml` in IGV desktop (File > Open Session). Track paths inside the results directory are relative
-to the session file, so the results directory can be copied elsewhere (e.g. to a laptop); the genome and annotation are
-referenced by the absolute paths given to `--fasta` and `--gtf`, so copy those too and edit the two paths if needed.
-A gzipped `--fasta` must be bgzip-compressed and indexed for IGV.
+Open `igv_session.xml` in IGV desktop (File > Open Session). All paths in the session are relative to it, so it works
+anywhere as long as the session, `igv/` and the track files keep their relative locations. To browse on a laptop,
+copy the session, `igv/`, `coverage/`, `ctss/bigwig/`, `tss_clusters/`, `transcripts/` (and `erna/` if present); the
+BAM files are not needed:
+
+```bash
+rsync -av --prune-empty-dirs --include='*/' --include='igv_session.xml' --include='igv/*' --include='*.bigWig' --include='*.bed' --include='*.bed12' --exclude='*' cluster:/path/to/results/ results_igv/
+```
 
 Coverage shows where the mapped read pairs lie, so transcription outside gene models (unannotated genes, 5'
 extensions, antisense or intergenic transcripts) is visible directly; the TSS signal shows where those RNAs start.
 Coverage of CAGEscan libraries decays with distance from the TSS (fragment length), so it is strongest near 5' ends.
+
+### eRNA candidates
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `erna/<set>/`
+  - `all_samples.<set>.erna_candidates.bed`: divergent pairs passing all filters; the region spans from the minus-strand to the plus-strand TSS peak, name = `<tss_minus>|<tss_plus>`, score = reads of the pair (capped at 1000).
+  - `all_samples.<set>.erna_candidates.tsv`: the same with reads per strand, directionality, peak distance and distance to the nearest annotated 5' end.
+  - `all_samples.<set>.erna_stats_mqc.tsv`: divergent and convergent (control) pairs after each filter, also shown in MultiQC.
+
+</details>
+
+See [usage](usage.md#enhancer-rna-candidates) for the criteria.
 
 ### Transcripts
 
@@ -99,7 +119,7 @@ fragments (the library insert size), not necessarily to the polyadenylation site
   - `all_samples.<set>.tss_clusters.tsv`: cluster table: `tss_id`, location (1-based), strand, peak (1-based), total count, width.
   - `all_samples.<set>.tss_cluster_counts.tsv`: READ1 counts per cluster (rows) and sample (columns).
   - `all_samples.<set>.tss_cluster_cpm.tsv`: the same, as counts per million TSS-assigned READ1s.
-  - `all_samples.<set>.tss_cluster_sl_counts.tsv`: READ1s per cluster whose soft-clipped 5' end matches `--sl_sequence` (only written when SL reads are found). Divide by the counts matrix to get the trans-spliced fraction of each TSS.
+  - `all_samples.<set>.tss_cluster_sl_counts.tsv`: READ1s per cluster that carried the spliced leader (`--sl_sequence`; trimmed before alignment or soft-clipped) (only written when SL reads are found). Divide by the counts matrix to get the trans-spliced fraction of each TSS.
   - `tss_anchored_bam/<sample>.<set>.tss.bam(.bai)`: read pairs whose READ1 5' end falls in a TSS cluster, tagged with `TC:Z:<tss_id>`. These are the reads used to build transcripts.
 - `tss_clusters/sharp/` additionally
   - `all_samples.reclu_clusters.bed`: the reproducible innermost RECLU clusters before naming (0-based first/last CTSS positions).
@@ -181,9 +201,14 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastqc/`: FastQC reports of the raw reads.
+- `fastqc/`: FastQC reports of the reads entering the pipeline (after `--subsample_reads`; subsampled reads are not saved).
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
+- `sl_split/` (only with `--sl_sequence`): read pairs split by the spliced leader at the READ1 start.
+  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL:`.
+  - `<sample>.noSL_{1,2}.fastq.gz`: the other pairs, names prefixed with `no_adapter:`.
+  - `<sample>.sl_split.log`: cutadapt report (`Read 1 with adapter` = trans-spliced pairs).
+  The FASTQ files are saved with `--save_sl_split_reads` (default); they come after subsampling and trimming.
 - `sortmerna/`: SortMeRNA logs (only with `--ribo_database_manifest`).
 
 </details>

@@ -54,6 +54,28 @@ pairs are kept on overlap alone (reported in the MultiQC table).
 `--reclu_min_tpm_per_base` (0.1, as in RECLU) is relative to sequencing depth: in very small libraries one read
 already exceeds it, so the filter has no effect there.
 
+### Enhancer-RNA candidates
+
+Enhancer RNAs are transcribed in both directions from enhancers, so CAGE shows them as a **divergent pair** of TSS
+clusters on opposite strands, facing away from each other, typically 100-400 bp apart, away from gene promoters,
+with similar expression on both strands and short unspliced RNAs ([Andersson et al. 2014](https://doi.org/10.1038/nature12787)).
+For each cluster set, `erna/` lists such pairs:
+
+1. both clusters have >= `--erna_min_reads` READ1s and a spliced-leader fraction <= `--erna_max_sl_fraction`
+   (SL-dominated clusters are trans-splice acceptors, not TSSs);
+2. the minus-strand peak lies `--erna_min_distance` to `--erna_max_distance` bases upstream of the plus-strand peak;
+3. with `--gtf`, both peaks are more than `--erna_distal_distance` bases from any annotated transcript 5' end;
+4. directionality |F - R| / (F + R) < `--erna_max_directionality`;
+5. neither cluster starts a spliced transcript.
+
+Convergent pairs (plus-strand peak upstream of a minus-strand peak, same distances) go through the same filters as a
+**control**: they arise by chance or from overlapping transcription, not from bidirectional initiation. The MultiQC
+table reports both after each filter; only an excess of divergent pairs supports an eRNA-like signal, and on *O.
+dioica* embryo CAGE the excess was about 3-fold (156 divergent vs 48 convergent candidates, broad set). Candidates
+are hypotheses: unannotated genes and other short RNAs can look the same, so check them in the genome browser
+(the session has an eRNA track) and against chromatin data. Use the broad set: the reproducibility filter of the
+sharp set removes most weak, eRNA-like signal. `--find_erna false` turns this step off.
+
 ### Why StringTie, and what the pipeline corrects
 
 StringTie is only trusted for what TSS-anchored CAGEscan pairs can support: the splice structure near the TSS.
@@ -100,20 +122,54 @@ If you are unsure what precedes the cap in your reads, run the pipeline once wit
 | --- | --- | --- |
 | `-` (none) or `G` | READ1 starts at the cap (± extra G) | nothing |
 | a constant longer sequence, e.g. `...TATAGGG` | a 5' linker is still present | `--r1_5p_linker TATAGGG` (cutadapt removes it and everything before it) |
-| a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL-clipped READ1s are counted per sample and per TSS cluster |
+| a constant ~20-40 nt sequence present only at some TSSs | spliced leader (SL trans-splicing) | `--sl_sequence <SL>`; SL READ1s are counted per sample and per TSS cluster |
+| fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
-With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site. The last bases of a spliced leader
+Spliced-leader handling is only for organisms with SL trans-splicing (e.g. tunicates, nematodes, flatworms,
+trypanosomes) and is off unless `--sl_sequence` is given; without it, no reads are split and no TSS is moved.
+With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site, and SL reads are recognised in two
+ways.
+
+1. **Before alignment** (`--sl_split`, on by default). As in
+   [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe), which splits raw read pairs by the
+   presence of the SL at the start of READ1 (with TagDust2), the pairs are split into an SL and a non-SL set
+   (cutadapt): the SL must start at READ1 base 1 or 2 (room for the extra G), mismatches and indels are allowed
+   (`--sl_max_error_rate`, default 0.15), and the SL is trimmed, so the trimmed READ1 starts at the trans-splice site.
+   SL pairs are renamed `SL:<name>`, the others `no_adapter:<name>`. Both sets are then aligned together, and the
+   read names carry the SL status into the BAM files (`samtools view -e 'qname=~"^SL:"'` selects trans-spliced pairs).
+   The split FASTQ files and cutadapt logs are in `sl_split/` (FASTQs only with `--save_sl_split_reads`, default on).
+2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
+   leader, or with `--sl_split false`); exact match only.
+
+Why both: with the soft-clip match alone, 11-15% of SL READ1s were missed on *O. dioica* MGI and Illumina CAGE,
+because of sequencing errors in the 40-nt leader, and a further ~5% because STAR aligned the leader's last 4-27 bases to
+the genome with mismatches. On 500,000 raw pairs per library, the cutadapt step called the same SL reads as
+splitSpliceLeaderPE/TagDust2 (99.6% and 99.98% of TagDust2's SL reads; identical trimmed sequences for >99.9%),
+in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtered as low complexity.
+
+The last bases of a spliced leader
 often also match the genome, because the splice acceptor (`...AG`, `...CAG`) resembles the leader's 3' end (e.g.
 `...AACAG` in *Oikopleura dioica*). STAR then aligns those leader bases, and the read's 5' end lands up to 3 bases
 upstream, inside the acceptor. Such reads are recognised (soft clip ending in the leader minus its last k bases, and
 the first k aligned bases equal to the leader's last k bases) and their CTSS is moved k bases downstream. On
 *O. dioica* embryo CAGE this put 97% of trans-spliced TSS peaks exactly on annotated 5' ends, against 0% (62% at -2,
 35% at -3) without the correction.
-| fixed-length random bases | barcode/UMI-like prefix | `--r1_trim_front <N>` |
 
 READ2 of CAGEscan libraries starts in the random primer, whose mismatches to the RNA are tolerated by the reverse
 transcriptase. FANTOM5 CAGEscan ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) trimmed the first 6
 bases of READ2 for random hexamers; use `--r2_trim_front 6` (or the length of your random primer) to do the same.
+
+### Subsampling
+
+By default each sample is randomly subsampled to at most 10 million read pairs (`--subsample_reads 10000000`, seqtk
+`sample` with the same seed for READ1 and READ2, so pairs stay together; samples with fewer pairs are used whole).
+This bounds run time and disk use for very large libraries (an MGI lane can hold several hundred million pairs per
+sample; the BAMs need about 0.4 GB per million pairs). Subsampling is the first step after merging lanes, so FastQC,
+the alignment statistics and all counts refer to the subsampled reads; CPM/TPM values stay comparable between samples.
+
+10 M pairs are enough to place the TSSs of moderately and highly expressed genes and to build their transcripts. Use
+`--subsample_reads 0` (all reads) when depth matters: weak TSSs, enhancer RNAs, lowly expressed genes, or quantifying
+rare isoforms. Change `--subsample_seed` to draw a different random subset.
 
 ### Relation to the FANTOM5 CAGEscan workflow
 

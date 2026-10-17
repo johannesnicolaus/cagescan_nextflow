@@ -89,6 +89,20 @@
             "fa_icon": "fas fa-cut",
             "description": "Linker, adapter, quality and rRNA filtering of the reads.",
             "properties": {
+                "subsample_reads": {
+                    "type": "integer",
+                    "default": 10000000,
+                    "minimum": 0,
+                    "description": "Randomly keep at most this many read pairs per sample (seqtk sample). Set to 0 to use all reads.",
+                    "help_text": "Samples with fewer read pairs are used whole. Subsampling happens after merging lanes and before any other step, and keeps READ1 and READ2 in sync. Use `--subsample_reads 0` for full depth: rare TSSs, weak (e.g. enhancer) transcription and transcript structures of lowly expressed genes need depth.",
+                    "fa_icon": "fas fa-random"
+                },
+                "subsample_seed": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Random seed for `--subsample_reads`.",
+                    "fa_icon": "fas fa-seedling"
+                },
                 "r1_5p_linker": {
                     "type": "string",
                     "pattern": "^[ACGTNacgtn]+$",
@@ -167,9 +181,30 @@
                 "sl_sequence": {
                     "type": "string",
                     "pattern": "^[ACGTNacgtn]+$",
-                    "description": "Spliced-leader sequence (5'->3'), for organisms with SL trans-splicing.",
-                    "help_text": "READ1s whose soft-clipped 5' sequence ends with the SL are counted as trans-spliced; their fraction is reported per sample and per TSS cluster.",
+                    "description": "Spliced-leader sequence (5'->3'), for organisms with SL trans-splicing. Leave unset otherwise: all SL steps are then skipped.",
+                    "help_text": "READ1s that start with the SL (found before alignment, see `--sl_split`) or whose soft-clipped 5' sequence ends with it are counted as trans-spliced; their fraction is reported per sample and per TSS cluster, and their TSS is the trans-splice site.",
                     "fa_icon": "fas fa-link"
+                },
+                "sl_split": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Split read pairs by the presence of the SL at the start of READ1 before alignment, allowing mismatches, and trim the SL (cutadapt).",
+                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start at READ1 base 1 or 2 (room for the extra G). SL pairs are renamed `SL:<name>`, other pairs `no_adapter:<name>`; both sets are aligned together and the names carry the SL status. Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence` (organisms with SL trans-splicing).",
+                    "fa_icon": "fas fa-cut"
+                },
+                "save_sl_split_reads": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the SL and non-SL FASTQ files of `--sl_split` to `sl_split/`.",
+                    "fa_icon": "fas fa-save"
+                },
+                "sl_max_error_rate": {
+                    "type": "number",
+                    "default": 0.15,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "Maximum fraction of mismatches and indels in the SL match of `--sl_split` (cutadapt `-e`).",
+                    "fa_icon": "fas fa-percentage"
                 },
                 "paraclu_min_cluster": {
                     "type": "integer",
@@ -294,6 +329,64 @@
                     "description": "Derive transcripts for TSS clusters that lie inside an exon of another TSS's transcript.",
                     "help_text": "StringTie cannot start a transcript inside continuously covered sequence, so e.g. a second TSS in the same first exon gets no assembled transcript. Derived transcripts start at the cluster peak and follow the structure of the enclosing transcript(s); they are marked anchored \"derived\" with derived_from <source>.",
                     "fa_icon": "fas fa-code-branch"
+                }
+            }
+        },
+        "erna_options": {
+            "title": "eRNA candidate options",
+            "type": "object",
+            "fa_icon": "fas fa-arrows-alt-h",
+            "description": "Enhancer-RNA-like divergent pairs of TSS clusters (Andersson et al. 2014), with convergent pairs as a chance control.",
+            "properties": {
+                "find_erna": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Report enhancer-RNA-like divergent TSS cluster pairs for each cluster set.",
+                    "fa_icon": "fas fa-search"
+                },
+                "erna_min_reads": {
+                    "type": "number",
+                    "default": 10,
+                    "minimum": 0,
+                    "description": "Minimum READ1s (all samples) of each TSS cluster of a pair.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "erna_max_sl_fraction": {
+                    "type": "number",
+                    "default": 0.1,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum spliced-leader fraction of each TSS cluster (SL-dominated clusters are trans-splice acceptors, not TSSs).",
+                    "fa_icon": "fas fa-filter"
+                },
+                "erna_min_distance": {
+                    "type": "integer",
+                    "default": 50,
+                    "minimum": 0,
+                    "description": "Minimum distance between the two TSS peaks.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "erna_max_distance": {
+                    "type": "integer",
+                    "default": 400,
+                    "minimum": 1,
+                    "description": "Maximum distance between the two TSS peaks.",
+                    "fa_icon": "fas fa-ruler"
+                },
+                "erna_distal_distance": {
+                    "type": "integer",
+                    "default": 500,
+                    "minimum": 0,
+                    "description": "Both TSS peaks must be further than this from any annotated transcript 5' end (needs --gtf).",
+                    "fa_icon": "fas fa-map-signs"
+                },
+                "erna_max_directionality": {
+                    "type": "number",
+                    "default": 0.8,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum directionality |F-R|/(F+R) of a pair (Andersson et al. 2014).",
+                    "fa_icon": "fas fa-balance-scale"
                 }
             }
         },
@@ -479,6 +572,9 @@
         },
         {
             "$ref": "#/$defs/transcript_options"
+        },
+        {
+            "$ref": "#/$defs/erna_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
