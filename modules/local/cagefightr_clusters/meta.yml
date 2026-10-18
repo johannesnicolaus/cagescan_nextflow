@@ -1,0 +1,64 @@
+name: cagefightr_clusters
+description: "Unidirectional TSS clusters with CAGEfightR (TPM, CTSS support, slice-reduce clustering, TC expression filter)"
+keywords:
+  - cage
+  - tss
+  - clustering
+  - cagefightr
+tools:
+  - cagefightr:
+      description: "Analysis of Cap Analysis of Gene Expression (CAGE) data using Bioconductor"
+      homepage: https://bioconductor.org/packages/CAGEfightR
+      doi: 10.1186/s12859-019-3029-5
+      licence:
+        - "GPL-3.0-or-later"
+      identifier: biotools:cagefightr
+input:
+  - - meta:
+        type: map
+        description: Cluster set information
+    - ctss:
+        type: file
+        description: "Per-sample CTSS BED files (chrom, pos0, pos0+1, ., count, strand)"
+        pattern: "*.bed"
+  - - meta2:
+        type: map
+        description: Genome information
+    - fai:
+        type: file
+        description: FASTA index (chromosome lengths)
+        pattern: "*.fai"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: Cluster set information
+      - "*.cagefightr.bed":
+          type: file
+          description: "Clusters: chrom, start0, end, strand, peak0, total count, pooled TPM"
+          pattern: "*.cagefightr.bed"
+  versions_cagefightr:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - CAGEfightR:
+          type: string
+          description: The name of the tool
+      - "Rscript -e 'cat(as.character(packageVersion(\"CAGEfightR\")))'":
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - CAGEfightR:
+          type: string
+          description: The name of the tool
+      - "Rscript -e 'cat(as.character(packageVersion(\"CAGEfightR\")))'":
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

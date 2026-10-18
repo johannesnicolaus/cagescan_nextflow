@@ -70,19 +70,25 @@ def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
 
 SL_TRIMMED = ("SL:", "SLG:")  # read-name prefixes of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
-MAX_SL_CLIP = 25  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
+MAX_SL_CLIP = 3  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
 
 
 def sl_trimmed_5p(read, pos, strand, clip):
-    """5' end of an SL-trimmed READ1, with its 5' soft clip added back.
+    """5' end of an SL-trimmed READ1, with a short 5' soft clip added back.
 
     After the SL (and the extra G before it) is trimmed, the read starts at the trans-splice site and holds no
-    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, variants),
-    which would otherwise move the CTSS downstream.
+    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, strain
+    variants), which would otherwise move the CTSS downstream.
     """
     if read.query_name.startswith(SL_TRIMMED) and 0 < len(clip) <= MAX_SL_CLIP:
         return max(0, pos - len(clip)) if strand == "+" else pos + len(clip)
     return pos
+
+
+def sl_trimmed_unplaceable(read, clip):
+    """SL-trimmed READ1 with a longer 5' soft clip: its 5' end cannot be placed (extra non-genomic bases after the
+    leader, or an indel near the 5' end), so it gives no TSS."""
+    return read.query_name.startswith(SL_TRIMMED) and len(clip) > MAX_SL_CLIP
 
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
@@ -134,7 +140,7 @@ def main():
     ctss = collections.Counter()
     sl_ctss = collections.Counter()
     clips = collections.Counter()
-    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_clip_added = n_sl_shifted = 0
+    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_clip_added = n_sl_unplaced = n_sl_shifted = 0
 
     with pysam.AlignmentFile(args.bam, "rb") as bam:
         for read in bam.fetch(until_eof=True):
@@ -142,12 +148,15 @@ def main():
                 continue
             pos, strand, clip, aligned = five_prime(read)
             clip = clip.upper()
+            if sl_trimmed_unplaceable(read, clip):
+                n_sl_unplaced += 1
+                continue
             k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
             if k is not None:
                 n_sl += 1
                 if read.query_name.startswith(SL_TRIMMED):
                     n_sl_trimmed += 1
-                    if clip and len(clip) <= MAX_SL_CLIP:
+                    if clip:
                         n_sl_clip_added += 1
                     pos = sl_trimmed_5p(read, pos, strand, clip)
                 if k:
@@ -186,9 +195,9 @@ def main():
         out.write("# section_name: 'CTSS extraction'\n")
         out.write("# description: 'READ1 5-prime ends used as CAGE TSSs, and what was soft-clipped before them (extra G, linker, spliced leader).'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL trimmed, 5' clip added back (%)\tSL end aligned, CTSS moved (%)\n")
+        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL trimmed, 5' clip added back (%)\tSL trimmed, 5' end unplaceable (%)\tSL end aligned, CTSS moved (%)\n")
         other = n_used - n_noclip - n_g
-        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_clip_added)}\t{pct(n_sl_shifted)}\n")
+        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_clip_added)}\t{100 * n_sl_unplaced / max(n_used + n_sl_unplaced, 1):.2f}\t{pct(n_sl_shifted)}\n")
 
     if n_used == 0:
         print(f"WARNING: no usable READ1 alignments found in {args.bam}", file=sys.stderr)

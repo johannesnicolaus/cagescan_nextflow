@@ -213,6 +213,35 @@
                     "description": "Maximum fraction of mismatches in the SL match of `--sl_split` (cutadapt `-e`; no indels).",
                     "fa_icon": "fas fa-percentage"
                 },
+                "cluster_method": {
+                    "type": "string",
+                    "default": "cagefightr",
+                    "enum": ["cagefightr", "paraclu"],
+                    "description": "How to call the broad TSS clusters: CAGEfightR (default) or paraclu on the pooled counts.",
+                    "help_text": "`cagefightr` follows the standard CAGEfightR workflow (Thodberg et al. 2019): per-sample TPM, CTSSs seen in >= `--ctss_min_samples` samples, pooled TPM clustered by slice-reduce (positions within `--tss_merge_distance` bases merged), peak = CTSS with the highest pooled TPM, clusters kept with >= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples. `paraclu` clusters the pooled counts with paraclu (>= `--paraclu_min_cluster` reads) and paraclu-cut, trims sparse tails and merges clusters within `--tss_merge_distance` bases.",
+                    "fa_icon": "fas fa-object-group"
+                },
+                "ctss_min_samples": {
+                    "type": "integer",
+                    "default": 2,
+                    "minimum": 1,
+                    "description": "CAGEfightR: use CTSSs (single positions) seen in at least this many samples (capped at the number of samples).",
+                    "fa_icon": "fas fa-filter"
+                },
+                "tc_min_tpm": {
+                    "type": "number",
+                    "default": 1.0,
+                    "minimum": 0,
+                    "description": "CAGEfightR: keep clusters with at least this many TPM in at least `--tc_min_samples` samples.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "tc_min_samples": {
+                    "type": "integer",
+                    "default": 2,
+                    "minimum": 1,
+                    "description": "CAGEfightR: number of samples that must reach `--tc_min_tpm` (capped at the number of samples).",
+                    "fa_icon": "fas fa-filter"
+                },
                 "paraclu_min_cluster": {
                     "type": "integer",
                     "default": 30,

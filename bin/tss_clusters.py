@@ -16,6 +16,9 @@
       clustered separately and added with IDs starting with --sl-id-prefix (SL);
       SL and non-SL clusters may overlap.
 
+  tss_clusters.py combine --prefix P clusters.bed [--sl-clusters sl.bed]
+      Name clusters called by cagefightr_clusters.R and write the same outputs.
+
 paraclu reports the first and last CTSS position of each cluster; since the
 CTSS positions are 0-based, the BED end coordinate is last + 1.
 """
@@ -124,6 +127,29 @@ def annotate(args):
         # Trans-splice sites (spliced-leader READ1s) clustered separately from the other TSSs: both kinds of
         # cluster can overlap; their IDs tell them apart (--sl-id-prefix).
         sets.append((args.sl_id_prefix, build_clusters(args.sl_paraclu, args.sl_ctss, args.trim_fraction, args.merge_distance)))
+    write_clusters(args.prefix, sets, args.sl_id_prefix if args.sl_paraclu else None)
+
+
+def read_clusters(path):
+    """Cluster bed from cagefightr_clusters.R: chrom, start0, end, strand, peak0, total[, pooled TPM]."""
+    clusters = []
+    with open(path) as handle:
+        for line in handle:
+            f = line.rstrip("\n").split("\t")
+            if len(f) >= 6:
+                clusters.append((f[0], int(f[1]), int(f[2]), f[3], int(f[4]), int(f[5])))
+    return clusters
+
+
+def combine(args):
+    sets = [(args.id_prefix, read_clusters(args.clusters))]
+    if args.sl_clusters:
+        sets.append((args.sl_id_prefix, read_clusters(args.sl_clusters)))
+    write_clusters(args.prefix, sets, args.sl_id_prefix if args.sl_clusters else None)
+
+
+def write_clusters(prefix, sets, sl_id_prefix):
+    """Name clusters per set (ID prefix + number) and write PREFIX.tss_clusters.bed/.tsv, sorted by position."""
     named = []
     for id_prefix, clusters in sets:
         clusters.sort()
@@ -132,11 +158,11 @@ def annotate(args):
     named.sort()
     rgb = {"+": "0,127,0", "-": "127,0,127"}
     rgb_sl = {"+": "200,120,0", "-": "200,60,60"}
-    with open(f"{args.prefix}.tss_clusters.bed", "w") as bed, open(f"{args.prefix}.tss_clusters.tsv", "w") as tsv:
+    with open(f"{prefix}.tss_clusters.bed", "w") as bed, open(f"{prefix}.tss_clusters.tsv", "w") as tsv:
         tsv.write("tss_id\tlocation\tstrand\tpeak\ttotal_count\twidth\n")
         for (chrom, start, end, strand, peak, total), tss_id, id_prefix in named:
             score = min(1000, total)
-            color = (rgb_sl if args.sl_paraclu and id_prefix == args.sl_id_prefix else rgb).get(strand, "0,0,0")
+            color = (rgb_sl if sl_id_prefix and id_prefix == sl_id_prefix else rgb).get(strand, "0,0,0")
             bed.write(f"{chrom}\t{start}\t{end}\t{tss_id}\t{score}\t{strand}\t{peak}\t{peak + 1}\t{color}\n")
             tsv.write(f"{tss_id}\t{chrom}:{start + 1}-{end}\t{strand}\t{peak + 1}\t{total}\t{end - start}\n")
 
@@ -163,6 +189,14 @@ def main():
     p_annot.add_argument("--sl-id-prefix", default="SL", help="ID prefix of spliced-leader clusters (default: %(default)s)")
     p_annot.add_argument("paraclu", help="paraclu bed (chrom, first, last, name, count, strand)")
     p_annot.set_defaults(func=annotate)
+
+    p_comb = sub.add_parser("combine", help="name clusters called elsewhere (cagefightr_clusters.R), SL clusters separately")
+    p_comb.add_argument("--prefix", required=True)
+    p_comb.add_argument("--id-prefix", default="TC", help="cluster ID prefix (default: %(default)s)")
+    p_comb.add_argument("--sl-clusters", help="clusters of the spliced-leader CTSS (IDs with --sl-id-prefix)")
+    p_comb.add_argument("--sl-id-prefix", default="SL", help="ID prefix of spliced-leader clusters (default: %(default)s)")
+    p_comb.add_argument("clusters", help="clusters: chrom, start0, end, strand, peak0, total[, pooled TPM]")
+    p_comb.set_defaults(func=combine)
 
     args = parser.parse_args()
     args.func(args)

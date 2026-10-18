@@ -69,7 +69,7 @@ terminus(1230, 120, 150, "IGV session", PURPLE, "genome · annotation · all tra
 
 station(790, 270, "CTSS", ["READ1 5' ends; soft-clip report", "extra G · linker · spliced leader"], above=False)
 station(880, 270, "pool", "all samples", above=True)
-station(1020, 270, "paraclu", "pooled CTSS", above=True)
+station(1020, 270, "CAGEfightR", "TPM · support · SL apart", above=True)
 station(1160, 270, "trim · merge", "tails, < 20 bp gaps", above=True)
 station(1010, 350, "paraclu", "per replicate", above=False)
 station(1110, 350, "TPM / base", "(log) stability", above=False)

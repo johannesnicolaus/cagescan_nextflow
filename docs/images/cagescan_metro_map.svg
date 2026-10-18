@@ -58,8 +58,8 @@ text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #21252
 <text x="880" y="248" class="st">pool</text>
 <text x="880" y="233" class="sub">all samples</text>
 <circle cx="1020" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
-<text x="1020" y="248" class="st">paraclu</text>
-<text x="1020" y="233" class="sub">pooled CTSS</text>
+<text x="1020" y="248" class="st">CAGEfightR</text>
+<text x="1020" y="233" class="sub">TPM · support · SL apart</text>
 <circle cx="1160" cy="270" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
 <text x="1160" y="248" class="st">trim · merge</text>
 <text x="1160" y="233" class="sub">tails, &lt; 20 bp gaps</text>

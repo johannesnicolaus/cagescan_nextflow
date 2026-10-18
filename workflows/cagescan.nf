@@ -166,6 +166,7 @@ workflow CAGESCAN {
     TSS_CLUSTERS(
         ch_bam_bai,
         PREPARE_GENOME.out.sizes,
+        params.cluster_method,
         params.paraclu_min_cluster,
         !params.skip_sharp_clusters,
         params.reclu_paraclu_min,

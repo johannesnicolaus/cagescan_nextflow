@@ -1,0 +1,46 @@
+name: combine_tss_clusters
+description: "Name TSS clusters (TC...) and spliced-leader clusters (SL...) and write the pipeline's cluster BED and table"
+keywords:
+  - cage
+  - tss
+  - clustering
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory
+      homepage: https://www.python.org
+      licence:
+        - "PSF-2.0"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: Cluster set information
+    - clusters:
+        type: file
+        description: "Clusters (chrom, start0, end, strand, peak0, total[, pooled TPM])"
+        pattern: "*.bed"
+    - sl_clusters:
+        type: file
+        description: "Spliced-leader clusters, same format (optional, [] if absent)"
+        pattern: "*.bed"
+output:
+  bed:
+    - - meta:
+          type: map
+          description: Cluster set information
+      - "*.tss_clusters.bed":
+          type: file
+          description: "TSS clusters (BED9; thick = peak)"
+          pattern: "*.tss_clusters.bed"
+  tsv:
+    - - meta:
+          type: map
+          description: Cluster set information
+      - "*.tss_clusters.tsv":
+          type: file
+          description: "Cluster table: tss_id, location, strand, peak, total count, width"
+          pattern: "*.tss_clusters.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

@@ -18,8 +18,9 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 - Stranded coverage bigWigs per sample, pooled TSS-signal bigWigs, and an `igv_session.xml` for genome browsing.
 - eRNA candidates: divergent, distal, balanced, unspliced pairs of non-SL TSS clusters per cluster set, with convergent pairs as a control (`erna/`, MultiQC table, IGV track).
 - Read pairs split into SL and non-SL sets before alignment, by the spliced leader at the READ1 start, allowing mismatches, with the SL trimmed (cutadapt; `--sl_split`, `--sl_max_error_rate`, `--save_sl_split_reads`), following splitSpliceLeaderPE; recovers 15-20% more SL reads on *O. dioica* CAGE than the soft-clip match.
+- Broad TSS clusters called with CAGEfightR by default (TPM, CTSS support in >= 2 samples, slice-reduce clustering, >= 1 TPM in >= 2 samples; `--cluster_method`, `--ctss_min_samples`, `--tc_min_tpm`, `--tc_min_samples`); paraclu remains available.
 - MultiQC: initiator dinucleotide (-1/+1) of TSS READ1s and the two bases before trans-splice sites, per sample (`CTSS_MOTIFS`).
-- SL split: exact leader boundary (two anchored patterns, with and without the extra G; mismatches but no indels), and the 5' soft clip of SL-trimmed READ1s is added back to their CTSS (first exon bases that differ from the assembly no longer move trans-splice sites downstream).
+- SL split: exact leader boundary (two anchored patterns, with and without the extra G; mismatches but no indels), and up to 3 bases soft-clipped at the 5' end of SL-trimmed READ1s are added back to their CTSS (first exon bases that differ from the assembly no longer move trans-splice sites downstream); SL-trimmed READ1s with longer 5' clips give no TSS.
 - Spliced-leader READ1s (trans-splice sites) and the other READ1s are clustered separately in the broad set (`SL…` and `TC…` clusters; `--sl_separate_clusters`), so that a TSS next to a trans-splice site keeps its own peak.
 - Random subsampling of read pairs per sample with seqtk, `--subsample_reads` (default 10,000,000; 0 = all reads) and `--subsample_seed`.
 - Simulated test data set (`tests/data/make_test_data.py`) with known TSSs and isoforms.

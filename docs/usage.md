@@ -8,7 +8,7 @@ The pipeline takes **paired-end CAGE** reads (CAGEscan-style: READ1 starts at th
 READ2 is random-primed downstream) **without UMIs**, and reconstructs 5'-anchored transcripts:
 
 1. read pairs are aligned to the genome with STAR (spliced, local alignment);
-2. READ1 5' ends give CAGE TSSs (CTSS), which are pooled across samples and clustered with paraclu;
+2. READ1 5' ends give CAGE TSSs (CTSS), which are clustered with CAGEfightR (TPM, support across samples) or paraclu;
 3. read pairs whose READ1 starts in a TSS cluster are kept and tagged with the cluster ID (`TC:Z:`);
 4. StringTie builds isoforms from those pairs, per sample and merged across samples;
 5. every transcript is matched to a TSS cluster, its 5' end is moved to the cluster's dominant CTSS and it is
@@ -30,8 +30,8 @@ therefore builds two cluster sets and runs everything downstream for both (`tran
 
 | | broad (`TC...`) | sharp (`TS...`) |
 | --- | --- | --- |
-| Method | paraclu on CTSS pooled across all samples, simplified with paraclu-cut; sparse tails trimmed; clusters closer than `--tss_merge_distance` merged | [RECLU](https://doi.org/10.1186/1471-2164-15-269) (Ohmiya et al. 2014): full paraclu hierarchy per replicate, TPM-per-base filter, hierarchical stability, replicate pairing (>= 90% reciprocal overlap) and IDR, <= 200 bp, innermost reproducible clusters |
-| Recruits | every TSS region with enough pooled reads, as one cluster (up to 200 bp) | only TSSs reproducible across replicates, split into their narrow cores (typically a few bp) |
+| Method | [CAGEfightR](https://bioconductor.org/packages/CAGEfightR) (default): per-sample TPM, CTSSs seen in >= `--ctss_min_samples` samples, pooled TPM clustered by slice-reduce (positions within `--tss_merge_distance` bases merged), clusters with >= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples; or paraclu on the pooled counts (`--cluster_method paraclu`) | [RECLU](https://doi.org/10.1186/1471-2164-15-269) (Ohmiya et al. 2014): full paraclu hierarchy per replicate, TPM-per-base filter, hierarchical stability, replicate pairing (>= 90% reciprocal overlap) and IDR, <= 200 bp, innermost reproducible clusters |
+| Recruits | every TSS region expressed above the TPM threshold, as one cluster | only TSSs reproducible across replicates, split into their narrow cores (typically a few bp) |
 | Needs replicates | no | yes, >= 2 per group |
 | Use for | maximum sensitivity; one model per promoter region | high-confidence, fine-grained TSSs; alternative TSSs a few bases apart kept separate |
 
@@ -40,6 +40,16 @@ group). RECLU runs every pair of replicates within a group and unites the reprod
 groups, so a TSS that is reproducible in only one condition is kept. Groups with a single sample contribute nothing to
 the sharp set; with no group of two or more samples, the sharp set is skipped with a warning. `--skip_sharp_clusters`
 turns it off.
+
+**Broad clusters with CAGEfightR.** The default caller follows the standard workflow of CAGEfightR
+([Thodberg et al. 2019](https://doi.org/10.1186/s12859-019-3029-5)), one of the two Bioconductor packages commonly
+used for CAGE, with CAGEr: counts are normalised to tags per million (TPM) per sample, single positions (CTSSs) seen
+in fewer than `--ctss_min_samples` (2) samples are dropped, the mean TPM across samples is clustered by
+slice-reduce (positions with signal closer than `--tss_merge_distance`, 20 bp, are merged), the peak of a cluster
+is its CTSS with the highest pooled TPM, and clusters below `--tc_min_tpm` (1) TPM in at least `--tc_min_samples` (2)
+samples are dropped. Thresholds are capped at the number of samples. With `--sl_sequence`, SL and non-SL READ1s are
+clustered separately (see below). `--cluster_method paraclu` restores the earlier caller (paraclu on raw pooled
+counts, `--paraclu_min_cluster` reads), which recruits many more weak clusters at high depth.
 
 **Deviation from RECLU.** RECLU ranks clusters for IDR by their hierarchical stability: a cluster's paraclu
 stability (max density / min density) plus that of every cluster containing it. A stability depends on the distance
@@ -138,9 +148,10 @@ ways.
    starts at the trans-splice site. SL pairs are renamed `SL:<name>` (or `SLG:<name>` when the extra G was present),
    the others `no_adapter:<name>`. Both sets are then aligned together, and the read names carry the SL status into
    the BAM files (`samtools view -e 'qname=~"^SLG?:"'` selects trans-spliced pairs). A trimmed READ1 holds no
-   non-templated bases, so bases that STAR soft-clips at its 5' end (sequencing errors or variants that differ from
-   the assembly) are added back: its CTSS is the trans-splice site even when the first exon bases do not match the
-   genome.
+   non-templated bases, so up to 3 bases that STAR soft-clips at its 5' end (sequencing errors or strain variants
+   that differ from the assembly) are added back: its CTSS is the trans-splice site even when the first exon bases
+   do not match the genome. Trimmed READ1s with a longer 5' clip (extra non-genomic bases after the leader, or an
+   indel near the 5' end) cannot be placed and give no TSS (1-3% of READ1s in Osaka CAGE; MultiQC *CTSS extraction*).
    The split FASTQ files and cutadapt logs are in `sl_split/` (FASTQs only with `--save_sl_split_reads`, default on).
 2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
    leader, or with `--sl_split false`); exact match only.
@@ -153,7 +164,8 @@ in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtere
 cutadapt cut 100% of the SL reads exactly at the end of the leader (TagDust2 and cutadapt with indels: 99.3-99.5%).
 Adding back the 5' soft clip matters: in the Osaka strain, the first base after the acceptor of a highly expressed
 trans-spliced gene differs from the O10 assembly in most reads, and STAR's clip of that base put the SL peak one
-base downstream of the acceptor.
+base downstream of the acceptor. With these rules, 98.5% of the SL cluster peaks of the full Osaka data follow
+an AG acceptor (CAGEr consensus clusters of oist/LuscombeU-CAGE_libraries: 97.2%).
 
 **Separate clusters for trans-splice sites** (`--sl_separate_clusters`, on by default with `--sl_sequence`).
 Trans-splice sites and TSSs of the same gene are often a few bases apart. Pooled into one cluster, only the stronger

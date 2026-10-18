@@ -71,19 +71,25 @@ def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
 
 SL_TRIMMED = ("SL:", "SLG:")  # read-name prefixes of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
-MAX_SL_CLIP = 25  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
+MAX_SL_CLIP = 3  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
 
 
 def sl_trimmed_5p(read, pos, strand, clip):
-    """5' end of an SL-trimmed READ1, with its 5' soft clip added back.
+    """5' end of an SL-trimmed READ1, with a short 5' soft clip added back.
 
     After the SL (and the extra G before it) is trimmed, the read starts at the trans-splice site and holds no
-    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, variants),
-    which would otherwise move the CTSS downstream.
+    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, strain
+    variants), which would otherwise move the CTSS downstream.
     """
     if read.query_name.startswith(SL_TRIMMED) and 0 < len(clip) <= MAX_SL_CLIP:
         return max(0, pos - len(clip)) if strand == "+" else pos + len(clip)
     return pos
+
+
+def sl_trimmed_unplaceable(read, clip):
+    """SL-trimmed READ1 with a longer 5' soft clip: its 5' end cannot be placed (extra non-genomic bases after the
+    leader, or an indel near the 5' end), so it gives no TSS."""
+    return read.query_name.startswith(SL_TRIMMED) and len(clip) > MAX_SL_CLIP
 
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
@@ -220,6 +226,8 @@ def main():
                 continue
             n_read1 += 1
             pos, strand, clip, aligned = five_prime(read)
+            if sl_trimmed_unplaceable(read, clip):
+                continue
             k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
             if k:
                 pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py

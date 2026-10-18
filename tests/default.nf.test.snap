@@ -8,9 +8,6 @@
                 "ANNOTATE_SHARP_CLUSTERS": {
                     "python": "3.12.14"
                 },
-                "ANNOTATE_TSS_CLUSTERS": {
-                    "python": "3.12.14"
-                },
                 "ASSIGN_PAIRS_TO_TSS": {
                     "pysam": "0.24.1",
                     "python": "3.12.14"
@@ -21,6 +18,12 @@
                 },
                 "BEDTOOLS_GENOMECOV": {
                     "bedtools": "2.31.1"
+                },
+                "CAGEFIGHTR_CLUSTERS": {
+                    "CAGEfightR": "1.26.0"
+                },
+                "COMBINE_TSS_CLUSTERS": {
+                    "python": "3.12.14"
                 },
                 "COVERAGE_BIGWIG": {
                     "ucsc": 482
@@ -58,9 +61,6 @@
                 },
                 "MERGE_TSS_COUNTS": {
                     "python": "3.12.14"
-                },
-                "PARACLU": {
-                    "paraclu": 10
                 },
                 "PARACLU_RAW": {
                     "paraclu": 10
@@ -600,9 +600,9 @@
                 "SAMPLE1.idxstats:md5,60960d3f576e9bf79663fa0918ec592b",
                 "SAMPLE2.flagstat:md5,1f857e8948ef2756a7b5e025c2c8882c",
                 "SAMPLE2.idxstats:md5,baf40a161776c8b0f391829363b69ab1",
-                "SAMPLE1.broad.cagescan_clusters.bed12:md5,3c1528292c914a7fc380167197495f23",
-                "SAMPLE2.broad.cagescan_clusters.bed12:md5,82708fffb6c28a0eb8d52945e54b46af",
-                "all_samples.broad.cagescan_clusters.bed12:md5,8e4993347a69c07f4f1b7bfd759bcee2",
+                "SAMPLE1.broad.cagescan_clusters.bed12:md5,af047a0d780fb82ac432de881ddd8a32",
+                "SAMPLE2.broad.cagescan_clusters.bed12:md5,0f8f774a215b94141fc063ce5b057fc3",
+                "all_samples.broad.cagescan_clusters.bed12:md5,cbba627b9d04ebf1093ec25e764693dd",
                 "SAMPLE1.sharp.cagescan_clusters.bed12:md5,4abb11ad2de590f962c139048e2f5393",
                 "SAMPLE2.sharp.cagescan_clusters.bed12:md5,a3780ca1bcba366d742849905e944b71",
                 "all_samples.sharp.cagescan_clusters.bed12:md5,9e39929f975a2d1949b937fedca03a92",
@@ -649,10 +649,10 @@
                 "fastqc_per_sequence_quality_scores_plot.txt:md5,f3865a3826dff97ab3c3ccc8b9d48ba5",
                 "fastqc_sequence_counts_plot.txt:md5,b467ee00ccf53875892c2a6d6519b820",
                 "fastqc_sequence_duplication_levels_plot.txt:md5,52008f92894c3d8788f204425a82492a",
-                "multiqc_anchor_stats.txt:md5,e13c5cf3101c2f1e1adb65dc555404d6",
+                "multiqc_anchor_stats.txt:md5,7f1e3a37d8499ab19a5ad83b2b1d4907",
                 "multiqc_citations.txt:md5,728400da3e52c09441f2f6927ed0b36e",
                 "multiqc_ctss_motif_stats.txt:md5,dc8537933fd61c026ac21aabf2a251ed",
-                "multiqc_ctss_stats.txt:md5,ffec266646ad5a30deffa7a3ec5271ce",
+                "multiqc_ctss_stats.txt:md5,0d0eb6a843d772ea2d73e17e2f214148",
                 "multiqc_cutadapt.txt:md5,cf85b4fcfb992ee02da47febbe86ea1e",
                 "multiqc_erna_stats_all_samples_broad.txt:md5,2e08348a1be5b3f3f6405903b744c5b2",
                 "multiqc_erna_stats_all_samples_sharp.txt:md5,2e08348a1be5b3f3f6405903b744c5b2",
@@ -665,7 +665,7 @@
                 "multiqc_samtools_stats.txt:md5,fb4cbf7989c8c25250c6ff6faa5fe16f",
                 "multiqc_sl_acceptor_plot.txt:md5,f2ae2f45c0107f317645d70355cb4308",
                 "multiqc_star.txt:md5,0b21a8af71c5f06046c1f5784124e7ef",
-                "multiqc_tss_assign_stats.txt:md5,180992d470753905ec2531df968b8f2c",
+                "multiqc_tss_assign_stats.txt:md5,8b7bf1af40bf64e5f9621932270e68be",
                 "multiqc_tss_initiator_plot.txt:md5,509d56f8baac93ed4f7f9f046e5c8013",
                 "samtools-flagstat-pct-table.txt:md5,d3a22cbcb4eb8073bf9dc42f86434356",
                 "samtools-flagstat-table.txt:md5,d573926cd247261dd6d037eab9d8617d",
@@ -677,8 +677,8 @@
                 "samtools_insert_size.txt:md5,1f6daf9164bb39327ff53d75baacea1a",
                 "star_alignment_plot.txt:md5,39e39218b3024cb1524679f7ec10fc87",
                 "star_summary_table.txt:md5,5723408ebb2053193cbc884a5f397ff5",
-                "all_samples.broad.transcript_cov.tsv:md5,5921517ad3991813de7299cd81c9d26e",
-                "all_samples.broad.transcript_tpm.tsv:md5,825f1de3b7526d70020214c6c0b107bd",
+                "all_samples.broad.transcript_cov.tsv:md5,96039494e01cff44a6e99a4844ed6d46",
+                "all_samples.broad.transcript_tpm.tsv:md5,e9d631fa159f759c3c97346cfd03fcda",
                 "all_samples.sharp.transcript_cov.tsv:md5,32310656c6938f9bffda4f4ae52724db",
                 "all_samples.sharp.transcript_tpm.tsv:md5,e317d5602ee59315af086e4efd947ade",
                 "SAMPLE1.SL_1.fastq.gz:md5,0d32617f04679a4791f4119f9a2d091a",
@@ -689,18 +689,18 @@
                 "SAMPLE2.SL_2.fastq.gz:md5,c640f0ae6c25f3ba7d9636f7209235e9",
                 "SAMPLE2.noSL_1.fastq.gz:md5,31d9ee330a02a9b375fa8ae3562b51f2",
                 "SAMPLE2.noSL_2.fastq.gz:md5,5084968574cc1fa42e70e5779cb57f05",
-                "SAMPLE1.broad.transcripts.bed12:md5,c92ee6360d3ecd20e125ba4f0e33364f",
-                "SAMPLE1.broad.transcripts.fasta:md5,297099ad039c085ffb13da2064306576",
-                "SAMPLE1.broad.transcripts.gff3:md5,1f786056a71034c3a2018dffae7c07ea",
-                "SAMPLE1.broad.transcripts.gtf:md5,6f39e746cd738de8d659eae94d0911a3",
-                "SAMPLE2.broad.transcripts.bed12:md5,c7aa4319738491fa5409a75cf8d24745",
-                "SAMPLE2.broad.transcripts.fasta:md5,2daba442a22792c816ac05c2299afdbd",
-                "SAMPLE2.broad.transcripts.gff3:md5,b1253f645f04dfb0e4a90d7f7c3d2e6a",
-                "SAMPLE2.broad.transcripts.gtf:md5,e13f8962adda32c848e54e8efe01cd45",
-                "merged.broad.transcripts.bed12:md5,eab909ba3973ce9ce1c05a88a8baf013",
-                "merged.broad.transcripts.fasta:md5,b4cebfc500b0f9cc4c9aefc944e6d3c1",
-                "merged.broad.transcripts.gff3:md5,cd7f314d3ff24dbcea1cea1fa037abdc",
-                "merged.broad.transcripts.gtf:md5,4535f48435178f5b8024fb8716a2f389",
+                "SAMPLE1.broad.transcripts.bed12:md5,1352ff721cf6c3ace8346ec08ca12355",
+                "SAMPLE1.broad.transcripts.fasta:md5,d8cbed37bbfca47d45fcf792cc23bf40",
+                "SAMPLE1.broad.transcripts.gff3:md5,d6056f451ccd5908272a61456ec70547",
+                "SAMPLE1.broad.transcripts.gtf:md5,0cee68f9d7edf7512305fb80cb55749b",
+                "SAMPLE2.broad.transcripts.bed12:md5,322ede0ceff9a67f501b468dc14528ca",
+                "SAMPLE2.broad.transcripts.fasta:md5,839dff097c89ebd7bdcbc1f69e07fb99",
+                "SAMPLE2.broad.transcripts.gff3:md5,68c16901e32d2e1c4c5e4484974b9314",
+                "SAMPLE2.broad.transcripts.gtf:md5,9bd7ae15f5ba04c3a7f9141dea82ef0c",
+                "merged.broad.transcripts.bed12:md5,3e1bdd30f1b6b695dd8209fc7470c8d4",
+                "merged.broad.transcripts.fasta:md5,fff5686d0cedaaf4efa4bd10a5e0d4ab",
+                "merged.broad.transcripts.gff3:md5,d94bf833acb7969cb1afdc92947bca74",
+                "merged.broad.transcripts.gtf:md5,321e7abedd35964939e7aa1dbf37fa14",
                 "SAMPLE1.sharp.transcripts.bed12:md5,52a416a4cbeefc1081cac875df3f0e64",
                 "SAMPLE1.sharp.transcripts.fasta:md5,2af1c9a768277d4b24aab57d9dcf7d90",
                 "SAMPLE1.sharp.transcripts.gff3:md5,660c43b8322c40ed07619c6a49e6a0bf",
@@ -722,11 +722,11 @@
                 "all_samples.sl.ctss.bed:md5,693f8652b19cc20c23ba1d9832566de5",
                 "all_samples.sl.ctss.minus.bedgraph:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "all_samples.sl.ctss.plus.bedgraph:md5,de3f4c67ca1ed0d980144de556e6a103",
-                "all_samples.broad.tss_cluster_counts.tsv:md5,ba9121a6259ab51e1b978057ecaf180b",
-                "all_samples.broad.tss_cluster_cpm.tsv:md5,1f63d41a5e2f9abdfabaad5be751955c",
-                "all_samples.broad.tss_cluster_sl_counts.tsv:md5,a23ac40eb8c9194bff33012fa8a0d79a",
-                "all_samples.broad.tss_clusters.bed:md5,7a80efee725f44ac9af7e296df127533",
-                "all_samples.broad.tss_clusters.tsv:md5,2791a9bbccf3070ceaea3807fee139c9",
+                "all_samples.broad.tss_cluster_counts.tsv:md5,8fb4b8076d80eddeeb49090ee184476d",
+                "all_samples.broad.tss_cluster_cpm.tsv:md5,92c95a309981a1459e195b713a874692",
+                "all_samples.broad.tss_cluster_sl_counts.tsv:md5,c05f09daf397e4e867a025863156e69f",
+                "all_samples.broad.tss_clusters.bed:md5,f357f6ac7c8a73f0dfb17fc5793ead33",
+                "all_samples.broad.tss_clusters.tsv:md5,01b4a027284f21358834c0c9ee228eb9",
                 "all_samples.reclu_clusters.bed:md5,96d1801faaf1e3dd24a053f4b3984028",
                 "all_samples.sharp.tss_cluster_counts.tsv:md5,e6488db8f9981c7032002a8575d514db",
                 "all_samples.sharp.tss_cluster_cpm.tsv:md5,c470720701b4a24eee02a515b067b688",
@@ -736,7 +736,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,aecda801cbc91071e0a81f7bdc5488a8"
             ]
         ],
-        "timestamp": "2026-10-18T15:08:22.824707121",
+        "timestamp": "2026-10-18T15:42:15.357961978",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

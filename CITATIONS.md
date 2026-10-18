@@ -26,6 +26,10 @@
 
   > Plessy C. splitSpliceLeaderPE: split paired-end reads by spliced leader. https://github.com/oist/plessy_splitspliceleaderpe
 
+- [CAGEfightR](https://pubmed.ncbi.nlm.nih.gov/31615434/)
+
+  > Thodberg M, Thieffry A, Vitting-Seerup K, Andersson R, Sandelin A. CAGEfightR: analysis of 5'-end data using R/Bioconductor. BMC Bioinformatics. 2019 Oct 15;20(1):487. doi: 10.1186/s12859-019-3029-5.
+
 - [cutadapt](https://doi.org/10.14806/ej.17.1.200)
 
   > Martin M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal. 2011;17(1):10-12. doi: 10.14806/ej.17.1.200.

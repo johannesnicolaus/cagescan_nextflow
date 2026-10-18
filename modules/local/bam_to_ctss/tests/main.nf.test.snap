@@ -171,7 +171,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss_stats_mqc.tsv:md5,336408aae35852f95aff40ed88f44f26"
+                        "test.ctss_stats_mqc.tsv:md5,f467a02ae87a691d07761cbdc79b53db"
                     ]
                 ],
                 "6": [
@@ -236,7 +236,7 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss_stats_mqc.tsv:md5,336408aae35852f95aff40ed88f44f26"
+                        "test.ctss_stats_mqc.tsv:md5,f467a02ae87a691d07761cbdc79b53db"
                     ]
                 ],
                 "versions_pysam": [
@@ -255,7 +255,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-18T14:54:10.306925998",
+        "timestamp": "2026-10-18T15:24:48.956246531",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

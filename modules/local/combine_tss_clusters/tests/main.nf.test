@@ -1,0 +1,35 @@
+nextflow_process {
+
+    name "Test Process COMBINE_TSS_CLUSTERS"
+    script "../main.nf"
+    process "COMBINE_TSS_CLUSTERS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "combine_tss_clusters"
+
+    test("TSS and SL clusters") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    file("${projectDir}/tests/data/modules/tc.cagefightr.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/sl.cagefightr.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            def bed = path(process.out.bed[0][1]).readLines().collect { line -> line.split('\\t') }
+            assertAll(
+                { assert process.success },
+                { assert bed.count { f -> f[3].startsWith('SL') } == 1 },
+                { assert bed.count { f -> f[3].startsWith('TC') } == 7 },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+}

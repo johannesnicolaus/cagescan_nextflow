@@ -9,6 +9,8 @@ include { POOL_CTSS                       } from '../../../modules/local/pool_ct
 include { POOL_CTSS as POOL_CTSS_BY_SL     } from '../../../modules/local/pool_ctss/main'
 include { PARACLU                         } from '../../../modules/nf-core/paraclu/main'
 include { ANNOTATE_TSS_CLUSTERS           } from '../../../modules/local/annotate_tss_clusters/main'
+include { CAGEFIGHTR_CLUSTERS             } from '../../../modules/local/cagefightr_clusters/main'
+include { COMBINE_TSS_CLUSTERS            } from '../../../modules/local/combine_tss_clusters/main'
 include { ASSIGN_PAIRS_TO_TSS             } from '../../../modules/local/assign_pairs_to_tss/main'
 include { MERGE_COUNTS as MERGE_TSS_COUNTS } from '../../../modules/local/merge_counts/main'
 include { MERGE_CAGESCAN_CLUSTERS         } from '../../../modules/local/merge_cagescan_clusters/main'
@@ -20,6 +22,7 @@ workflow TSS_CLUSTERS {
     take:
     ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ]; meta.group = replicate group
     ch_sizes            // channel: [ val(meta), path(chrom.sizes) ]
+    cluster_method      // string:  broad cluster caller, 'cagefightr' or 'paraclu'
     min_cluster         // integer: minimum total CTSS count of a broad (pooled paraclu) cluster
     run_sharp           // boolean: also build sharp (RECLU) clusters
     reclu_paraclu_min   // integer: paraclu minValue for the RECLU cluster hierarchy
@@ -65,8 +68,9 @@ workflow TSS_CLUSTERS {
     UCSC_BEDGRAPHTOBIGWIG(ch_bedgraph, ch_sizes.map { _meta, sizes -> sizes })
 
     //
-    // Broad clusters: paraclu on the pooled CTSS. With a spliced leader, trans-splice sites (SL READ1s) and the
-    // other TSSs are pooled and clustered separately, so that a TSS next to a trans-splice site keeps its own peak.
+    // Broad clusters, with CAGEfightR (default: TPM, CTSS support, slice-reduce, TC expression filter) or paraclu on
+    // the pooled CTSS. With a spliced leader, trans-splice sites (SL READ1s) and the other TSSs are clustered
+    // separately, so that a TSS next to a trans-splice site keeps its own peak.
     //
     def ch_broad_ctss = POOL_CTSS.out.ctss
     if (sl_separate) {
@@ -78,17 +82,42 @@ workflow TSS_CLUSTERS {
         )
         ch_broad_ctss = POOL_CTSS_BY_SL.out.ctss
     }
-    PARACLU(ch_broad_ctss, min_cluster)
-    def ch_paraclu = PARACLU.out.bed.join(ch_broad_ctss, failOnDuplicate: true, failOnMismatch: true)
-    def ch_annotate = sl_separate
-        ? ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'nosl' }
-            .combine(ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'sl' })
-            .map { _meta, bed, ctss, _sl_meta, sl_bed, sl_ctss -> [[id: 'all_samples', cluster_set: 'broad'], bed, ctss, sl_bed, sl_ctss] }
-        : ch_paraclu.map { meta, bed, ctss -> [meta + [cluster_set: 'broad'], bed, ctss, [], []] }
-    ANNOTATE_TSS_CLUSTERS(ch_annotate)
-    def ch_sets = ANNOTATE_TSS_CLUSTERS.out.bed
-        .join(ANNOTATE_TSS_CLUSTERS.out.tsv)
-        .map { _meta, bed, tsv -> ['broad', bed, tsv] }
+    def ch_sets
+    if (cluster_method == 'cagefightr') {
+        def ch_class_ctss = sl_separate
+            ? BAM_TO_CTSS.out.sl_ctss.map { _meta, ctss -> ['sl', ctss] }
+                .mix(BAM_TO_CTSS.out.nosl_ctss.map { _meta, ctss -> ['nosl', ctss] })
+            : BAM_TO_CTSS.out.ctss.map { _meta, ctss -> ['all', ctss] }
+        CAGEFIGHTR_CLUSTERS(
+            ch_class_ctss
+                .groupTuple(sort: { a, b -> a.name <=> b.name })
+                .map { kind, ctss -> [[id: "all_samples.${kind}", sl_class: kind], ctss] },
+            ch_fasta_fai.map { meta, _fasta, fai -> [meta, fai] }
+        )
+        def ch_cfr = CAGEFIGHTR_CLUSTERS.out.bed
+        COMBINE_TSS_CLUSTERS(
+            sl_separate
+                ? ch_cfr.filter { meta, _bed -> meta.sl_class == 'nosl' }
+                    .combine(ch_cfr.filter { meta, _bed -> meta.sl_class == 'sl' })
+                    .map { _meta, bed, _sl_meta, sl_bed -> [[id: 'all_samples', cluster_set: 'broad'], bed, sl_bed] }
+                : ch_cfr.map { _meta, bed -> [[id: 'all_samples', cluster_set: 'broad'], bed, []] }
+        )
+        ch_sets = COMBINE_TSS_CLUSTERS.out.bed
+            .join(COMBINE_TSS_CLUSTERS.out.tsv)
+            .map { _meta, bed, tsv -> ['broad', bed, tsv] }
+    } else {
+        PARACLU(ch_broad_ctss, min_cluster)
+        def ch_paraclu = PARACLU.out.bed.join(ch_broad_ctss, failOnDuplicate: true, failOnMismatch: true)
+        def ch_annotate = sl_separate
+            ? ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'nosl' }
+                .combine(ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'sl' })
+                .map { _meta, bed, ctss, _sl_meta, sl_bed, sl_ctss -> [[id: 'all_samples', cluster_set: 'broad'], bed, ctss, sl_bed, sl_ctss] }
+            : ch_paraclu.map { meta, bed, ctss -> [meta + [cluster_set: 'broad'], bed, ctss, [], []] }
+        ANNOTATE_TSS_CLUSTERS(ch_annotate)
+        ch_sets = ANNOTATE_TSS_CLUSTERS.out.bed
+            .join(ANNOTATE_TSS_CLUSTERS.out.tsv)
+            .map { _meta, bed, tsv -> ['broad', bed, tsv] }
+    }
 
     //
     // Sharp clusters: RECLU reproducible clusters (needs replicates)
