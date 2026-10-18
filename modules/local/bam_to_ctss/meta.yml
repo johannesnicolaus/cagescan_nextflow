@@ -57,6 +57,16 @@ output:
           type: file
           description: "CTSS of the other READ1s (with --sl-sequence)"
           pattern: "*.nosl_ctss.bed"
+  sl_leaders:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'sample1' ]
+      - "*.sl_leaders_mqc.tsv":
+          type: file
+          description: "MultiQC bargraph: share of SL READ1s per leader (with several leaders)"
+          pattern: "*.sl_leaders_mqc.tsv"
   bedgraph:
     - - meta:
           type: map

@@ -17,6 +17,7 @@ process BAM_TO_CTSS {
     tuple val(meta), path("*.ctss.{plus,minus}.bedgraph"), emit: bedgraph
     tuple val(meta), path("*.softclip_5p.tsv")       , emit: softclip
     tuple val(meta), path("*.ctss_stats_mqc.tsv")    , emit: stats
+    tuple val(meta), path("*.sl_leaders_mqc.tsv")    , emit: sl_leaders, optional: true
     tuple val("${task.process}"), val('python'), eval("python --version | sed 's/Python //'"), topic: versions, emit: versions_python
     tuple val("${task.process}"), val('pysam'), eval("python -c 'import pysam; print(pysam.__version__)'"), topic: versions, emit: versions_pysam
 

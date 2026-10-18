@@ -625,8 +625,8 @@
                 "genome.fa.fai:md5,b0f316ea7d9746701ea2e550255dc8ad",
                 "igv_session.xml:md5,9327e8d0085e6ab6972fa0923c98a98b",
                 "cutadapt_filtered_reads_plot.txt:md5,ad1f1ec55b5c67d126dd265fb96a5aad",
-                "cutadapt_trimmed_sequences_plot_default_Counts.txt:md5,85d167c263f5f401a2d22f237c8b6296",
-                "cutadapt_trimmed_sequences_plot_default_Obs_Exp.txt:md5,1dc39c24cdaf813d77e710941d849561",
+                "cutadapt_trimmed_sequences_plot_default_Counts.txt:md5,8ca1ff8afa2172f9c626e4873993c833",
+                "cutadapt_trimmed_sequences_plot_default_Obs_Exp.txt:md5,47821af265726006c7df2399c99bcfd4",
                 "fastp-seq-content-gc-plot_Read_1_After_filtering.txt:md5,e912d7c31366df395e80375ba0b2a4f2",
                 "fastp-seq-content-gc-plot_Read_1_Before_filtering.txt:md5,f6c97d6fc718c346d70ae1099f49700d",
                 "fastp-seq-content-gc-plot_Read_2_After_filtering.txt:md5,c4c52fc2e7cf2f92c5ca2b913379a370",
@@ -681,12 +681,12 @@
                 "all_samples.broad.transcript_tpm.tsv:md5,8694d3ba7a35ccb88679f27f1e5a90b4",
                 "all_samples.sharp.transcript_cov.tsv:md5,4b7b6af9bcffb02a6c6ff37c88521c31",
                 "all_samples.sharp.transcript_tpm.tsv:md5,96a16429538b7877442510102bf893ce",
-                "SAMPLE1.SL_1.fastq.gz:md5,0d32617f04679a4791f4119f9a2d091a",
-                "SAMPLE1.SL_2.fastq.gz:md5,2acb24f1fb695dd74a55c4306b9965a5",
+                "SAMPLE1.SL_1.fastq.gz:md5,5265849ad9b16767362b82fd9c8cf104",
+                "SAMPLE1.SL_2.fastq.gz:md5,c0524d63cb4b6a999054a8477814d1f9",
                 "SAMPLE1.noSL_1.fastq.gz:md5,5bd1b90f48fceccb3d0b1fc935dfda4d",
                 "SAMPLE1.noSL_2.fastq.gz:md5,c1864e33a60dd99c3863d6e39530e60b",
-                "SAMPLE2.SL_1.fastq.gz:md5,9bb691f8bd0a14410c01de48cd4cda65",
-                "SAMPLE2.SL_2.fastq.gz:md5,c640f0ae6c25f3ba7d9636f7209235e9",
+                "SAMPLE2.SL_1.fastq.gz:md5,c59f138fc32d03d1456a18d376d8ad8e",
+                "SAMPLE2.SL_2.fastq.gz:md5,1823435288cef92f84ddbe6c9acaf40f",
                 "SAMPLE2.noSL_1.fastq.gz:md5,31d9ee330a02a9b375fa8ae3562b51f2",
                 "SAMPLE2.noSL_2.fastq.gz:md5,5084968574cc1fa42e70e5779cb57f05",
                 "SAMPLE1.broad.transcripts.bed12:md5,0c80292a9f1e7aceeb675a00cf345481",
@@ -736,7 +736,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,9ae2bbc535cc7f0f4179feebb72626f5"
             ]
         ],
-        "timestamp": "2026-10-18T16:12:16.374330871",
+        "timestamp": "2026-10-18T18:17:27.898402775",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

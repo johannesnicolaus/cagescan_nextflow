@@ -156,14 +156,20 @@ trypanosomes) and is off unless `--sl_sequence` is given; without it, no reads a
 With `--sl_sequence`, the TSS of a trans-spliced READ1 is the trans-splice site, and SL reads are recognised in two
 ways.
 
+`--sl_sequence` takes one leader or several, for organisms with more than one (e.g. *C. elegans* SL1 and the SL2
+family, used mostly by downstream genes of operons): `--sl_sequence SL1=GGTTTAATTACCCAAGTTTGAG,SL2a=GGTTTTAACCCAGTTACTCAAG,...`
+(unnamed leaders are called SL, or SL1, SL2, ...). All leaders are looked for in every read; SL clusters pool them,
+and `tss_clusters/<set>/all_samples.<set>.tss_cluster_sl_leaders.tsv` gives the SL READ1s per leader and the main
+leader of each cluster; MultiQC shows the share of each leader per sample.
+
 1. **Before alignment** (`--sl_split`, on by default). As in
    [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe), which splits raw read pairs by the
    presence of the SL at the start of READ1 (with TagDust2), the pairs are split into an SL and a non-SL set
    (cutadapt): the SL must start at READ1 base 1 or right after one G (the extra G), mismatches are allowed
    (`--sl_max_error_rate`, default 0.15) but no indels, so that the SL is cut exactly at its end, and the trimmed READ1
-   starts at the trans-splice site. SL pairs are renamed `SL:<name>` (or `SLG:<name>` when the extra G was present),
-   the others `no_adapter:<name>`. Both sets are then aligned together, and the read names carry the SL status into
-   the BAM files (`samtools view -e 'qname=~"^SLG?:"'` selects trans-spliced pairs). A trimmed READ1 holds no
+   starts at the trans-splice site. SL pairs are renamed `SL.<leader>:<name>` (or `SLG.<leader>:<name>` when the extra G
+   was present), the others `no_adapter:<name>`. Both sets are then aligned together, and the read names carry the
+   SL status and the leader into the BAM files (`samtools view -e 'qname=~"^SLG?\\."'` selects trans-spliced pairs). A trimmed READ1 holds no
    non-templated bases, so up to 3 bases that STAR soft-clips at its 5' end (sequencing errors or strain variants
    that differ from the assembly) are added back: its CTSS is the trans-splice site even when the first exon bases
    do not match the genome. Trimmed READ1s with a longer 5' clip (extra non-genomic bases after the leader, or an

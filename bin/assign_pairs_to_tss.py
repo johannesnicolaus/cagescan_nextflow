@@ -18,7 +18,7 @@ these are not isoform-resolved.
 
 Outputs (PREFIX = --prefix):
   PREFIX.tss.bam                  TSS-anchored pairs (coordinate-sorted, indexed)
-  PREFIX.tss_counts.tsv           tss_id, READ1 count, SL READ1 count
+  PREFIX.tss_counts.tsv           tss_id, READ1 count, SL READ1 count (and per leader, with several)
   PREFIX.cagescan_clusters.bed12  union of pair blocks per TSS cluster
   PREFIX.tss_assign_stats_mqc.tsv one-row summary table for MultiQC
 """
@@ -26,100 +26,11 @@ Outputs (PREFIX = --prefix):
 import argparse
 import bisect
 import collections
-import re
 
 import pysam
 
-COMPLEMENT = str.maketrans("ACGTNacgtn", "TGCANtgcan")
-
-
-def revcomp(seq):
-    return seq.translate(COMPLEMENT)[::-1]
-
-
-def five_prime(read):
-    """Return (pos0, strand, softclipped 5' sequence, first aligned bases), all in read orientation."""
-    cigar = [op for op in (read.cigartuples or []) if op[0] != 5]  # hard clips are not in the sequence
-    seq = read.query_sequence or ""
-    if read.is_reverse:
-        clip = cigar[-1][1] if cigar and cigar[-1][0] == 4 else 0
-        oriented = revcomp(seq)
-        return read.reference_end - 1, "-", oriented[:clip], oriented[clip:clip + 8]
-    clip = cigar[0][1] if cigar and cigar[0][0] == 4 else 0
-    return read.reference_start, "+", seq[:clip], seq[clip:clip + 8]
-
-
-def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
-    """Number of spliced-leader 3' bases aligned to the genome, or None if the read has no SL.
-
-    The soft clip must end with (a suffix of) the SL.  The SL's last bases often
-    match the genome, because the trans-splice acceptor (...AG, ...CAG) resembles
-    the SL's own 3' end (...AACAG); then the clip stops up to `max_aligned` bases
-    early and those SL bases start the alignment.
-    """
-    if not sl_sequence or len(clip) < min_overlap:
-        return None
-    clip, aligned = clip.upper(), aligned.upper()
-    for k in range(max_aligned + 1):
-        sl = sl_sequence[:len(sl_sequence) - k]
-        n = min(len(clip), len(sl))
-        if n >= min_overlap and clip[-n:] == sl[-n:] and aligned[:k] == sl_sequence[len(sl_sequence) - k:]:
-            return k
-    return None
-
-
-def shift_downstream(pos, strand, k):
-    return pos + k if strand == "+" else pos - k
-
-SL_TRIMMED = ("SL:", "SLG:")  # read-name prefixes of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
-MAX_SL_CLIP = 3  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
-
-
-def sl_trimmed_5p(read, pos, strand, clip):
-    """5' end of an SL-trimmed READ1, with a short 5' soft clip added back.
-
-    After the SL (and the extra G before it) is trimmed, the read starts at the trans-splice site and holds no
-    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, strain
-    variants), which would otherwise move the CTSS downstream.
-    """
-    if read.query_name.startswith(SL_TRIMMED) and 0 < len(clip) <= MAX_SL_CLIP:
-        return max(0, pos - len(clip)) if strand == "+" else pos + len(clip)
-    return pos
-
-
-def sl_trimmed_unplaceable(read, clip):
-    """SL-trimmed READ1 with a longer 5' soft clip: its 5' end cannot be placed (extra non-genomic bases after the
-    leader, or an indel near the 5' end), so it gives no TSS."""
-    return read.query_name.startswith(SL_TRIMMED) and len(clip) > MAX_SL_CLIP
-
-MD_FIRST = re.compile(r"^0[ACGTN]")
-MD_LAST = re.compile(r"[ACGTN]0$")
-
-
-def first_g_mismatch(read):
-    """READ1 aligned from its first 5' base, which is a G that differs from the genome (MD tag): the non-templated
-    G added by the reverse transcriptase at the cap; the TSS is the next base (as CAGEr's removeFirstG)."""
-    if read.query_name.startswith(SL_TRIMMED) or not read.has_tag("MD"):
-        return False
-    cigar = [op for op in (read.cigartuples or []) if op[0] != 5]
-    seq = read.query_sequence or ""
-    if not cigar or not seq:
-        return False
-    md = read.get_tag("MD")
-    if read.is_reverse:
-        return cigar[-1][0] in (0, 7, 8) and seq[-1] == "C" and bool(MD_LAST.search(md))
-    return cigar[0][0] in (0, 7, 8) and seq[0] == "G" and bool(MD_FIRST.match(md))
-
-
-def sl_status(read, clip, aligned, sl_sequence, min_overlap):
-    """SL bases aligned to the genome (0-3) if READ1 carries the spliced leader, else None.
-
-    A READ1 whose SL was trimmed before alignment starts at the trans-splice site.
-    Otherwise the SL is recognised in the soft clip (see sl_aligned).
-    """
-    if read.query_name.startswith(SL_TRIMMED):
-        return 0
-    return sl_aligned(clip, aligned, sl_sequence, min_overlap)
+from cagescan_sl import (MAX_SL_CLIP, first_g_mismatch, five_prime, parse_leaders, shift_downstream,
+                         sl_status, sl_trimmed_5p, sl_trimmed_unplaceable, trimmed_leader)
 
 
 def is_primary(read):
@@ -222,18 +133,19 @@ def main():
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--window", type=int, default=50, help="extend clusters by this many bases (default: %(default)s)")
     parser.add_argument("--min-mapq", type=int, default=10, help="minimum READ1 mapping quality (default: %(default)s)")
-    parser.add_argument("--sl-sequence", default="", help="spliced-leader sequence, 5'->3' (default: none)")
+    parser.add_argument("--sl-sequence", default="", help="spliced leader(s), 5'->3': SEQ or NAME=SEQ,NAME=SEQ,... (default: none)")
     parser.add_argument("--sl-min-overlap", type=int, default=8)
     parser.add_argument("--remove-first-g", action="store_true",
                         help="READ1s aligned from their first base: skip a first G that differs from the genome")
     parser.add_argument("--threads", type=int, default=1)
     args = parser.parse_args()
-    sl_sequence = args.sl_sequence.upper()
+    leaders = parse_leaders(args.sl_sequence)
 
     index = ClusterIndex(args.clusters, args.window)
     assigned = {}
     counts = collections.Counter()
     sl_counts = collections.Counter()
+    leader_counts = collections.defaultdict(collections.Counter)  # tss_id -> leader -> READ1s
     n_read1 = 0
 
     # Pass 1: assign READ1s to TSS clusters.
@@ -249,7 +161,7 @@ def main():
             pos, strand, clip, aligned = five_prime(read)
             if sl_trimmed_unplaceable(read, clip):
                 continue
-            k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
+            k, leader = sl_status(read, clip, aligned, leaders, args.sl_min_overlap)
             if k:
                 pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py
             if k is not None:
@@ -263,6 +175,7 @@ def main():
             counts[tss_id] += 1
             if k is not None:
                 sl_counts[tss_id] += 1
+                leader_counts[tss_id][leader] += 1
 
     # Pass 2: write every primary record of the assigned templates.
     out_bam = f"{args.prefix}.tss.bam"
@@ -284,10 +197,15 @@ def main():
     pysam.index(out_bam)
     write_cagescan_clusters(f"{args.prefix}.cagescan_clusters.bed12", index, unions, counts)
 
+    # with several leaders, SL READ1s per leader follow the total SL count (columns sl_<leader>)
+    names = [name for name, _ in leaders]
+    seen = sorted({lead for c in leader_counts.values() for lead in c} - set(names))
+    per_leader = names + seen if len(leaders) > 1 or seen else []
     with open(f"{args.prefix}.tss_counts.tsv", "w") as out:
-        out.write("tss_id\tcount\tsl_count\n")
+        out.write("tss_id\tcount\tsl_count" + "".join(f"\tsl_{n}" for n in per_leader) + "\n")
         for tss_id in index.ids:
-            out.write(f"{tss_id}\t{counts[tss_id]}\t{sl_counts[tss_id]}\n")
+            extra = "".join(f"\t{leader_counts[tss_id][n]}" for n in per_leader)
+            out.write(f"{tss_id}\t{counts[tss_id]}\t{sl_counts[tss_id]}{extra}\n")
 
     n_assigned = len(assigned)
     with open(f"{args.prefix}.tss_assign_stats_mqc.tsv", "w") as out:

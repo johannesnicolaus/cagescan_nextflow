@@ -121,6 +121,7 @@ fragments (the library insert size), not necessarily to the polyadenylation site
   - `all_samples.<set>.tss_cluster_counts.tsv`: READ1 counts per cluster (rows) and sample (columns).
   - `all_samples.<set>.tss_cluster_cpm.tsv`: the same, as counts per million TSS-assigned READ1s.
   - `all_samples.<set>.tss_cluster_sl_counts.tsv`: READ1s per cluster that carried the spliced leader (`--sl_sequence`; trimmed before alignment or soft-clipped) (only written when SL reads are found). Divide by the counts matrix to get the trans-spliced fraction of each TSS.
+  - `all_samples.<set>.tss_cluster_sl_leaders.tsv` (several leaders only): SL READ1s per leader, summed over samples, with the main leader and its fraction for each cluster with SL reads.
   - `tss_anchored_bam/<sample>.<set>.tss.bam(.bai)`: read pairs whose READ1 5' end falls in a TSS cluster, tagged with `TC:Z:<tss_id>`. These are the reads used to build transcripts.
 - `tss_clusters/sharp/` additionally
   - `all_samples.reclu_clusters.bed`: the reproducible innermost RECLU clusters before naming (0-based first/last CTSS positions).
@@ -206,7 +207,7 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
 - `sl_split/` (only with `--sl_sequence`): read pairs split by the spliced leader at the READ1 start.
-  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL:` (or `SLG:` when the extra G preceded the leader).
+  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL.<leader>:` (or `SLG.<leader>:` when the extra G preceded the leader).
   - `<sample>.noSL_{1,2}.fastq.gz`: the other pairs, names prefixed with `no_adapter:`.
   - `<sample>.sl_split.log`: cutadapt report (`Read 1 with adapter` = trans-spliced pairs).
   The FASTQ files are saved with `--save_sl_split_reads` (default); they come after subsampling and trimming.

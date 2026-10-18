@@ -25,7 +25,7 @@ input:
         pattern: "*.{fastq,fq}.gz"
   - sl_sequence:
       type: string
-      description: "Spliced-leader sequence, 5'->3'"
+      description: "Spliced leader(s), 5'->3': SEQ or NAME=SEQ,NAME=SEQ,..."
 output:
   sl:
     - - meta:
@@ -35,7 +35,7 @@ output:
             e.g. [ id:'sample1' ]
       - "*.SL_{1,2}.fastq.gz":
           type: file
-          description: "Pairs whose READ1 starts with the SL (SL trimmed; read names prefixed with SL: or SLG:)"
+          description: "Pairs whose READ1 starts with the SL (SL trimmed; read names prefixed with SL.<leader>: or SLG.<leader>:)"
           pattern: "*.SL_{1,2}.fastq.gz"
   nosl:
     - - meta:

@@ -3,7 +3,8 @@
 
   merge_counts.py tss --clusters tss_clusters.tsv --prefix P S1.tss_counts.tsv S2.tss_counts.tsv ...
       -> P.tss_cluster_counts.tsv, P.tss_cluster_cpm.tsv, and
-         P.tss_cluster_sl_counts.tsv (spliced-leader READ1s) if any were found
+         P.tss_cluster_sl_counts.tsv (spliced-leader READ1s) if any were found, and with several leaders
+         P.tss_cluster_sl_leaders.tsv (SL READ1s per leader summed over samples, main leader per cluster)
 
   merge_counts.py transcripts --prefix P S1.transcripts.gtf S2.transcripts.gtf ...
       (StringTie -e output) -> P.transcript_tpm.tsv, P.transcript_cov.tsv
@@ -38,21 +39,38 @@ def tss(args):
             fields = line.rstrip("\n").split("\t")
             info[fields[0]] = fields[1:4]  # location, strand, peak
     samples, counts, sl_counts = [], {}, {}
+    leaders, leader_totals = [], collections.defaultdict(collections.Counter)  # tss_id -> leader -> READ1s
     for path in sorted(args.files):
         name = sample_name(path)
         samples.append(name)
         counts[name], sl_counts[name] = {}, {}
         with open(path) as handle:
-            handle.readline()
+            # tss_id, count, sl_count[, sl_<leader> ...]
+            extra = [c[3:] for c in handle.readline().rstrip("\n").split("\t")[3:]]
+            leaders += [lead for lead in extra if lead not in leaders]
             for line in handle:
-                tss_id, count, sl_count = line.rstrip("\n").split("\t")
+                fields = line.rstrip("\n").split("\t")
+                tss_id, count, sl_count = fields[:3]
                 counts[name][tss_id] = int(count)
                 sl_counts[name][tss_id] = int(sl_count)
+                for lead, value in zip(extra, fields[3:]):
+                    leader_totals[tss_id][lead] += int(value)
     rows = [[tss_id] + values for tss_id, values in info.items()]
     header = ["tss_id", "location", "strand", "peak"]
     write_matrix(f"{args.prefix}.tss_cluster_counts.tsv", header, rows, samples, counts, str)
     if any(any(v.values()) for v in sl_counts.values()):
         write_matrix(f"{args.prefix}.tss_cluster_sl_counts.tsv", header, rows, samples, sl_counts, str)
+    if leaders:
+        # several spliced leaders: SL READ1s per leader, summed over samples, and the main leader of each cluster
+        with open(f"{args.prefix}.tss_cluster_sl_leaders.tsv", "w") as out:
+            out.write("\t".join(header + ["sl_reads"] + leaders + ["main_leader", "main_leader_fraction"]) + "\n")
+            for row in rows:
+                c = leader_totals.get(row[0], collections.Counter())
+                total = sum(c.values())
+                if not total:
+                    continue
+                main, n = max(((lead, c[lead]) for lead in leaders), key=lambda x: x[1])
+                out.write("\t".join(row + [str(total)] + [str(c[lead]) for lead in leaders] + [main, f"{n / total:.3f}"]) + "\n")
     cpm = {}
     for name in samples:
         total = sum(counts[name].values()) or 1

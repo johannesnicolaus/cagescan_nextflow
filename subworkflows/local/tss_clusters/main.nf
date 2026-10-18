@@ -172,6 +172,7 @@ workflow TSS_CLUSTERS {
         .mix(CTSS_MOTIFS.out.initiator.map { _meta, tsv -> tsv }.collectFile(name: 'tss_initiator_mqc.tsv', keepHeader: true, skip: 10, sort: true))
         .mix(CTSS_MOTIFS.out.acceptor.map { _meta, tsv -> tsv }.collectFile(name: 'sl_acceptor_mqc.tsv', keepHeader: true, skip: 10, sort: true))
         .mix(CTSS_MOTIFS.out.stats.map { _meta, tsv -> tsv }.collectFile(name: 'ctss_motif_stats_mqc.tsv', keepHeader: true, skip: 5, sort: true))
+        .mix(BAM_TO_CTSS.out.sl_leaders.map { _meta, tsv -> tsv }.collectFile(name: 'sl_leaders_mqc.tsv', keepHeader: true, skip: 10, sort: true))
 
     emit:
     ctss              = BAM_TO_CTSS.out.ctss                            // channel: [ val(meta), path(ctss.bed) ]
