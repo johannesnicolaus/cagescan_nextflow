@@ -69,7 +69,20 @@ def sl_aligned(clip, aligned, sl_sequence, min_overlap, max_aligned=3):
 def shift_downstream(pos, strand, k):
     return pos + k if strand == "+" else pos - k
 
-SL_TRIMMED = "SL:"  # read-name prefix of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
+SL_TRIMMED = ("SL:", "SLG:")  # read-name prefixes of pairs whose SL was trimmed before alignment (SPLIT_SPLICED_LEADER)
+MAX_SL_CLIP = 25  # longest 5' soft clip of an SL-trimmed READ1 that is added back to its 5' end
+
+
+def sl_trimmed_5p(read, pos, strand, clip):
+    """5' end of an SL-trimmed READ1, with its 5' soft clip added back.
+
+    After the SL (and the extra G before it) is trimmed, the read starts at the trans-splice site and holds no
+    non-templated bases; STAR soft-clips first bases that differ from the genome (sequencing errors, variants),
+    which would otherwise move the CTSS downstream.
+    """
+    if read.query_name.startswith(SL_TRIMMED) and 0 < len(clip) <= MAX_SL_CLIP:
+        return max(0, pos - len(clip)) if strand == "+" else pos + len(clip)
+    return pos
 
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
@@ -121,7 +134,7 @@ def main():
     ctss = collections.Counter()
     sl_ctss = collections.Counter()
     clips = collections.Counter()
-    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_shifted = 0
+    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_clip_added = n_sl_shifted = 0
 
     with pysam.AlignmentFile(args.bam, "rb") as bam:
         for read in bam.fetch(until_eof=True):
@@ -134,6 +147,9 @@ def main():
                 n_sl += 1
                 if read.query_name.startswith(SL_TRIMMED):
                     n_sl_trimmed += 1
+                    if clip and len(clip) <= MAX_SL_CLIP:
+                        n_sl_clip_added += 1
+                    pos = sl_trimmed_5p(read, pos, strand, clip)
                 if k:
                     # SL bases aligned to the acceptor: the trans-splice site is k bases downstream
                     pos = shift_downstream(pos, strand, k)
@@ -170,9 +186,9 @@ def main():
         out.write("# section_name: 'CTSS extraction'\n")
         out.write("# description: 'READ1 5-prime ends used as CAGE TSSs, and what was soft-clipped before them (extra G, linker, spliced leader).'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL end aligned, CTSS moved (%)\n")
+        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL trimmed, 5' clip added back (%)\tSL end aligned, CTSS moved (%)\n")
         other = n_used - n_noclip - n_g
-        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_shifted)}\n")
+        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_clip_added)}\t{pct(n_sl_shifted)}\n")
 
     if n_used == 0:
         print(f"WARNING: no usable READ1 alignments found in {args.bam}", file=sys.stderr)

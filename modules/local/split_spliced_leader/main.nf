@@ -23,13 +23,16 @@ process SPLIT_SPLICED_LEADER {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // The SL must start at READ1 base 1 or 2 (room for the extra G). It is trimmed, and the pairs are written to
-    // separate files and renamed SL:<name> / no_adapter:<name>, so that the SL status survives alignment.
+    // The SL must start at READ1 base 1 or after one G (the extra G); mismatches are allowed but no indels, so that the
+    // SL is cut exactly at its end. It is trimmed, and the pairs are written to separate files and renamed
+    // SL:<name> or SLG:<name> (SL found) / no_adapter:<name>, so that the SL status survives alignment.
     // No {comment} in the new name: STAR rejects header lines that end in a space.
     """
     cutadapt \\
         --cores $task.cpus \\
-        -g 'SL=^N${sl_sequence}' \\
+        -g 'SL=^${sl_sequence}' \\
+        -g 'SLG=^G${sl_sequence}' \\
+        --no-indels \\
         --rename '{r1.adapter_name}:{id}' \\
         $args \\
         -o ${prefix}.SL_1.fastq.gz \\

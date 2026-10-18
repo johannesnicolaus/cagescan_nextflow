@@ -32,7 +32,7 @@ nextflow_process {
                 // 12,000 simulated pairs; READ1s of the trans-spliced gene start with the SL
                 { assert sl[0].size() == sl[1].size() && sl[0].size() > 0 },
                 { assert (sl[0].size() + nosl[0].size()) / 4 == 12000 },
-                { assert sl.every { lines -> lines[0].startsWith('@SL:') } },
+                { assert sl.every { lines -> lines[0] ==~ /^@SLG?:.*/ } },
                 { assert nosl.every { lines -> lines[0].startsWith('@no_adapter:') } },
                 // the SL is trimmed from READ1
                 { assert !sl[0].withIndex().any { line, i -> i % 4 == 1 && line.startsWith('GGTTTAATTACCCAAG') } },

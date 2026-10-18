@@ -10,10 +10,16 @@ report_section_order:
     order: -1002
   ctss_stats:
     order: -10
-  tss_assign_stats:
+  ctss_motif_stats:
     order: -11
-  anchor_stats:
+  tss_initiator:
     order: -12
+  sl_acceptor:
+    order: -13
+  tss_assign_stats:
+    order: -14
+  anchor_stats:
+    order: -15
 
 export_plots: true
 

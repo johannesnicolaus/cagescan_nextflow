@@ -4,6 +4,7 @@
 //
 
 include { BAM_TO_CTSS                     } from '../../../modules/local/bam_to_ctss/main'
+include { CTSS_MOTIFS                     } from '../../../modules/local/ctss_motifs/main'
 include { POOL_CTSS                       } from '../../../modules/local/pool_ctss/main'
 include { POOL_CTSS as POOL_CTSS_BY_SL     } from '../../../modules/local/pool_ctss/main'
 include { PARACLU                         } from '../../../modules/nf-core/paraclu/main'
@@ -23,6 +24,8 @@ workflow TSS_CLUSTERS {
     run_sharp           // boolean: also build sharp (RECLU) clusters
     reclu_paraclu_min   // integer: paraclu minValue for the RECLU cluster hierarchy
     sl_separate         // boolean: cluster spliced-leader and other CTSS separately (broad set; needs --sl_sequence)
+    has_sl              // boolean: --sl_sequence given (BAM_TO_CTSS writes SL and non-SL CTSS)
+    ch_fasta_fai        // channel: [ val(meta), path(fasta), path(fai) ]
 
     main:
 
@@ -30,6 +33,16 @@ workflow TSS_CLUSTERS {
     // READ1 5' ends -> CTSS per sample
     //
     BAM_TO_CTSS(ch_bam_bai)
+
+    //
+    // Sequence at TSSs (initiator) and trans-splice sites (acceptor), for MultiQC
+    //
+    CTSS_MOTIFS(
+        has_sl
+            ? BAM_TO_CTSS.out.nosl_ctss.join(BAM_TO_CTSS.out.sl_ctss, failOnDuplicate: true, failOnMismatch: true)
+            : BAM_TO_CTSS.out.ctss.map { meta, ctss -> [meta, ctss, []] },
+        ch_fasta_fai
+    )
 
     //
     // CTSS pooled across samples
@@ -127,6 +140,9 @@ workflow TSS_CLUSTERS {
                 .collectFile(name: 'tss_assign_stats_mqc.tsv', keepHeader: true, skip: 5, sort: true)
         )
         .mix(ch_reclu_stats)
+        .mix(CTSS_MOTIFS.out.initiator.map { _meta, tsv -> tsv }.collectFile(name: 'tss_initiator_mqc.tsv', keepHeader: true, skip: 10, sort: true))
+        .mix(CTSS_MOTIFS.out.acceptor.map { _meta, tsv -> tsv }.collectFile(name: 'sl_acceptor_mqc.tsv', keepHeader: true, skip: 10, sort: true))
+        .mix(CTSS_MOTIFS.out.stats.map { _meta, tsv -> tsv }.collectFile(name: 'ctss_motif_stats_mqc.tsv', keepHeader: true, skip: 5, sort: true))
 
     emit:
     ctss              = BAM_TO_CTSS.out.ctss                            // channel: [ val(meta), path(ctss.bed) ]

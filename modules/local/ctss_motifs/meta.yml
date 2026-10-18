@@ -1,0 +1,68 @@
+name: ctss_motifs
+description: "Sequence at CAGE TSSs (initiator dinucleotide) and trans-splice sites (acceptor), as MultiQC tables"
+keywords:
+  - cage
+  - ctss
+  - initiator
+  - trans-splicing
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory (uses pysam)
+      homepage: https://github.com/pysam-developers/pysam
+      licence:
+        - "MIT"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'sample1' ]
+    - ctss:
+        type: file
+        description: "CTSS BED of TSS READ1s (the non-SL CTSS when sl_ctss is given)"
+        pattern: "*.bed"
+    - sl_ctss:
+        type: file
+        description: "CTSS BED of spliced-leader READ1s (optional, [] if absent)"
+        pattern: "*.bed"
+  - - meta2:
+        type: map
+        description: Genome information
+    - fasta:
+        type: file
+        description: Genome FASTA
+        pattern: "*.{fa,fasta}"
+    - fai:
+        type: file
+        description: FASTA index
+        pattern: "*.fai"
+output:
+  initiator:
+    - - meta:
+          type: map
+          description: Sample information
+      - "*.tss_initiator_mqc.tsv":
+          type: file
+          description: "MultiQC bargraph: dinucleotide at -1/+1 of TSSs (read-weighted)"
+          pattern: "*.tss_initiator_mqc.tsv"
+  acceptor:
+    - - meta:
+          type: map
+          description: Sample information
+      - "*.sl_acceptor_mqc.tsv":
+          type: file
+          description: "MultiQC bargraph: the two bases before trans-splice sites (read-weighted)"
+          pattern: "*.sl_acceptor_mqc.tsv"
+  stats:
+    - - meta:
+          type: map
+          description: Sample information
+      - "*.ctss_motif_stats_mqc.tsv":
+          type: file
+          description: "MultiQC table: % YR initiator, % AG before trans-splice sites"
+          pattern: "*.ctss_motif_stats_mqc.tsv"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

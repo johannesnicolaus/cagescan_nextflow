@@ -169,7 +169,9 @@ workflow CAGESCAN {
         params.paraclu_min_cluster,
         !params.skip_sharp_clusters,
         params.reclu_paraclu_min,
-        params.sl_sequence && params.sl_separate_clusters
+        params.sl_sequence && params.sl_separate_clusters,
+        params.sl_sequence as boolean,
+        PREPARE_GENOME.out.fasta.combine(PREPARE_GENOME.out.fai).map { meta, fasta, _fai_meta, fai -> [meta, fasta, fai] }.first()
     )
     ch_multiqc_files = ch_multiqc_files.mix(TSS_CLUSTERS.out.multiqc_files)
 

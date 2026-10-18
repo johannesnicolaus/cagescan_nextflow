@@ -133,10 +133,14 @@ ways.
 1. **Before alignment** (`--sl_split`, on by default). As in
    [splitSpliceLeaderPE](https://github.com/oist/plessy_splitspliceleaderpe), which splits raw read pairs by the
    presence of the SL at the start of READ1 (with TagDust2), the pairs are split into an SL and a non-SL set
-   (cutadapt): the SL must start at READ1 base 1 or 2 (room for the extra G), mismatches and indels are allowed
-   (`--sl_max_error_rate`, default 0.15), and the SL is trimmed, so the trimmed READ1 starts at the trans-splice site.
-   SL pairs are renamed `SL:<name>`, the others `no_adapter:<name>`. Both sets are then aligned together, and the
-   read names carry the SL status into the BAM files (`samtools view -e 'qname=~"^SL:"'` selects trans-spliced pairs).
+   (cutadapt): the SL must start at READ1 base 1 or right after one G (the extra G), mismatches are allowed
+   (`--sl_max_error_rate`, default 0.15) but no indels, so that the SL is cut exactly at its end, and the trimmed READ1
+   starts at the trans-splice site. SL pairs are renamed `SL:<name>` (or `SLG:<name>` when the extra G was present),
+   the others `no_adapter:<name>`. Both sets are then aligned together, and the read names carry the SL status into
+   the BAM files (`samtools view -e 'qname=~"^SLG?:"'` selects trans-spliced pairs). A trimmed READ1 holds no
+   non-templated bases, so bases that STAR soft-clips at its 5' end (sequencing errors or variants that differ from
+   the assembly) are added back: its CTSS is the trans-splice site even when the first exon bases do not match the
+   genome.
    The split FASTQ files and cutadapt logs are in `sl_split/` (FASTQs only with `--save_sl_split_reads`, default on).
 2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
    leader, or with `--sl_split false`); exact match only.
@@ -145,7 +149,11 @@ Why both: with the soft-clip match alone, 11-15% of SL READ1s were missed on *O.
 because of sequencing errors in the 40-nt leader, and a further ~5% because STAR aligned the leader's last 4-27 bases to
 the genome with mismatches. On 500,000 raw pairs per library, the cutadapt step called the same SL reads as
 splitSpliceLeaderPE/TagDust2 (99.6% and 99.98% of TagDust2's SL reads; identical trimmed sequences for >99.9%),
-in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtered as low complexity.
+in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtered as low complexity. Without indels,
+cutadapt cut 100% of the SL reads exactly at the end of the leader (TagDust2 and cutadapt with indels: 99.3-99.5%).
+Adding back the 5' soft clip matters: in the Osaka strain, the first base after the acceptor of a highly expressed
+trans-spliced gene differs from the O10 assembly in most reads, and STAR's clip of that base put the SL peak one
+base downstream of the acceptor.
 
 **Separate clusters for trans-splice sites** (`--sl_separate_clusters`, on by default with `--sl_sequence`).
 Trans-splice sites and TSSs of the same gene are often a few bases apart. Pooled into one cluster, only the stronger

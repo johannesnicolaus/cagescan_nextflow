@@ -35,7 +35,7 @@ output:
             e.g. [ id:'sample1' ]
       - "*.SL_{1,2}.fastq.gz":
           type: file
-          description: "Pairs whose READ1 starts with the SL (SL trimmed; read names prefixed with SL:)"
+          description: "Pairs whose READ1 starts with the SL (SL trimmed; read names prefixed with SL: or SLG:)"
           pattern: "*.SL_{1,2}.fastq.gz"
   nosl:
     - - meta:

@@ -189,7 +189,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Split read pairs by the presence of the SL at the start of READ1 before alignment, allowing mismatches, and trim the SL (cutadapt).",
-                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start at READ1 base 1 or 2 (room for the extra G). SL pairs are renamed `SL:<name>`, other pairs `no_adapter:<name>`; both sets are aligned together and the names carry the SL status. Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence` (organisms with SL trans-splicing).",
+                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start at READ1 base 1 or right after one G (the extra G), with mismatches but no indels. SL pairs are renamed `SL:<name>` or `SLG:<name>`, other pairs `no_adapter:<name>`; 5' soft clips of trimmed READ1s are added back to their CTSS; both sets are aligned together and the names carry the SL status. Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence` (organisms with SL trans-splicing).",
                     "fa_icon": "fas fa-cut"
                 },
                 "save_sl_split_reads": {
@@ -210,7 +210,7 @@
                     "default": 0.15,
                     "minimum": 0,
                     "maximum": 0.5,
-                    "description": "Maximum fraction of mismatches and indels in the SL match of `--sl_split` (cutadapt `-e`).",
+                    "description": "Maximum fraction of mismatches in the SL match of `--sl_split` (cutadapt `-e`; no indels).",
                     "fa_icon": "fas fa-percentage"
                 },
                 "paraclu_min_cluster": {

@@ -1,0 +1,243 @@
+{
+    "simulated CAGE - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "3": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "4": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "acceptor": [
+                    
+                ],
+                "initiator": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-18T14:54:52.829529228",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "no spliced leader": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,1cde4cd924d9bbfb157439351f7adf8f"
+                    ]
+                ],
+                "1": [
+                    
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,34501d613567d5b842f7549357c42dcf"
+                    ]
+                ],
+                "3": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "4": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "acceptor": [
+                    
+                ],
+                "initiator": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,1cde4cd924d9bbfb157439351f7adf8f"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,34501d613567d5b842f7549357c42dcf"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-18T14:54:42.138905754",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "simulated CAGE": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,1cde4cd924d9bbfb157439351f7adf8f"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.sl_acceptor_mqc.tsv:md5,d5c101344e03e3dea22763031233c600"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,606d78a08a0ce6e98066199d5f024596"
+                    ]
+                ],
+                "3": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ],
+                "4": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "acceptor": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.sl_acceptor_mqc.tsv:md5,d5c101344e03e3dea22763031233c600"
+                    ]
+                ],
+                "initiator": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.tss_initiator_mqc.tsv:md5,1cde4cd924d9bbfb157439351f7adf8f"
+                    ]
+                ],
+                "stats": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_motif_stats_mqc.tsv:md5,606d78a08a0ce6e98066199d5f024596"
+                    ]
+                ],
+                "versions_pysam": [
+                    [
+                        "CTSS_MOTIFS",
+                        "pysam",
+                        "0.24.1"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "CTSS_MOTIFS",
+                        "python",
+                        "3.12.14"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-18T14:54:31.027313584",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
