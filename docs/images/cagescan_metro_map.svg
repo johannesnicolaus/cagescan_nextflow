@@ -25,20 +25,24 @@ text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #21252
 <text x="185" y="98" class="st">cat · seqtk</text>
 <text x="185" y="150" class="sub">lanes · subsample</text>
 <text x="185" y="163" class="sub">FastQC</text>
-<circle cx="295" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
-<text x="295" y="98" class="st">cutadapt</text>
-<text x="295" y="150" class="sub">5' linker</text>
-<text x="295" y="163" class="sub">SL split (trans-splicing)</text>
-<circle cx="395" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
-<text x="395" y="98" class="st">fastp</text>
-<text x="395" y="150" class="sub">adapters · quality</text>
-<circle cx="485" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
-<text x="485" y="98" class="st">SortMeRNA</text>
-<text x="485" y="150" class="sub">rRNA</text>
-<circle cx="565" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
-<text x="565" y="98" class="st">STAR</text>
-<text x="565" y="150" class="sub">spliced alignment</text>
-<text x="565" y="163" class="sub">READ1 5' end-to-end</text>
+<circle cx="272" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="272" y="98" class="st">cutadapt</text>
+<text x="272" y="150" class="sub">5' linker</text>
+<circle cx="352" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="352" y="98" class="st">fastp</text>
+<text x="352" y="150" class="sub">adapters</text>
+<text x="352" y="163" class="sub">quality</text>
+<circle cx="432" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="432" y="98" class="st">SortMeRNA</text>
+<text x="432" y="150" class="sub">rRNA</text>
+<circle cx="510" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3" stroke-dasharray="4 3"/>
+<text x="510" y="98" class="st">SL split</text>
+<text x="510" y="150" class="sub">leaders</text>
+<text x="510" y="163" class="sub">(cutadapt)</text>
+<circle cx="590" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
+<text x="590" y="98" class="st">STAR</text>
+<text x="590" y="150" class="sub">spliced alignment</text>
+<text x="590" y="163" class="sub">READ1 5' end-to-end</text>
 <circle cx="660" cy="120" r="10" fill="#fff" stroke="#212529" stroke-width="3"/>
 <text x="660" y="98" class="st">samtools</text>
 <text x="660" y="150" class="sub">stats</text>

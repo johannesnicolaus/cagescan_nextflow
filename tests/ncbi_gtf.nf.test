@@ -1,0 +1,32 @@
+nextflow_pipeline {
+
+    name "Test pipeline, NCBI-style annotation"
+    script "../main.nf"
+    tag "pipeline"
+    tag "ncbi_gtf"
+
+    test("-profile test, NCBI-style GTF (gene rows with transcript_id \"\")") {
+
+        when {
+            params {
+                def data_dir = "${projectDir}/tests/data"
+                def samplesheet = new File(new File(outputDir).parentFile, "samplesheet_ncbi.csv")
+                samplesheet.text = "sample,fastq_1,fastq_2,group\n" + ['SAMPLE1', 'SAMPLE2'].collect { s ->
+                    "${s},${data_dir}/${s}_R1.fastq.gz,${data_dir}/${s}_R2.fastq.gz,A"
+                }.join("\n") + "\n"
+                input              = samplesheet.toString()
+                outdir             = "$outputDir"
+                gtf                = "${projectDir}/tests/data/annotation_ncbi.gtf"
+                skip_sharp_clusters = true
+            }
+        }
+
+        then {
+            assertAll(
+                // gffcompare used to fail on these gene rows ("no valid ID found for GFF record")
+                { assert workflow.success },
+                { assert new File("${params.outdir}/gffcompare/broad").listFiles().any { f -> f.name.endsWith('.stats') } }
+            )
+        }
+    }
+}

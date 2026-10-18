@@ -233,7 +233,7 @@ def combine(args):
     with open(f"{args.prefix}.reclu_stats_mqc.tsv", "w") as out:
         out.write("# id: 'reclu_stats'\n")
         out.write("# section_name: 'Sharp TSS clusters (RECLU)'\n")
-        out.write(f"# description: 'Replicate pairs: clusters paired by >= 90% reciprocal overlap, and pairs passing IDR < {args.max_idr} and length <= {args.max_length} bp. {len(rows)} sharp clusters in total.'\n")
+        out.write(f"# description: 'Replicate pairs: clusters paired by >= {100 * args.min_overlap:.0f}% reciprocal overlap, and pairs passing IDR < {args.max_idr} and length <= {args.max_length} bp. {len(rows)} sharp clusters in total.'\n")
         out.write("# plot_type: 'table'\n")
         out.write("Replicate pair\tPaired clusters\tReproducible\tIDR model fitted\n")
         for name, n_pairs, n_pass, fitted in stats:
@@ -264,6 +264,7 @@ def main():
 
     p = sub.add_parser("combine", help="unite reproducible clusters and keep the innermost")
     p.add_argument("--prefix", required=True)
+    p.add_argument("--min-overlap", type=float, default=0.9, help="reciprocal overlap used to pair replicate clusters (reported only; default: %(default)s)")
     p.add_argument("--max-idr", type=float, default=0.1, help="(default: %(default)s)")
     p.add_argument("--max-length", type=int, default=200, help="(default: %(default)s)")
     p.add_argument("files", nargs="+")

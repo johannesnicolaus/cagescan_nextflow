@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/luscombeu/cagescan/master/nextflow_schema.json",
     "title": "luscombeu/cagescan pipeline parameters",
-    "description": "Reconstruct 5'-anchored transcripts from paired-end CAGE (CAGEscan) reads without UMIs",
+    "description": "Reconstruct 5'-anchored transcripts from paired-end CAGE (CAGEscan) reads without UMIs, and call TSS and trans-splice-site clusters from paired-end or single-end CAGE",
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -23,7 +23,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "A comma-separated file with a header row and the columns `sample,fastq_1,fastq_2`, plus an optional `group` column naming the condition each sample is a replicate of (used for sharp RECLU clusters; default: all samples are one group). Reads must be paired-end CAGE (READ1 starts at the capped 5' end). Rows with the same sample name are treated as lanes and concatenated.",
+                    "help_text": "A comma-separated file with a header row and the columns `sample`, `fastq_1`, optionally `fastq_2` and `group`. `fastq_1` is READ1 (starting at the cap). Leave `fastq_2` empty for single-end CAGE (TSS clusters and counts only, no transcripts); all samples must be single-end or all paired-end. `group` names the condition each sample is a replicate of (sharp clusters only). Rows with the same sample name are lanes and are concatenated. The names `all_samples` and `merged` are reserved.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -107,7 +107,7 @@
                     "type": "string",
                     "pattern": "^[ACGTNacgtn]+$",
                     "description": "Linker sequence at the 5' end of READ1 to remove (e.g. `TATAGGG` for nanoCAGE).",
-                    "help_text": "The linker and anything before it in READ1 are trimmed with cutadapt (`-g LINKER`). Leave unset if READ1 already starts at the cap; check `ctss/*.softclip_5p.tsv` from a first run to see what precedes the cap.",
+                    "help_text": "The linker and anything before it in READ1 are trimmed with cutadapt (`-g LINKER`). Leave unset if READ1 already starts at the cap; to see what precedes the cap, run once with `--read1_end_to_end false` (local alignment) and check `ctss/*.softclip_5p.tsv`.",
                     "fa_icon": "fas fa-cut"
                 },
                 "linker_discard_untrimmed": {
@@ -201,7 +201,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Split read pairs by the presence of the SL at the start of READ1 before alignment, allowing mismatches, and trim the SL (cutadapt).",
-                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start at READ1 base 1 or right after one G (the extra G), with mismatches but no indels. SL pairs are renamed `SL.<leader>:<name>` or `SLG.<leader>:<name>`, other pairs `no_adapter:<name>`; 5' soft clips of trimmed READ1s are added back to their CTSS; both sets are aligned together and the names carry the SL status. Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence` (organisms with SL trans-splicing).",
+                    "help_text": "Same approach as splitSpliceLeaderPE (github.com/oist/plessy_splitspliceleaderpe): the SL must start at READ1 base 1 or right after one G (the extra G), with mismatches but no indels. SL pairs are renamed `SL.<leader>:<name>` or `SLG.<leader>:<name>`, other pairs `no_adapter:<name>`; up to 3 bases soft-clipped at the 5' end of a trimmed READ1 are added back to its CTSS, and trimmed READ1s with longer 5' clips give no TSS; both sets are aligned together and the names carry the SL status. Recovers SL reads with sequencing errors in the leader, which the soft-clip match misses. Only used with `--sl_sequence` (organisms with SL trans-splicing).",
                     "fa_icon": "fas fa-cut"
                 },
                 "save_sl_split_reads": {
@@ -274,9 +274,8 @@
                 "tss_merge_distance": {
                     "type": "integer",
                     "default": 20,
-                    "minimum": -1,
-                    "description": "Merge TSS clusters on the same strand separated by at most this many bases (-1: merge only overlapping clusters).",
-                    "help_text": "paraclu can split one TSS into neighbouring clusters, for example when the non-templated 5' G aligns to a genomic G for part of the reads.",
+                    "minimum": 0,
+                    "description": "Merge TSS clusters on the same strand fewer than this many bases apart (CAGEfightR mergeDist; the same rule for paraclu clusters).",
                     "fa_icon": "fas fa-compress-arrows-alt"
                 }
             }
@@ -285,7 +284,7 @@
             "title": "Sharp TSS cluster options (RECLU)",
             "type": "object",
             "fa_icon": "fas fa-bullseye",
-            "description": "Reproducible, narrow TSS clusters following RECLU (Ohmiya et al. 2014). Built in addition to the broad pooled-paraclu clusters; transcripts are built for both sets.",
+            "description": "Reproducible, narrow TSS clusters following RECLU (Ohmiya et al. 2014). Built in addition to the broad (CAGEfightR or paraclu) clusters; transcripts are built for both sets.",
             "properties": {
                 "skip_sharp_clusters": {
                     "type": "boolean",
@@ -397,7 +396,7 @@
                 },
                 "erna_min_reads": {
                     "type": "number",
-                    "default": 10,
+                    "default": 10.0,
                     "minimum": 0,
                     "description": "Minimum READ1s (all samples) of each TSS cluster of a pair.",
                     "fa_icon": "fas fa-filter"

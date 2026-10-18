@@ -36,9 +36,9 @@ all others have the same files as for paired-end CAGE.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, the pooled TSS signal per strand and the read coverage per sample and strand.
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts (paired-end) and TSS clusters of each cluster set, eRNA candidates (`--find_erna`), the pooled TSS signal per strand and the read coverage per sample and strand (strands without reads have no track).
 - `igv/genome.fa`, `igv/genome.fa.fai`, `igv/annotation.gtf`: copies of the genome, its index and the annotation used by the session.
-- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns), per million mapped read pairs. The strand is that of the RNA (CAGE READ1 is sense).
+- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns; duplicates excluded with `--dedup`), per million READ1s used for CTSS (primary, MAPQ >= `--min_mapq`; reads for single-end CAGE). The strand is that of the RNA (CAGE READ1 is sense).
 - `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
 
 </details>
@@ -116,8 +116,11 @@ fragments (the library insert size), not necessarily to the polyadenylation site
 <summary>Output files</summary>
 
 - `tss_clusters/`
-  - `all_samples.ctss.bed`: CTSS counts pooled across samples (input to paraclu).
-  - `all_samples.{sl,nosl}.ctss.bed`: the same for spliced-leader and other READ1s (with `--sl_sequence`; the input to paraclu for the broad set when `--sl_separate_clusters`).
+  - `all_samples.ctss.bed`: CTSS counts pooled across samples (the input to paraclu with `--cluster_method paraclu`
+    without separate SL clusters, and to the sharp set).
+  - `all_samples.{sl,nosl}.ctss.bed`: the same for spliced-leader and other READ1s (with `--sl_sequence` and
+    `--sl_separate_clusters`). CAGEfightR (default) works from the per-sample CTSS, not from these pooled files.
+  - `all_samples[.sl|.nosl].ctss.{plus,minus}.bedgraph`: the pooled CTSS per strand as bedGraphs.
 - `tss_clusters/<set>/`
   - `all_samples.<set>.tss_clusters.bed`: TSS clusters (BED9; `thickStart` is the dominant CTSS, `score` the pooled count capped at 1000). With `--sl_sequence` (and `--sl_separate_clusters`, default), the broad set holds two kinds of cluster: `TC…` from READ1s without the spliced leader (TSSs; green/purple) and `SL…` from spliced-leader READ1s (trans-splice sites; orange/red). They may overlap.
   - `all_samples.<set>.tss_clusters.tsv`: cluster table: `tss_id`, location (1-based), strand, peak (1-based), total count, width.
@@ -128,14 +131,18 @@ fragments (the library insert size), not necessarily to the polyadenylation site
   - `tss_anchored_bam/<sample>.<set>.tss.bam(.bai)`: read pairs whose READ1 5' end falls in a TSS cluster, tagged with `TC:Z:<tss_id>`. These are the reads used to build transcripts.
 - `tss_clusters/sharp/` additionally
   - `all_samples.reclu_clusters.bed`: the reproducible innermost RECLU clusters before naming (0-based first/last CTSS positions).
-  - `reclu_idr/<group>.<rep1>_vs_<rep2>.reclu_idr.tsv`: every pair of replicate clusters with >= 90% reciprocal overlap, their scores in each replicate, and local and global IDR.
+  - `reclu_idr/<group>.<rep1>_vs_<rep2>.reclu_idr.tsv`: every pair of replicate clusters with >= `--reclu_min_overlap` (90%) reciprocal overlap, their scores in each replicate, and local and global IDR.
 
 </details>
 
-Broad TSS clusters are called with [paraclu](https://gitlab.com/mcfrith/paraclu) on the pooled CTSS
-(`--paraclu_min_cluster`, simplified with `paraclu-cut`); sparse tails are trimmed and clusters closer than
-`--tss_merge_distance` bases are merged. A READ1 is assigned to a cluster when its 5' end lies in
-the cluster extended by `--tss_window` bases on the same strand.
+Broad TSS clusters are called with [CAGEfightR](https://bioconductor.org/packages/CAGEfightR) by default (per-sample
+TPM, CTSSs in >= `--ctss_min_samples` samples, slice-reduce of the pooled TPM with `--tss_merge_distance`, clusters with
+>= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples; `score` is then the total read count capped at 1000), or with
+[paraclu](https://gitlab.com/mcfrith/paraclu) on the pooled CTSS (`--cluster_method paraclu`: `--paraclu_min_cluster`,
+simplified with `paraclu-cut`, sparse tails trimmed, clusters fewer than `--tss_merge_distance` bases apart merged).
+See [usage](usage.md#broad-and-sharp-tss-clusters). A READ1 is assigned to a cluster when its 5' end lies in the
+cluster extended by `--tss_window` bases on the same strand (spliced-leader READ1s to `SL…` clusters, the others to
+`TC…` clusters); paired-end READ1s must be in a proper pair.
 
 ### CAGEscan clusters
 
@@ -161,7 +168,7 @@ look like introns. Use [Transcripts](#transcripts) for isoform structures.
 
 - `ctss/`
   - `<sample>.ctss.bed`: CAGE TSS counts (`chrom, start, end, ., count, strand`; 0-based, one base each).
-  - `<sample>.softclip_5p.tsv`: most frequent sequences soft-clipped before the first aligned READ1 base (`-` means no clip). Use this to identify the extra G, leftover linkers or spliced leaders.
+  - `<sample>.softclip_5p.tsv`: most frequent sequences soft-clipped before the first aligned READ1 base (`-` means no clip). With the default end-to-end alignment of READ1 this is almost always `-`; run with `--read1_end_to_end false` to identify the extra G, leftover linkers or spliced leaders.
   - `bigwig/<sample>.ctss.{plus,minus}.bigWig`: per-strand CTSS signal.
 
 </details>
@@ -210,8 +217,8 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
 - `sl_split/` (only with `--sl_sequence`): read pairs split by the spliced leader at the READ1 start.
-  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL.<leader>:` (or `SLG.<leader>:` when the extra G preceded the leader).
-  - `<sample>.noSL_{1,2}.fastq.gz`: the other pairs, names prefixed with `no_adapter:`.
+  - `<sample>.SL_{1,2}.fastq.gz` (`SL_1` only for single-end CAGE): trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL.<leader>:` (or `SLG.<leader>:` when the extra G preceded the leader).
+  - `<sample>.noSL_{1,2}.fastq.gz` (`noSL_1` only for single-end CAGE): the other pairs, names prefixed with `no_adapter:`.
   - `<sample>.sl_split.log`: cutadapt report (`Read 1 with adapter` = trans-spliced pairs).
   The FASTQ files are saved with `--save_sl_split_reads` (default); they come after subsampling and trimming.
 - `sortmerna/`: SortMeRNA logs (only with `--ribo_database_manifest`).
@@ -243,7 +250,7 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 
 [MultiQC](http://multiqc.info) is a visualization tool that generates a single HTML report summarising all samples in your project. Most of the pipeline QC results are visualised in the report and further statistics are available in the report data directory.
 
-Results generated by MultiQC collate pipeline QC from supported tools (FastQC, fastp, cutadapt, SortMeRNA, STAR, samtools) and pipeline-specific tables: *CTSS extraction* (READ1s used and their 5' soft clips), *TSS and trans-splice site sequence* (% of TSS READ1s with a pyrimidine-purine initiator at -1/+1; % of SL READ1s right after an AG acceptor) with the full dinucleotide composition as bar graphs (*TSS initiator*, *Trans-splice sites*), *Sharp TSS clusters (RECLU)* (pairs and reproducible clusters per replicate pair), *TSS cluster assignment* and *Transcript anchoring* (one row per sample and cluster set). The pipeline has special steps which also allow the software versions to be reported in the MultiQC output for future traceability. For more information about how to use MultiQC reports, see <http://multiqc.info>.
+Results generated by MultiQC collate pipeline QC from supported tools (FastQC, fastp, cutadapt, SortMeRNA, STAR, samtools) and pipeline-specific tables: *CTSS extraction* (READ1s used and their 5' soft clips), *TSS and trans-splice site sequence* (% of TSS READ1s with a pyrimidine-purine initiator at -1/+1; % of SL READ1s right after an AG acceptor) with the full dinucleotide composition as bar graphs (*TSS initiator*, *Trans-splice sites*), *Spliced leaders* (share of SL READ1s per leader, with several leaders), *Sharp TSS clusters (RECLU)* (pairs and reproducible clusters per replicate pair), *TSS cluster assignment* and *Transcript anchoring* (one row per sample and cluster set), *eRNA-like divergent TSS pairs* (pairs left after each filter, per cluster set) and gffcompare statistics (with `--gtf`). The pipeline has special steps which also allow the software versions to be reported in the MultiQC output for future traceability. For more information about how to use MultiQC reports, see <http://multiqc.info>.
 
 ### Pipeline information
 
@@ -251,10 +258,10 @@ Results generated by MultiQC collate pipeline QC from supported tools (FastQC, f
 <summary>Output files</summary>
 
 - `pipeline_info/`
-  - Reports generated by Nextflow: `execution_report.html`, `execution_timeline.html`, `execution_trace.txt` and `pipeline_dag.dot`/`pipeline_dag.svg`.
-  - Reports generated by the pipeline: `pipeline_report.html`, `pipeline_report.txt` and `software_versions.yml`. The `pipeline_report*` files will only be present if the `--email` / `--email_on_fail` parameter's are used when running the pipeline.
-  - Reformatted samplesheet files used as input to the pipeline: `samplesheet.valid.csv`.
-  - Parameters used by the pipeline run: `params.json`.
+  - Reports generated by Nextflow: `execution_report_<timestamp>.html`, `execution_timeline_<timestamp>.html`, `execution_trace_<timestamp>.txt` and `pipeline_dag_<timestamp>.html`.
+  - Software versions of every tool: `cagescan_software_mqc_versions.yml`.
+  - Reports generated by the pipeline: `pipeline_report.html`, `pipeline_report.txt`; only with `--email` / `--email_on_fail`.
+  - Parameters used by the pipeline run: `params_<timestamp>.json`.
 
 </details>
 

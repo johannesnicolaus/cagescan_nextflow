@@ -117,7 +117,7 @@ workflow CAGESCAN {
     }
 
     //
-    // MODULE: Split read pairs by the spliced leader at the READ1 5' end (SL trimmed; pairs renamed SL:<name>).
+    // MODULE: Split reads by the spliced leader at the READ1 5' end (leader trimmed; renamed SL.<leader>:<name>).
     //         Both sets are aligned together (STAR takes comma-separated READ1 and READ2 file lists).
     //
     if (params.sl_sequence && params.sl_split) {
@@ -227,7 +227,11 @@ workflow CAGESCAN {
         PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf },
         ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') },
         TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') },
-        !single_end
+        !single_end,
+        TSS_CLUSTERS.out.ctss_bigwig.mix(COVERAGE_TRACKS.out.bigwig)
+            .map { _meta, bigwig -> bigwig.name }
+            .toSortedList()
+            .map { names -> names.join(',') }
     )
 
     //

@@ -98,14 +98,15 @@ def build_clusters(paraclu, ctss, trim_fraction, merge_distance):
             if members:
                 spans[key].append((members[0][0], members[-1][0]))
 
-    # Merge clusters separated by <= merge_distance bases.  One TSS is often split
+    # Merge clusters separated by fewer than merge_distance bases (as CAGEfightR's mergeDist: GenomicRanges::reduce
+    # with min.gapwidth = merge_distance).  One TSS is often split
     # by paraclu, e.g. when the non-templated G aligns to a genomic G for part of
     # the reads; merging also guarantees disjoint clusters per strand.
     clusters = []
     for (chrom, strand), key_spans in spans.items():
         merged = []
         for first, last in sorted(key_spans):
-            if merged and first - merged[-1][1] - 1 <= merge_distance:
+            if merged and first - merged[-1][1] - 1 < merge_distance:
                 merged[-1][1] = max(merged[-1][1], last)
             else:
                 merged.append([first, last])
@@ -183,7 +184,7 @@ def main():
     p_annot.add_argument("--trim-fraction", type=float, default=0.01,
                          help="trim cluster ends by up to this fraction of the cluster's counts per end (default: %(default)s)")
     p_annot.add_argument("--merge-distance", type=int, default=20,
-                         help="merge clusters on the same strand separated by <= this many bases (default: %(default)s; -1 merges only overlapping clusters)")
+                         help="merge clusters on the same strand separated by fewer than this many bases (default: %(default)s; 0 merges only overlapping clusters)")
     p_annot.add_argument("--sl-paraclu", help="paraclu bed of the spliced-leader CTSS: cluster them separately")
     p_annot.add_argument("--sl-ctss", help="pooled spliced-leader CTSS bed (with --sl-paraclu)")
     p_annot.add_argument("--sl-id-prefix", default="SL", help="ID prefix of spliced-leader clusters (default: %(default)s)")

@@ -21,6 +21,7 @@ nextflow_process {
                 input[2] = 'SAMPLE1,SAMPLE2'
                 input[3] = 'broad,sharp'
                 input[4] = true
+                input[5] = ''
                 """
             }
         }
@@ -54,6 +55,7 @@ nextflow_process {
                 input[2] = 'SAMPLE1'
                 input[3] = 'broad'
                 input[4] = true
+                input[5] = ''
                 """
             }
         }

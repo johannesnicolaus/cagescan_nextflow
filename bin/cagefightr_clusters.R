@@ -3,9 +3,12 @@
 #   CTSSs -> TPM -> pooled TPM -> CTSSs supported in >= --ctss-min-samples samples
 #   -> clusterUnidirectionally (slice-reduce, pooledCutoff 0, mergeDist --merge-dist)
 #   -> TCs with >= --tc-min-tpm TPM in >= --tc-min-samples samples
-# The peak (thick) is the CTSS with the highest pooled TPM.
+# The peak (thick) is the CTSS with the highest pooled TPM (CAGEfightR sums TPM across samples).
+# TPM is relative to --library-sizes (TSV: sample, READ1s), e.g. all READ1s of a sample when only its spliced-leader
+# CTSS are clustered, so that a TPM threshold means the same depth for SL and non-SL clusters; without it, to the
+# CTSS given. Sample-count thresholds are capped at the number of samples. Empty inputs give an empty output.
 #
-# usage: cagefightr_clusters.R --prefix P --fai genome.fa.fai [options] S1.ctss.bed S2.ctss.bed ...
+# usage: cagefightr_clusters.R --prefix P --fai genome.fa.fai [--library-sizes sizes.tsv] [options] S1.ctss.bed ...
 # CTSS bed: chrom, pos0, pos0+1, ., count, strand.  Output: P.cagefightr.bed
 #   chrom, start0, end, strand, peak0, total count, pooled TPM
 suppressPackageStartupMessages({
@@ -16,7 +19,7 @@ suppressPackageStartupMessages({
 })
 
 args <- commandArgs(trailingOnly = TRUE)
-opt <- list(prefix = NULL, fai = NULL, ctss_min_samples = 2, merge_dist = 20, tc_min_tpm = 1, tc_min_samples = 2)
+opt <- list(prefix = NULL, fai = NULL, library_sizes = NULL, ctss_min_samples = 2, merge_dist = 20, tc_min_tpm = 5, tc_min_samples = 1)
 files <- character()
 i <- 1
 while (i <= length(args)) {
@@ -37,19 +40,25 @@ samples <- sub("\\..*$", "", basename(files))
 fai <- read.delim(opt$fai, header = FALSE, colClasses = c("character", "numeric", rep("NULL", 3)))
 seqinfo <- Seqinfo(fai[[1]], fai[[2]])
 
-# CTSS x sample count matrix
+out_file <- paste0(opt$prefix, ".cagefightr.bed")
+finish_empty <- function(why) {
+    file.create(out_file)
+    message(sprintf("%s: no clusters (%s)", opt$prefix, why))
+    quit(save = "no")
+}
+
+# CTSS x sample count matrix (a sample without CTSS of this class gives an empty file)
 tabs <- lapply(seq_along(files), function(j) {
+    if (file.size(files[j]) == 0) {
+        return(data.frame(chrom = character(), pos = integer(), count = numeric(), strand = character(), sample = integer()))
+    }
     x <- read.delim(files[j], header = FALSE, colClasses = c("character", "integer", "NULL", "NULL", "numeric", "character"))
     names(x) <- c("chrom", "pos", "count", "strand")
-    x$sample <- j
+    x$sample <- rep(j, nrow(x))
     x
 })
 all <- do.call(rbind, tabs)
-out_file <- paste0(opt$prefix, ".cagefightr.bed")
-if (nrow(all) == 0) {
-    file.create(out_file)
-    quit(save = "no")
-}
+if (nrow(all) == 0) finish_empty("no CTSS")
 key <- paste(all$chrom, all$pos, all$strand, sep = "\t")
 ukey <- unique(key)
 parts <- do.call(rbind, strsplit(ukey, "\t", fixed = TRUE))
@@ -63,11 +72,20 @@ CTSSs <- SummarizedExperiment(assays = SimpleList(counts = counts), rowRanges = 
                               colData = DataFrame(Name = samples, row.names = samples))
 
 n <- length(samples)
-CTSSs <- calcTPM(CTSSs, inputAssay = "counts", outputAssay = "TPM", outputColumn = "totalTags")
+# library sizes: given (all READ1s of each sample) or the CTSS of this class; never 0
+lib <- colSums(counts)
+if (!is.null(opt$library_sizes)) {
+    sizes <- read.delim(opt$library_sizes, header = FALSE, colClasses = c("character", "numeric"))
+    lib <- sizes[[2]][match(samples, sizes[[1]])]
+    if (anyNA(lib)) stop("--library-sizes lacks samples: ", paste(samples[is.na(lib)], collapse = ", "))
+}
+colData(CTSSs)$totalTags <- pmax(lib, 1)
+CTSSs <- calcTPM(CTSSs, inputAssay = "counts", outputAssay = "TPM", totalTags = "totalTags")
 CTSSs <- calcPooled(CTSSs, inputAssay = "TPM")
 # subsetBySupport keeps features above `unexpressed` in more than `minSamples` samples
 supported <- subsetBySupport(CTSSs, inputAssay = "counts", outputColumn = "support", unexpressed = 0,
                              minSamples = min(opt$ctss_min_samples, n) - 1)
+if (length(supported) == 0) finish_empty("no CTSS seen in enough samples")
 # CAGEfightR's slice-reduce, done directly: used when clusterUnidirectionally fails on very small inputs
 # (its cluster statistics break when a strand has a single cluster)
 slice_reduce <- function(x, merge_dist) {
@@ -93,8 +111,10 @@ TCs <- tryCatch(clusterUnidirectionally(supported, pooledCutoff = 0, mergeDist =
                 })
 TCexp <- quantifyClusters(CTSSs, clusters = TCs, inputAssay = "counts")
 TCexp <- calcTPM(TCexp, inputAssay = "counts", outputAssay = "TPM", totalTags = "totalTags")
-TCexp <- subsetBySupport(TCexp, inputAssay = "TPM", outputColumn = "support", unexpressed = opt$tc_min_tpm,
+# subsetBySupport counts samples with TPM > unexpressed; a tiny offset makes the threshold inclusive (>= tc_min_tpm)
+TCexp <- subsetBySupport(TCexp, inputAssay = "TPM", outputColumn = "support", unexpressed = max(opt$tc_min_tpm - 1e-9, 0),
                          minSamples = min(opt$tc_min_samples, n) - 1)
+if (nrow(TCexp) == 0) finish_empty("no cluster passed the expression filter")
 
 r <- rowRanges(TCexp)
 res <- data.frame(chrom = as.character(seqnames(r)), start = start(r) - 1L, end = end(r), strand = as.character(strand(r)),

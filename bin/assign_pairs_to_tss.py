@@ -61,8 +61,9 @@ class ClusterIndex:
                 self.info[tss_id] = (chrom, start, end, strand)
         for value in self.clusters.values():
             value.sort()
-        kinds = {key[2] for key in self.clusters}
-        self.split = kinds == {True, False}
+        # spliced-leader clusters (built only with separate SL clustering): SL READ1s go to SL clusters only and the
+        # others to TSS clusters only, also when one kind has no clusters
+        self.split = any(key[2] for key in self.clusters)
         if not self.split:  # one kind of cluster: assign all READ1s to them
             merged = collections.defaultdict(list)
             for (chrom, strand, _), value in self.clusters.items():

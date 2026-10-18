@@ -78,7 +78,19 @@
 
   > Li Q, Brown JB, Huang H, Bickel PJ. Measuring reproducibility of high-throughput experiments. Ann Appl Stat. 2011;5(3):1752-1779. doi: 10.1214/11-AOAS466.
 
-- [pysam](https://github.com/pysam-developers/pysam)
+- [pysam](https://github.com/pysam-developers/pysam) (built on htslib)
+
+  > Heger A, Jacobs K, et al. pysam: a Python module for reading and manipulating SAM/BAM files. https://github.com/pysam-developers/pysam
+
+  > Bonfield JK, Marshall J, Danecek P, Li H, Ohan V, Whitwham A, Keane T, Davies RM. HTSlib: C library for reading/writing high-throughput sequencing data. Gigascience. 2021 Feb 16;10(2):giab007. doi: 10.1093/gigascience/giab007.
+
+- [IGV](https://pubmed.ncbi.nlm.nih.gov/21221095/) (genome browser session)
+
+  > Robinson JT, Thorvaldsdóttir H, Winckler W, Guttman M, Lander ES, Getz G, Mesirov JP. Integrative genomics viewer. Nat Biotechnol. 2011 Jan;29(1):24-6. doi: 10.1038/nbt.1754.
+
+- [Bioconductor](https://pubmed.ncbi.nlm.nih.gov/25633503/) (CAGEfightR runs on R/Bioconductor)
+
+  > Huber W, Carey VJ, Gentleman R, et al. Orchestrating high-throughput genomic analysis with Bioconductor. Nat Methods. 2015 Feb;12(2):115-21. doi: 10.1038/nmeth.3252.
 
 - [SAMtools](https://pubmed.ncbi.nlm.nih.gov/33590861/)
 
@@ -99,6 +111,11 @@
 - [UCSC tools (bedGraphToBigWig)](https://pubmed.ncbi.nlm.nih.gov/20639541/)
 
   > Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics. 2010 Sep 1;26(17):2204-7. doi: 10.1093/bioinformatics/btq351.
+
+## Software versions
+
+The versions used by a run are written to `pipeline_info/cagescan_software_mqc_versions.yml` and shown in the MultiQC
+report. The containers pinned in this version of the pipeline are listed in [docs/methods.md](docs/methods.md#software).
 
 ## Software packaging/containerisation tools
 

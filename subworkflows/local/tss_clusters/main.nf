@@ -23,7 +23,7 @@ workflow TSS_CLUSTERS {
     ch_bam_bai          // channel: [ val(meta), path(bam), path(bai) ]; meta.group = replicate group
     ch_sizes            // channel: [ val(meta), path(chrom.sizes) ]
     cluster_method      // string:  broad cluster caller, 'cagefightr' or 'paraclu'
-    min_cluster         // integer: minimum total CTSS count of a broad (pooled paraclu) cluster
+    min_cluster         // integer: minimum pooled CTSS count of a broad cluster with --cluster_method paraclu
     run_sharp           // boolean: also build sharp (RECLU) clusters
     reclu_paraclu_min   // integer: paraclu minValue for the RECLU cluster hierarchy
     sl_separate         // boolean: cluster spliced-leader and other CTSS separately (broad set; needs --sl_sequence)
@@ -89,11 +89,17 @@ workflow TSS_CLUSTERS {
             ? BAM_TO_CTSS.out.sl_ctss.map { _meta, ctss -> ['sl', ctss] }
                 .mix(BAM_TO_CTSS.out.nosl_ctss.map { _meta, ctss -> ['nosl', ctss] })
             : BAM_TO_CTSS.out.ctss.map { _meta, ctss -> ['all', ctss] }
+        // TPM relative to all READ1s of a sample (CTSS stats 'READ1 used'), also for its SL and non-SL CTSS
+        def ch_library_sizes = BAM_TO_CTSS.out.stats
+            .map { meta, stats -> "${meta.id}\t${stats.readLines().last().tokenize('\t')[1]}" }
+            .collectFile(name: 'library_sizes.tsv', newLine: true, sort: true)
+            .first()
         CAGEFIGHTR_CLUSTERS(
             ch_class_ctss
                 .groupTuple(sort: { a, b -> a.name <=> b.name })
                 .map { kind, ctss -> [[id: "all_samples.${kind}", sl_class: kind], ctss] },
-            ch_fasta_fai.map { meta, _fasta, fai -> [meta, fai] }
+            ch_fasta_fai.map { meta, _fasta, fai -> [meta, fai] },
+            ch_library_sizes
         )
         def ch_cfr = CAGEFIGHTR_CLUSTERS.out.bed
         COMBINE_TSS_CLUSTERS(
@@ -180,6 +186,7 @@ workflow TSS_CLUSTERS {
         .mix(BAM_TO_CTSS.out.sl_leaders.map { _meta, tsv -> tsv }.collectFile(name: 'sl_leaders_mqc.tsv', keepHeader: true, skip: 10, sort: true))
 
     emit:
+    ctss_bigwig       = UCSC_BEDGRAPHTOBIGWIG.out.bigwig                  // channel: [ val(meta), path(bigWig) ]
     ctss              = BAM_TO_CTSS.out.ctss                            // channel: [ val(meta), path(ctss.bed) ]
     softclip          = BAM_TO_CTSS.out.softclip                        // channel: [ val(meta), path(tsv) ]
     ctss_stats        = BAM_TO_CTSS.out.stats                           // channel: [ val(meta), path(ctss_stats_mqc.tsv) ]

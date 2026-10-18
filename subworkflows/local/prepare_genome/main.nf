@@ -6,6 +6,7 @@ include { GUNZIP as GUNZIP_FASTA } from '../../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_GTF   } from '../../../modules/nf-core/gunzip/main'
 include { SAMTOOLS_FAIDX         } from '../../../modules/nf-core/samtools/faidx/main'
 include { STAR_GENOMEGENERATE    } from '../../../modules/nf-core/star/genomegenerate/main'
+include { CLEAN_GTF              } from '../../../modules/local/clean_gtf/main'
 
 workflow PREPARE_GENOME {
 
@@ -27,6 +28,8 @@ workflow PREPARE_GENOME {
         if (gtf.endsWith('.gz')) {
             ch_gtf = GUNZIP_GTF(ch_gtf).gunzip
         }
+        // drop records with an empty transcript_id (gene rows of NCBI-style GTFs), which gffcompare rejects
+        ch_gtf = CLEAN_GTF(ch_gtf).gtf
     }
 
     SAMTOOLS_FAIDX(ch_fasta.map { meta, fa -> [meta, fa, []] }, true)

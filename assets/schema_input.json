@@ -10,10 +10,16 @@
             "sample": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]+$",
-                "errorMessage": "Sample name must be provided and may only contain letters, digits, '_' and '-'",
+                "errorMessage": "Sample name must be provided and may only contain letters, digits, '_' and '-'; 'all_samples' and 'merged' are reserved for pooled outputs",
                 "meta": [
                     "id"
-                ]
+                ],
+                "not": {
+                    "enum": [
+                        "all_samples",
+                        "merged"
+                    ]
+                }
             },
             "fastq_1": {
                 "type": "string",

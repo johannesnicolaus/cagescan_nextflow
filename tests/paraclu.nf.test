@@ -1,0 +1,38 @@
+nextflow_pipeline {
+
+    name "Test pipeline, paraclu broad clusters"
+    script "../main.nf"
+    tag "pipeline"
+    tag "paraclu"
+
+    test("-profile test, --cluster_method paraclu") {
+
+        when {
+            params {
+                def data_dir = "${projectDir}/tests/data"
+                def samplesheet = new File(new File(outputDir).parentFile, "samplesheet_paraclu.csv")
+                samplesheet.text = "sample,fastq_1,fastq_2,group\n" + ['SAMPLE1', 'SAMPLE2'].collect { s ->
+                    "${s},${data_dir}/${s}_R1.fastq.gz,${data_dir}/${s}_R2.fastq.gz,A"
+                }.join("\n") + "\n"
+                input               = samplesheet.toString()
+                outdir              = "$outputDir"
+                cluster_method      = 'paraclu'
+                skip_sharp_clusters = true
+            }
+        }
+
+        then {
+            def broad = path("${params.outdir}/tss_clusters/broad/all_samples.broad.tss_clusters.bed").readLines()
+                .collect { line -> line.split('\t') }
+            def truth = path("${projectDir}/tests/data/truth_tss.bed").readLines()
+                .collect { line -> line.split('\t') }
+                .findAll { f -> f[3].startsWith('gene') }
+            assertAll(
+                { assert workflow.success },
+                // every designed TSS is a broad cluster peak (+/- 1 nt), the trans-spliced one in an SL cluster
+                { assert truth.every { t -> broad.any { f -> f[0] == t[0] && f[5] == t[5] && Math.abs((f[6] as int) - (t[1] as int)) <= 1 } } },
+                { assert broad.any { f -> f[3].startsWith('SL') } }
+            )
+        }
+    }
+}

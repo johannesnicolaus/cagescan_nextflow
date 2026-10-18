@@ -28,6 +28,10 @@ input:
         type: file
         description: FASTA index (chromosome lengths)
         pattern: "*.fai"
+  - library_sizes:
+      type: file
+      description: "TSV of sample name and READ1 count (TPM denominators); optional ([])"
+      pattern: "*.tsv"
 output:
   bed:
     - - meta:

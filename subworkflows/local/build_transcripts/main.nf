@@ -104,6 +104,7 @@ workflow BUILD_TRANSCRIPTS {
     def ch_multiqc_files = ANCHOR_TRANSCRIPTS.out.stats
         .map { _meta, stats -> stats }
         .collectFile(name: 'anchor_stats_mqc.tsv', keepHeader: true, skip: 5, sort: true)
+        .mix(ch_gffcompare_stats.map { _meta, stats -> stats })
 
     emit:
     gtf             = ch_anchored_gtf                    // channel: [ val(meta), path(gtf) ]

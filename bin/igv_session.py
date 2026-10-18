@@ -34,6 +34,8 @@ def main():
     parser.add_argument("--sets", required=True, help="comma-separated TSS cluster sets")
     parser.add_argument("--erna", action="store_true", help="add the eRNA candidate tracks")
     parser.add_argument("--no-transcripts", action="store_true", help="no transcript tracks (single-end CAGE)")
+    parser.add_argument("--bigwigs", default=None,
+                        help="comma-separated names of the bigWig files produced (strands without signal have none); default: all")
     args = parser.parse_args()
 
     os.makedirs("igv", exist_ok=True)
@@ -59,6 +61,11 @@ def main():
         for strand, color in (("plus", "200,0,0"), ("minus", "0,0,200")):
             tracks.append(track(f"coverage/{sample}.coverage.{strand}.bigWig", f"{sample} coverage {'+' if strand == 'plus' else '-'}", DATA,
                                 autoScale="true", autoscaleGroup=group, color=color, renderer="BAR_CHART"))
+
+    if args.bigwigs is not None:  # drop signal tracks whose bigWig was not produced (no reads on that strand)
+        produced = set(args.bigwigs.split(","))
+        tracks = [t for t in tracks if not t.split('id="', 1)[1].split('"', 1)[0].endswith(".bigWig")
+                  or os.path.basename(t.split('id="', 1)[1].split('"', 1)[0]) in produced]
 
     with open("igv_session.xml", "w") as out:
         out.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n')

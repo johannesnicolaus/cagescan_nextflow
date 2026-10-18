@@ -1,0 +1,49 @@
+nextflow_process {
+
+    name "Test Process CLEAN_GTF"
+    script "../main.nf"
+    process "CLEAN_GTF"
+
+    tag "modules"
+    tag "modules_local"
+    tag "clean_gtf"
+
+    test("NCBI-style GTF") {
+        when {
+            process {
+                """
+                input[0] = [ [ id:'annotation' ], file("${projectDir}/tests/data/annotation_ncbi.gtf", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            def lines = path(process.out.gtf[0][1]).readLines()
+            def original = path("${projectDir}/tests/data/annotation.gtf").readLines()
+            assertAll(
+                { assert process.success },
+                // gene rows with transcript_id "" dropped; every other record kept unchanged
+                { assert !lines.any { line -> line.contains('transcript_id ""') } },
+                { assert lines.findAll { line -> !line.startsWith('#') } == original }
+            )
+        }
+    }
+
+    test("GTF without empty IDs is unchanged") {
+        when {
+            process {
+                """
+                input[0] = [ [ id:'annotation' ], file("${projectDir}/tests/data/annotation.gtf", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.gtf[0][1]).readLines() == path("${projectDir}/tests/data/annotation.gtf").readLines() }
+            )
+        }
+    }
+
+}

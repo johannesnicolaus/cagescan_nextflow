@@ -75,6 +75,8 @@ workflow PIPELINE_INITIALISATION {
         true // cast command-line values to the schema types (Nextflow >= 26.04 passes them as strings)
     )
 
+    validateSplicedLeaders(params.sl_sequence)
+
     //
     // Check config provided to the pipeline
     //
@@ -163,6 +165,23 @@ workflow PIPELINE_COMPLETION {
 */
 
 //
+// Spliced leaders 'SEQ' or 'NAME=SEQ,...': names (given, or SL / SL1, SL2, ...) must be unique
+//
+def validateSplicedLeaders(spec) {
+    if (!spec) {
+        return
+    }
+    def entries = spec.tokenize(',')*.trim().findAll { entry -> entry }
+    def names = entries.withIndex().collect { entry, i ->
+        entry.contains('=') ? entry.tokenize('=')[0] : (entries.size() == 1 ? 'SL' : "SL${i + 1}")
+    }
+    def duplicates = names.findAll { name -> names.count(name) > 1 }.unique()
+    if (duplicates) {
+        error("--sl_sequence: spliced-leader names must be unique (duplicated: ${duplicates.join(', ')}); name every leader, e.g. SL1=...,SL2=...")
+    }
+}
+
+//
 // Single-end CAGE: every samplesheet row without fastq_2. Mixing single-end and paired-end samples is not supported.
 //
 def isSingleEnd(input) {
@@ -191,53 +210,70 @@ def validateInputSamplesheet(input) {
 //
 // Generate methods description for MultiQC
 //
-def toolCitationText() {
-    def citation_text = [
-            "Tools used in the workflow included:",
-            params.skip_fastqc ? "" : "FastQC (Andrews 2010),",
-            params.subsample_reads ? "seqtk (Li)," : "",
-            params.r1_5p_linker || (params.sl_sequence && params.sl_split) ? "cutadapt (Martin 2011)," : "",
-            params.skip_fastp ? "" : "fastp (Chen et al. 2018),",
-            params.ribo_database_manifest ? "SortMeRNA (Kopylova et al. 2012)," : "",
-            "STAR (Dobin et al. 2013),",
-            "SAMtools (Danecek et al. 2021),",
-            "pysam,",
-            params.cluster_method == "cagefightr" ? "CAGEfightR (Thodberg et al. 2019)," : "paraclu (Frith et al. 2008),",
-            params.skip_sharp_clusters ? "" : "RECLU (Ohmiya et al. 2014) with IDR (Li et al. 2011),",
-            "StringTie (Pertea et al. 2015),",
-            "GffRead and GffCompare (Pertea and Pertea 2020),",
-            "bedGraphToBigWig (Kent et al. 2010),",
-            "following the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017),",
-            params.find_erna ? "eRNA-like divergent TSS pairs as defined by Andersson et al. (2014)," : "",
-            "MultiQC (Ewels et al. 2016)",
-            "."
-        ].findAll { text -> text }.join(' ').trim()
+//
+// Tools used in this run, for the methods text: [condition, citation in the text, bibliography entry]
+//
+def usedTools() {
+    def single_end = params.input ? isSingleEnd(params.input) : false
+    def sl_split = params.sl_sequence && params.sl_split
+    def end_to_end = params.read1_end_to_end && !(params.sl_sequence && !params.sl_split)
+    return [
+        [!params.skip_fastqc, "FastQC (Andrews 2010)",
+            "Andrews S. (2010). FastQC: a quality control tool for high throughput sequence data. https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"],
+        [params.subsample_reads as boolean, "seqtk (Li)",
+            "Li H. seqtk: toolkit for processing sequences in FASTA/Q formats. https://github.com/lh3/seqtk"],
+        [params.r1_5p_linker || sl_split, "cutadapt (Martin 2011)",
+            "Martin M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal, 17(1), 10-12. doi: 10.14806/ej.17.1.200"],
+        [sl_split, "spliced-leader splitting as in splitSpliceLeaderPE (Plessy)",
+            "Plessy C. splitSpliceLeaderPE: split paired-end reads by spliced leader. https://github.com/oist/plessy_splitspliceleaderpe"],
+        [!params.skip_fastp, "fastp (Chen et al. 2018)",
+            "Chen S, Zhou Y, Chen Y, Gu J. (2018). fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics, 34(17), i884-i890. doi: 10.1093/bioinformatics/bty560"],
+        [params.ribo_database_manifest as boolean, "SortMeRNA (Kopylova et al. 2012)",
+            "Kopylova E, Noé L, Touzet H. (2012). SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data. Bioinformatics, 28(24), 3211-3217. doi: 10.1093/bioinformatics/bts611"],
+        [true, "STAR (Dobin et al. 2013)",
+            "Dobin A, Davis CA, Schlesinger F, et al. (2013). STAR: ultrafast universal RNA-seq aligner. Bioinformatics, 29(1), 15-21. doi: 10.1093/bioinformatics/bts635"],
+        [true, "SAMtools (Danecek et al. 2021)",
+            "Danecek P, Bonfield JK, Liddle J, et al. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008"],
+        [true, "pysam",
+            "Heger A, Jacobs K, et al. pysam: a Python module for reading and manipulating SAM/BAM files. https://github.com/pysam-developers/pysam"],
+        [end_to_end, "first-G removal as in CAGEr (Haberle et al. 2015)",
+            "Haberle V, Forrest ARR, Hayashizaki Y, Carninci P, Lenhard B. (2015). CAGEr: precise TSS data retrieval and high-resolution promoterome mining for integrative analyses. Nucleic Acids Research, 43(8), e51. doi: 10.1093/nar/gkv054"],
+        [params.cluster_method == 'cagefightr', "CAGEfightR (Thodberg et al. 2019)",
+            "Thodberg M, Thieffry A, Vitting-Seerup K, Andersson R, Sandelin A. (2019). CAGEfightR: analysis of 5'-end data using R/Bioconductor. BMC Bioinformatics, 20, 487. doi: 10.1186/s12859-019-3029-5"],
+        [params.cluster_method == 'paraclu' || !params.skip_sharp_clusters, "paraclu (Frith et al. 2008)",
+            "Frith MC, Valen E, Krogh A, Hayashizaki Y, Carninci P, Sandelin A. (2008). A code for transcription initiation in mammalian genomes. Genome Research, 18(1), 1-12. doi: 10.1101/gr.6831208"],
+        [!params.skip_sharp_clusters, "RECLU (Ohmiya et al. 2014)",
+            "Ohmiya H, Vitezic M, Frith MC, et al. (2014). RECLU: a pipeline to discover reproducible transcriptional start sites and their alternative regulation using capped analysis of gene expression (CAGE). BMC Genomics, 15, 269. doi: 10.1186/1471-2164-15-269"],
+        [!params.skip_sharp_clusters, "IDR (Li et al. 2011)",
+            "Li Q, Brown JB, Huang H, Bickel PJ. (2011). Measuring reproducibility of high-throughput experiments. Annals of Applied Statistics, 5(3), 1752-1779. doi: 10.1214/11-AOAS466"],
+        [!single_end, "StringTie (Pertea et al. 2015)",
+            "Pertea M, Pertea GM, Antonescu CM, et al. (2015). StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology, 33(3), 290-295. doi: 10.1038/nbt.3122"],
+        [!single_end, (params.gtf ? "GffRead and GffCompare" : "GffRead") + " (Pertea and Pertea 2020)",
+            "Pertea G, Pertea M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9, 304. doi: 10.12688/f1000research.23297.2"],
+        [true, "BEDTools (Quinlan and Hall 2010)",
+            "Quinlan AR, Hall IM. (2010). BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics, 26(6), 841-842. doi: 10.1093/bioinformatics/btq033"],
+        [true, "bedGraphToBigWig (Kent et al. 2010)",
+            "Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351"],
+        [true, "IGV (Robinson et al. 2011)",
+            "Robinson JT, Thorvaldsdóttir H, Winckler W, et al. (2011). Integrative genomics viewer. Nature Biotechnology, 29(1), 24-26. doi: 10.1038/nbt.1754"],
+        [!single_end, "the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017)",
+            "Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470"],
+        [!single_end, "",
+            "Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147"],
+        [params.find_erna as boolean, "eRNA-like divergent TSS pairs as defined by Andersson et al. (2014)",
+            "Andersson R, Gebhard C, Miguel-Escalada I, et al. (2014). An atlas of active enhancers across human cell types and tissues. Nature, 507, 455-461. doi: 10.1038/nature12787"],
+        [true, "MultiQC (Ewels et al. 2016)",
+            "Ewels P, Magnusson M, Lundin S, Käller M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics, 32(19), 3047-3048. doi: 10.1093/bioinformatics/btw354"],
+    ].findAll { used, _text, _reference -> used }
+}
 
-    return citation_text
+def toolCitationText() {
+    def cited = usedTools().collect { _used, text, _reference -> text }.findAll { text -> text }
+    return "Tools used in the workflow included: " + cited.join(', ') + "."
 }
 
 def toolBibliographyText() {
-    def reference_text = [
-            params.skip_fastqc ? "" : "<li>Andrews S, (2010) FastQC, URL: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).</li>",
-            params.r1_5p_linker ? "<li>Martin M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal, 17(1), 10-12. doi: 10.14806/ej.17.1.200</li>" : "",
-            params.skip_fastp ? "" : "<li>Chen S, Zhou Y, Chen Y, Gu J. (2018). fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics, 34(17), i884-i890. doi: 10.1093/bioinformatics/bty560</li>",
-            params.ribo_database_manifest ? "<li>Kopylova E, Noé L, Touzet H. (2012). SortMeRNA: fast and accurate filtering of ribosomal RNAs in metatranscriptomic data. Bioinformatics, 28(24), 3211-3217. doi: 10.1093/bioinformatics/bts611</li>" : "",
-            "<li>Dobin A, Davis CA, Schlesinger F, et al. (2013). STAR: ultrafast universal RNA-seq aligner. Bioinformatics, 29(1), 15-21. doi: 10.1093/bioinformatics/bts635</li>",
-            "<li>Danecek P, Bonfield JK, Liddle J, et al. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>",
-            params.cluster_method == "cagefightr" ? "<li>Thodberg M, Thieffry A, Vitting-Seerup K, Andersson R, Sandelin A. (2019). CAGEfightR: analysis of 5'-end data using R/Bioconductor. BMC Bioinformatics, 20, 487. doi: 10.1186/s12859-019-3029-5</li>" : "",
-            "<li>Frith MC, Valen E, Krogh A, Hayashizaki Y, Carninci P, Sandelin A. (2008). A code for transcription initiation in mammalian genomes. Genome Research, 18(1), 1-12. doi: 10.1101/gr.6831208</li>",
-            params.skip_sharp_clusters ? "" : "<li>Ohmiya H, Vitezic M, Frith MC, et al. (2014). RECLU: a pipeline to discover reproducible transcriptional start sites and their alternative regulation using capped analysis of gene expression (CAGE). BMC Genomics, 15, 269. doi: 10.1186/1471-2164-15-269</li>",
-            params.skip_sharp_clusters ? "" : "<li>Li Q, Brown JB, Huang H, Bickel PJ. (2011). Measuring reproducibility of high-throughput experiments. Annals of Applied Statistics, 5(3), 1752-1779. doi: 10.1214/11-AOAS466</li>",
-            "<li>Pertea M, Pertea GM, Antonescu CM, et al. (2015). StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology, 33(3), 290-295. doi: 10.1038/nbt.3122</li>",
-            "<li>Pertea G, Pertea M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9, 304. doi: 10.12688/f1000research.23297.2</li>",
-            "<li>Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351</li>",
-            "<li>Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470</li>",
-            "<li>Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147</li>",
-            params.find_erna ? "<li>Andersson R, Gebhard C, Miguel-Escalada I, et al. (2014). An atlas of active enhancers across human cell types and tissues. Nature, 507, 455-461. doi: 10.1038/nature12787</li>" : "",
-            "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
-        ].findAll { text -> text }.join(' ').trim()
-
-    return reference_text
+    return usedTools().collect { _used, _text, reference -> "<li>${reference}</li>" }.join(' ')
 }
 
 def methodsDescriptionText(mqc_methods_yaml) {

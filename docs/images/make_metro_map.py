@@ -59,10 +59,11 @@ out.append('<text x="232" y="444" class="subl">paired-end CAGE (CAGEscan) only</
 # ---------------------------------------------------------------- stations
 terminus(70, 120, 120, "FASTQ", GREY, "pairs or single-end")
 station(185, 120, "cat · seqtk", ["lanes · subsample", "FastQC"], sub_below=True)
-station(295, 120, "cutadapt", ["5' linker", "SL split (trans-splicing)"], optional=True, sub_below=True)
-station(395, 120, "fastp", "adapters · quality", sub_below=True)
-station(485, 120, "SortMeRNA", "rRNA", optional=True, sub_below=True)
-station(565, 120, "STAR", ["spliced alignment", "READ1 5' end-to-end"], sub_below=True)
+station(272, 120, "cutadapt", "5' linker", optional=True, sub_below=True)
+station(352, 120, "fastp", ["adapters", "quality"], sub_below=True)
+station(432, 120, "SortMeRNA", "rRNA", optional=True, sub_below=True)
+station(510, 120, "SL split", ["leaders", "(cutadapt)"], optional=True, sub_below=True)
+station(590, 120, "STAR", ["spliced alignment", "READ1 5' end-to-end"], sub_below=True)
 station(660, 120, "samtools", "stats", sub_below=True)
 
 station(790, 120, "samtools view", "primary, MAPQ", sub_below=True)

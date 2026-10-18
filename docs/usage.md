@@ -5,11 +5,13 @@
 ## Introduction
 
 The pipeline takes **paired-end CAGE** reads (CAGEscan-style: READ1 starts at the capped 5' end of the RNA,
-READ2 is random-primed downstream) **without UMIs**, and reconstructs 5'-anchored transcripts:
+READ2 is random-primed downstream) **without UMIs**, and reconstructs 5'-anchored transcripts. It also takes
+**single-end CAGE** (see [Single-end CAGE](#single-end-cage)), for which steps 1-3 run.
 
-1. read pairs are aligned to the genome with STAR (spliced, local alignment);
-2. READ1 5' ends give CAGE TSSs (CTSS), which are clustered with CAGEfightR (TPM, support across samples) or paraclu;
-3. read pairs whose READ1 starts in a TSS cluster are kept and tagged with the cluster ID (`TC:Z:`);
+1. reads are aligned to the genome with STAR (spliced; READ1 aligned from its first base, mates locally);
+2. READ1 5' ends give CAGE TSSs (CTSS; a non-templated first G is removed), which are clustered with CAGEfightR
+   (default) or paraclu, with trans-splice sites (spliced-leader reads) clustered separately;
+3. reads (pairs) whose READ1 starts in a TSS cluster are kept, counted and tagged with the cluster ID (`TC:Z:`);
 4. StringTie builds isoforms from those pairs, per sample and merged across samples;
 5. every transcript is matched to a TSS cluster, its 5' end is moved to the cluster's dominant CTSS and it is
    renamed `<tss_id>.<n>`; one TSS can therefore have several isoforms.
@@ -30,7 +32,7 @@ therefore builds two cluster sets and runs everything downstream for both (`tran
 
 | | broad (`TC...`) | sharp (`TS...`) |
 | --- | --- | --- |
-| Method | [CAGEfightR](https://bioconductor.org/packages/CAGEfightR) (default): per-sample TPM, CTSSs seen in >= `--ctss_min_samples` samples, pooled TPM clustered by slice-reduce (positions within `--tss_merge_distance` bases merged), clusters with >= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples; or paraclu on the pooled counts (`--cluster_method paraclu`) | [RECLU](https://doi.org/10.1186/1471-2164-15-269) (Ohmiya et al. 2014): full paraclu hierarchy per replicate, TPM-per-base filter, hierarchical stability, replicate pairing (>= 90% reciprocal overlap) and IDR, <= 200 bp, innermost reproducible clusters |
+| Method | [CAGEfightR](https://bioconductor.org/packages/CAGEfightR) (default): per-sample TPM, CTSSs seen in >= `--ctss_min_samples` samples, pooled TPM clustered by slice-reduce (positions within `--tss_merge_distance` bases merged), clusters with >= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples; or paraclu on the pooled counts (`--cluster_method paraclu`) | [RECLU](https://doi.org/10.1186/1471-2164-15-269) (Ohmiya et al. 2014): full paraclu hierarchy per replicate, TPM-per-base filter, hierarchical stability, replicate pairing (>= `--reclu_min_overlap` reciprocal overlap, default 90%) and IDR, <= 200 bp, innermost reproducible clusters |
 | Recruits | every TSS region expressed above the TPM threshold, as one cluster | only TSSs reproducible across replicates, split into their narrow cores (typically a few bp) |
 | Needs replicates | no | yes, >= 2 per group |
 | Use for | maximum sensitivity; one model per promoter region | high-confidence, fine-grained TSSs; alternative TSSs a few bases apart kept separate |
@@ -51,10 +53,12 @@ leader must then be soft-clipped. Extra STAR arguments go in `--star_extra_args`
 **Broad clusters with CAGEfightR.** The default caller follows the standard workflow of CAGEfightR
 ([Thodberg et al. 2019](https://doi.org/10.1186/s12859-019-3029-5)), one of the two Bioconductor packages commonly
 used for CAGE, with CAGEr: counts are normalised to tags per million (TPM) per sample, single positions (CTSSs) seen
-in fewer than `--ctss_min_samples` (2) samples are dropped, the mean TPM across samples is clustered by
-slice-reduce (positions with signal closer than `--tss_merge_distance`, 20 bp, are merged), the peak of a cluster
-is its CTSS with the highest pooled TPM, and clusters below `--tc_min_tpm` (1) TPM in at least `--tc_min_samples` (2)
-samples are dropped (default: 5 TPM in at least 1 sample). Thresholds are capped at the number of samples.
+in fewer than `--ctss_min_samples` (2) samples are dropped, the TPM summed across samples (CAGEfightR's pooled
+signal) is clustered by slice-reduce (positions with signal fewer than `--tss_merge_distance`, 20, bases apart are
+merged), the peak of a cluster is its CTSS with the highest pooled TPM, and clusters with less than `--tc_min_tpm`
+(5) TPM in at least `--tc_min_samples` (1) samples are dropped. TPM is relative to all READ1s of a sample (the CTSS
+total), also for the separately clustered trans-splice sites, so the threshold means the same depth for both kinds
+of cluster. Sample-count thresholds are capped at the number of samples.
 
 How strict? Common practice ranges from 1 TPM (CAGEr's tag clusters, `clusterCTSS(threshold = 1)`; the CAGEfightR
 vignette, >= 1 TPM in a minimum number of samples; FANTOM5 "robust" peaks, >= 1 TPM and >= 11 reads at one position
@@ -124,7 +128,7 @@ first three are corrected by the pipeline:
 | --- | --- |
 | A TSS inside continuously covered sequence (e.g. a second TSS in the same first exon) gets no transcript. | A transcript is **derived** for every TSS cluster lying inside an exon of an anchored transcript, starting at the cluster peak (`anchored "derived"`, `derived_from`; `--derive_transcripts false` to disable). |
 | 3' ends sit where coverage runs out (coverage decays with fragment length), and one TSS can get several 3'-truncated copies of the same structure. | Transcripts that are 3' truncations of another transcript of the same TSS are dropped. 3' ends remain approximate. |
-| paraclu can split one TSS (e.g. when the extra G aligns to a genomic G for part of the reads), and the transcript may anchor to the minor piece. | Clusters closer than `--tss_merge_distance` (20 bp) are merged, and transcripts anchor to the strongest cluster within `--tss_window`. |
+| One TSS can be split into neighbouring clusters (e.g. when the extra G aligns to a genomic G for part of the reads), and the transcript may anchor to the minor piece. | Clusters fewer than `--tss_merge_distance` (20) bases apart are merged (CAGEfightR's `mergeDist`, and the same rule for paraclu), and transcripts anchor to the strongest cluster within `--tss_window`. |
 | Isoform abundances assume uniform coverage, which CAGEscan does not have (one 4-isoform test gene: estimated 0.55/0.08/0.20/0.17 vs true 0.40/0.10/0.10/0.40). | Not corrected: use `tss_clusters/<set>/*.tss_cluster_counts.tsv` for expression; transcript TPMs are approximate. |
 
 Splicing further downstream than the library insert size is never observed; that is a limit of CAGEscan data.
@@ -135,14 +139,20 @@ lower confidence.
 
 ### READ1 structure, linkers and spliced leaders
 
-Reverse transcriptase usually adds a non-templated G at the cap, so many READ1s start with one extra G. STAR's local
-alignment soft-clips it, and the CTSS is taken from the first *aligned* READ1 base. When the genome itself has a G
-at that position, the extra G aligns and the CTSS shifts 1 base upstream. This is a known limitation of CAGE: with a
-genomic G upstream of the TSS, the dominant CTSS (and so the transcript 5' end) can be 1 base upstream of the true TSS.
-Neighbouring clusters created by this shift are merged (`--tss_merge_distance`).
+Reverse transcriptase usually adds a non-templated G at the cap, so many READ1s start with one extra G. By default
+STAR aligns READ1 from its first base (`--read1_end_to_end`), and a first G that differs from the genome (MD tag) is
+removed: the CTSS is the next base, as with `removeFirstG` in CAGEr (41% of READ1s in the Osaka MGI libraries).
+When the genome itself has a G at that position, the extra G cannot be recognised and the CTSS is 1 base upstream
+of the true TSS for those reads; this is a known limitation of CAGE. CAGEr's statistical correction of these cases
+(`correctSystematicG`) was tested and not adopted: on the Osaka data it moved peaks away from pyrimidine-purine
+initiators (90.6% to 88.8% of TSS cluster peaks). Neighbouring clusters created by the shift are merged
+(`--tss_merge_distance`).
 
-If you are unsure what precedes the cap in your reads, run the pipeline once with defaults and check
-`ctss/<sample>.softclip_5p.tsv` and the *CTSS extraction* table in the MultiQC report:
+End-to-end alignment of the READ1 5' end needs reads that start at the cap (after an optional extra G): reads whose
+first bases are not genomic do not align (14% of READ1s in the Osaka MGI libraries, "too many mismatches" in the
+STAR log), where local alignment would soft-clip them and give a wrong TSS. If you are unsure what precedes the cap
+in your reads, run once with `--read1_end_to_end false` (local alignment) and check `ctss/<sample>.softclip_5p.tsv`
+and the *CTSS extraction* table in the MultiQC report:
 
 | Most frequent soft clip | Meaning | What to do |
 | --- | --- | --- |
@@ -175,8 +185,9 @@ leader of each cluster; MultiQC shows the share of each leader per sample.
    do not match the genome. Trimmed READ1s with a longer 5' clip (extra non-genomic bases after the leader, or an
    indel near the 5' end) cannot be placed and give no TSS (1-3% of READ1s in Osaka CAGE; MultiQC *CTSS extraction*).
    The split FASTQ files and cutadapt logs are in `sl_split/` (FASTQs only with `--save_sl_split_reads`, default on).
-2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment (e.g. with only part of the
-   leader, or with `--sl_split false`); exact match only.
+2. **After alignment**, in the READ1 5' soft clip, for SL reads not found before alignment: only with local
+   alignment, i.e. with `--sl_split false` (then READ1 is always aligned locally, so that the leader can be
+   soft-clipped) or `--read1_end_to_end false`; exact match only.
 
 Why both: with the soft-clip match alone, 11-15% of SL READ1s were missed on *O. dioica* MGI and Illumina CAGE,
 because of sequencing errors in the 40-nt leader, and a further ~5% because STAR aligned the leader's last 4-27 bases to
@@ -228,15 +239,24 @@ rare isoforms. Change `--subsample_seed` to draw a different random subset.
 The FANTOM5 CAGEscan libraries ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147)) had no UMIs either.
 That workflow aligned the pairs (BWA), kept proper pairs, removed pairs with identical coordinates, and grouped pairs
 whose READ1 starts in a CAGE peak into *CAGEscan clusters* (union of the pairs' blocks). This pipeline follows the same
-logic (STAR instead of BWA for spliced alignment, paraclu TSS clusters as seeds) and writes the same kind of clusters
+logic (STAR instead of BWA for spliced alignment, CAGEfightR or paraclu TSS clusters as seeds) and writes the same kind of clusters
 to `cagescan_clusters/`, but additionally resolves isoforms with StringTie.
 
 ### Duplicates
 
 Without UMIs, PCR duplicates cannot be told apart from independent molecules with the same TSS. With
 `--dedup`, read pairs with identical READ1 *and* READ2 positions are marked by `samtools markdup` and ignored
-downstream. Because READ2 is random-primed this is a reasonable proxy (FANTOM5 CAGEscan removed such pairs), but
-highly expressed TSSs with short fragments also collide by chance, so it is off by default.
+downstream (CTSS, TSS cluster counts, coverage tracks and transcripts). Because READ2 is random-primed this is a
+reasonable proxy (FANTOM5 CAGEscan removed such pairs), but highly expressed TSSs with short fragments also collide by
+chance, so it is off by default. It is not available for single-end CAGE, where identical 5' ends are expected.
+
+### Which reads are counted
+
+CTSS and the TSS signal bigWigs use every primary READ1 (or single read) with mapping quality >= `--min_mapq` (10),
+not QC-failed and not marked as duplicate. TSS cluster counts (`tss_cluster_counts.tsv`) additionally require
+paired-end READ1s to be in a proper pair (both mates aligned in the expected orientation and distance), as in the
+FANTOM5 CAGEscan workflow, so cluster counts are slightly lower than the CTSS in the same clusters. Single-end reads
+have no such requirement.
 
 ### Reference annotation
 
@@ -246,7 +266,7 @@ transcript 5' ends come from the CAGE data; use `--stringtie_guide` to change th
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with a header row and the columns `sample`, `fastq_1`, and optionally `fastq_2` (paired-end) and `group`, as shown in the examples below. The sample names `all_samples` and `merged` are reserved for pooled outputs.
 
 ```bash
 --input '[path to samplesheet file]'

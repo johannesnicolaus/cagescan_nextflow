@@ -26,6 +26,9 @@ def parse_leaders(spec):
     for i, entry in enumerate(entries, 1):
         name, _, seq = entry.rpartition("=")
         leaders.append((name or ("SL" if len(entries) == 1 else f"SL{i}"), seq.upper()))
+    names = [name for name, _ in leaders]
+    if len(set(names)) < len(names):
+        raise ValueError(f"duplicate spliced-leader names in {spec!r}: {names}")
     return leaders
 
 
@@ -98,7 +101,9 @@ def sl_trimmed_5p(read, pos, strand, clip):
     the CTSS downstream when the aligner soft-clipped them.
     """
     if read.query_name.startswith(SL_TRIMMED) and 0 < len(clip) <= MAX_SL_CLIP:
-        return max(0, pos - len(clip)) if strand == "+" else pos + len(clip)
+        new = pos - len(clip) if strand == "+" else pos + len(clip)
+        if 0 <= new < read.header.get_reference_length(read.reference_name):  # not past a contig end
+            return new
     return pos
 
 

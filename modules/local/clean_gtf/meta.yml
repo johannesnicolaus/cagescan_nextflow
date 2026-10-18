@@ -1,0 +1,33 @@
+name: clean_gtf
+description: "Drop GTF records with an empty transcript_id (gene rows of NCBI-style GTFs, which gffcompare rejects)"
+keywords:
+  - gtf
+  - annotation
+tools:
+  - python:
+      description: Python 3 script from the pipeline bin/ directory
+      homepage: https://www.python.org
+      licence:
+        - "PSF-2.0"
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: Annotation information
+    - gtf:
+        type: file
+        description: Reference annotation GTF
+        pattern: "*.gtf"
+output:
+  gtf:
+    - - meta:
+          type: map
+          description: Annotation information
+      - "*.clean.gtf":
+          type: file
+          description: GTF without records that have an empty transcript_id
+          pattern: "*.clean.gtf"
+authors:
+  - "@johannesnicolaus"
+maintainers:
+  - "@johannesnicolaus"

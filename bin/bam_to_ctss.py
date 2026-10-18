@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Extract CAGE transcription start sites (CTSS) from a paired-end CAGE BAM.
+"""Extract CAGE transcription start sites (CTSS) from a CAGE BAM (paired-end or single-end).
 
-The 5' end of each READ1 alignment marks a capped 5' end.  For every primary,
-mapped READ1 that passes the MAPQ filter we record its 5' genomic position and
-strand.  The soft-clipped 5' sequence (if any) is tallied, because it reveals
-what precedes the cap in the read: nothing, the non-templated extra G added by
-reverse transcriptase, a leftover linker, or a spliced-leader (SL) sequence.
-When the last bases of the SL also match the genome (the acceptor ...AG / ...CAG
-resembles the SL's 3' end), STAR aligns them and the read's 5' end lands inside
-the acceptor; the CTSS of such SL reads is moved downstream past those bases, to
-the trans-splice site.  Read pairs whose name starts with 'SL:' had the SL found
-and trimmed before alignment (cutadapt); their READ1 starts at the trans-splice site.
+The 5' end of each READ1 (or single read) alignment marks a capped 5' end.  For every primary, mapped READ1 that
+passes the MAPQ filter we record its 5' genomic position and strand:
+- READ1 aligned from its first base (STAR --alignEndsType Extend5pOfRead1, the pipeline default): a first G that
+  differs from the genome (MD tag) is the G added by the reverse transcriptase at the cap; with --remove-first-g the
+  CTSS is the next base (as CAGEr's removeFirstG).
+- Reads whose spliced leader (SL) was found and trimmed before alignment are named 'SL.<leader>:<name>' or
+  'SLG.<leader>:<name>' ('SL:' / 'SLG:' in earlier versions); their READ1 starts at the trans-splice site. Up to 3
+  soft-clipped 5' bases are added back; reads with longer 5' clips give no CTSS.
+- With local alignment, the soft-clipped 5' sequence reveals what precedes the cap (nothing, the extra G, a linker
+  or an SL) and is tallied. An SL is recognised when the clip ends with it; when its last bases also match the
+  genome (the acceptor ...AG / ...CAG resembles the SL's 3' end), STAR aligns them and the CTSS is moved downstream
+  past those bases, to the trans-splice site.
 
 Outputs (PREFIX = --prefix):
   PREFIX.ctss.bed            chrom, pos0, pos0+1, ., count, strand

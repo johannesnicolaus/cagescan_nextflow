@@ -19,6 +19,9 @@
                 "CAGEFIGHTR_CLUSTERS": {
                     "CAGEfightR": "1.26.0"
                 },
+                "CLEAN_GTF": {
+                    "python": "3.12.14"
+                },
                 "COMBINE_TSS_CLUSTERS": {
                     "python": "3.12.14"
                 },
@@ -510,7 +513,7 @@
                 "A.SAMPLE1_vs_SAMPLE2.reclu_idr.tsv:md5,bcb5fbcbace781c1b3f33b9c7e17da22"
             ]
         ],
-        "timestamp": "2026-10-18T22:49:03.706937436",
+        "timestamp": "2026-10-19T00:19:56.932745606",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -130,7 +130,7 @@ def main():
     usable = collections.defaultdict(list)
     for tss_id, chrom, strand, peak in read_clusters(args.clusters):
         n = counts.get(tss_id, 0)
-        if n >= args.min_reads and sl.get(tss_id, 0) / n <= args.max_sl_fraction:
+        if n > 0 and n >= args.min_reads and sl.get(tss_id, 0) / n <= args.max_sl_fraction:
             usable[chrom].append((peak, strand, tss_id, n))
     for v in usable.values():
         v.sort()
