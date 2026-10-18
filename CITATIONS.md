@@ -26,6 +26,10 @@
 
   > Plessy C. splitSpliceLeaderPE: split paired-end reads by spliced leader. https://github.com/oist/plessy_splitspliceleaderpe
 
+- [CAGEr](https://pubmed.ncbi.nlm.nih.gov/25653163/) (first-G removal, cluster expression threshold)
+
+  > Haberle V, Forrest ARR, Hayashizaki Y, Carninci P, Lenhard B. CAGEr: precise TSS data retrieval and high-resolution promoterome mining for integrative analyses. Nucleic Acids Res. 2015 Apr 30;43(8):e51. doi: 10.1093/nar/gkv054.
+
 - [CAGEfightR](https://pubmed.ncbi.nlm.nih.gov/31615434/)
 
   > Thodberg M, Thieffry A, Vitting-Seerup K, Andersson R, Sandelin A. CAGEfightR: analysis of 5'-end data using R/Bioconductor. BMC Bioinformatics. 2019 Oct 15;20(1):487. doi: 10.1186/s12859-019-3029-5.

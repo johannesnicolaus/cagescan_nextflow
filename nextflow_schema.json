@@ -156,6 +156,18 @@
             "fa_icon": "fas fa-align-center",
             "description": "Spliced alignment and duplicate handling.",
             "properties": {
+                "read1_end_to_end": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Align READ1 to its 5' end with STAR (`--alignEndsType Extend5pOfRead1`) and remove a non-templated first G that does not match the genome.",
+                    "help_text": "Local alignment soft-clips mismatched first bases (sequencing errors, strain variants), which moves the TSS downstream. End-to-end alignment of the READ1 5' end keeps them; the extra G added by the reverse transcriptase is then removed when it differs from the genome (as CAGEr's `removeFirstG`). Not used with `--sl_sequence` when `--sl_split` is off, because the leader must then be soft-clipped.",
+                    "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "star_extra_args": {
+                    "type": "string",
+                    "description": "Extra STAR arguments (e.g. `--alignIntronMax 25000`).",
+                    "fa_icon": "fas fa-terminal"
+                },
                 "min_mapq": {
                     "type": "integer",
                     "default": 10,
@@ -216,7 +228,10 @@
                 "cluster_method": {
                     "type": "string",
                     "default": "cagefightr",
-                    "enum": ["cagefightr", "paraclu"],
+                    "enum": [
+                        "cagefightr",
+                        "paraclu"
+                    ],
                     "description": "How to call the broad TSS clusters: CAGEfightR (default) or paraclu on the pooled counts.",
                     "help_text": "`cagefightr` follows the standard CAGEfightR workflow (Thodberg et al. 2019): per-sample TPM, CTSSs seen in >= `--ctss_min_samples` samples, pooled TPM clustered by slice-reduce (positions within `--tss_merge_distance` bases merged), peak = CTSS with the highest pooled TPM, clusters kept with >= `--tc_min_tpm` TPM in >= `--tc_min_samples` samples. `paraclu` clusters the pooled counts with paraclu (>= `--paraclu_min_cluster` reads) and paraclu-cut, trims sparse tails and merges clusters within `--tss_merge_distance` bases.",
                     "fa_icon": "fas fa-object-group"
@@ -230,14 +245,14 @@
                 },
                 "tc_min_tpm": {
                     "type": "number",
-                    "default": 1.0,
+                    "default": 5.0,
                     "minimum": 0,
-                    "description": "CAGEfightR: keep clusters with at least this many TPM in at least `--tc_min_samples` samples.",
+                    "description": "CAGEfightR: keep clusters with at least this many TPM in at least `--tc_min_samples` samples (default 5 TPM in 1 sample, as CAGEr's consensus clusters).",
                     "fa_icon": "fas fa-filter"
                 },
                 "tc_min_samples": {
                     "type": "integer",
-                    "default": 2,
+                    "default": 1,
                     "minimum": 1,
                     "description": "CAGEfightR: number of samples that must reach `--tc_min_tpm` (capped at the number of samples).",
                     "fa_icon": "fas fa-filter"

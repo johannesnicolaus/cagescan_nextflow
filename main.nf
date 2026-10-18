@@ -19,6 +19,7 @@ params {
     r2_trim_front            : Integer = 0
     skip_fastqc              : Boolean = false
     skip_fastp               : Boolean = false
+    read1_end_to_end         : Boolean = true
     min_mapq                 : Integer = 10
     dedup                    : Boolean = false
     sl_split                 : Boolean = true
@@ -26,8 +27,8 @@ params {
     sl_max_error_rate        : Float   = 0.15
     sl_separate_clusters     : Boolean = true
     ctss_min_samples         : Integer = 2
-    tc_min_tpm               : Float   = 1.0
-    tc_min_samples           : Integer = 2
+    tc_min_tpm               : Float   = 5.0
+    tc_min_samples           : Integer = 1
     paraclu_min_cluster      : Integer = 30
     tss_window               : Integer = 50
     tss_merge_distance       : Integer = 20

@@ -41,13 +41,29 @@ groups, so a TSS that is reproducible in only one condition is kept. Groups with
 the sharp set; with no group of two or more samples, the sharp set is skipped with a warning. `--skip_sharp_clusters`
 turns it off.
 
+**READ1 5' ends.** STAR aligns READ1 to its first base (`--alignEndsType Extend5pOfRead1`; mates and READ1 3'
+ends are aligned locally). Local alignment would soft-clip first bases that differ from the genome (sequencing errors,
+strain variants) and move the TSS downstream. The G that the reverse transcriptase adds at the cap is then removed
+when it differs from the genome: the TSS is the next base (as `removeFirstG` in CAGEr). `--read1_end_to_end false`
+restores local alignment; it is also used automatically with `--sl_sequence` when `--sl_split` is off, because the
+leader must then be soft-clipped. Extra STAR arguments go in `--star_extra_args`.
+
 **Broad clusters with CAGEfightR.** The default caller follows the standard workflow of CAGEfightR
 ([Thodberg et al. 2019](https://doi.org/10.1186/s12859-019-3029-5)), one of the two Bioconductor packages commonly
 used for CAGE, with CAGEr: counts are normalised to tags per million (TPM) per sample, single positions (CTSSs) seen
 in fewer than `--ctss_min_samples` (2) samples are dropped, the mean TPM across samples is clustered by
 slice-reduce (positions with signal closer than `--tss_merge_distance`, 20 bp, are merged), the peak of a cluster
 is its CTSS with the highest pooled TPM, and clusters below `--tc_min_tpm` (1) TPM in at least `--tc_min_samples` (2)
-samples are dropped. Thresholds are capped at the number of samples. With `--sl_sequence`, SL and non-SL READ1s are
+samples are dropped (default: 5 TPM in at least 1 sample). Thresholds are capped at the number of samples.
+
+How strict? Common practice ranges from 1 TPM (CAGEr's tag clusters, `clusterCTSS(threshold = 1)`; the CAGEfightR
+vignette, >= 1 TPM in a minimum number of samples; FANTOM5 "robust" peaks, >= 1 TPM and >= 11 reads at one position
+in at least one sample) to 5 TPM (CAGEr's consensus clusters, `aggregateTagClusters(tpmThreshold = 5)`;
+nf-core/cageseq). On the full Osaka MGI data (6 libraries, ~470 M READ1s), raising the threshold from 1 TPM in 2
+samples to 5 TPM in 1 sample reduced non-SL clusters from 30,744 to 17,908 and raised the share whose peak has a
+pyrimidine-purine initiator from 78% to 82%; 5 TPM in 1 sample keeps TSSs active in a single stage or condition.
+Lower `--tc_min_tpm` for more sensitivity (e.g. weak enhancer RNAs) and raise it, or `--tc_min_samples`, for fewer,
+stronger clusters. With `--sl_sequence`, SL and non-SL READ1s are
 clustered separately (see below). `--cluster_method paraclu` restores the earlier caller (paraclu on raw pooled
 counts, `--paraclu_min_cluster` reads), which recruits many more weak clusters at high depth.
 

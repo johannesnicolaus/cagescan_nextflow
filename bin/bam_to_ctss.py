@@ -24,6 +24,7 @@ Outputs (PREFIX = --prefix):
 
 import argparse
 import collections
+import re
 import sys
 
 import pysam
@@ -90,6 +91,24 @@ def sl_trimmed_unplaceable(read, clip):
     leader, or an indel near the 5' end), so it gives no TSS."""
     return read.query_name.startswith(SL_TRIMMED) and len(clip) > MAX_SL_CLIP
 
+MD_FIRST = re.compile(r"^0[ACGTN]")
+MD_LAST = re.compile(r"[ACGTN]0$")
+
+
+def first_g_mismatch(read):
+    """READ1 aligned from its first 5' base, which is a G that differs from the genome (MD tag): the non-templated
+    G added by the reverse transcriptase at the cap; the TSS is the next base (as CAGEr's removeFirstG)."""
+    if read.query_name.startswith(SL_TRIMMED) or not read.has_tag("MD"):
+        return False
+    cigar = [op for op in (read.cigartuples or []) if op[0] != 5]
+    seq = read.query_sequence or ""
+    if not cigar or not seq:
+        return False
+    md = read.get_tag("MD")
+    if read.is_reverse:
+        return cigar[-1][0] in (0, 7, 8) and seq[-1] == "C" and bool(MD_LAST.search(md))
+    return cigar[0][0] in (0, 7, 8) and seq[0] == "G" and bool(MD_FIRST.match(md))
+
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
     """SL bases aligned to the genome (0-3) if READ1 carries the spliced leader, else None.
@@ -132,6 +151,8 @@ def main():
     parser.add_argument("--min-mapq", type=int, default=10, help="minimum READ1 mapping quality (default: %(default)s)")
     parser.add_argument("--sl-sequence", default="", help="spliced-leader sequence, 5'->3' (default: none)")
     parser.add_argument("--sl-min-overlap", type=int, default=8, help="minimum soft-clip length to call an SL match (default: %(default)s)")
+    parser.add_argument("--remove-first-g", action="store_true",
+                        help="READ1s aligned from their first base: a first G that differs from the genome is the non-templated G; the CTSS is the next base")
     parser.add_argument("--max-clip-report", type=int, default=30, help="truncate reported soft clips to this many 3'-most bases (default: %(default)s)")
     parser.add_argument("--top", type=int, default=50, help="number of soft-clip sequences to report (default: %(default)s)")
     args = parser.parse_args()
@@ -140,7 +161,7 @@ def main():
     ctss = collections.Counter()
     sl_ctss = collections.Counter()
     clips = collections.Counter()
-    n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_clip_added = n_sl_unplaced = n_sl_shifted = 0
+    n_used = n_noclip = n_g = n_g_removed = n_sl = n_sl_trimmed = n_sl_clip_added = n_sl_unplaced = n_sl_shifted = 0
 
     with pysam.AlignmentFile(args.bam, "rb") as bam:
         for read in bam.fetch(until_eof=True):
@@ -163,6 +184,9 @@ def main():
                     # SL bases aligned to the acceptor: the trans-splice site is k bases downstream
                     pos = shift_downstream(pos, strand, k)
                     n_sl_shifted += 1
+            elif args.remove_first_g and first_g_mismatch(read):
+                pos = shift_downstream(pos, strand, 1)
+                n_g_removed += 1
             ctss[(read.reference_name, pos, strand)] += 1
             if k is not None:
                 sl_ctss[(read.reference_name, pos, strand)] += 1
@@ -195,9 +219,9 @@ def main():
         out.write("# section_name: 'CTSS extraction'\n")
         out.write("# description: 'READ1 5-prime ends used as CAGE TSSs, and what was soft-clipped before them (extra G, linker, spliced leader).'\n")
         out.write("# plot_type: 'table'\n")
-        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL trimmed, 5' clip added back (%)\tSL trimmed, 5' end unplaceable (%)\tSL end aligned, CTSS moved (%)\n")
+        out.write("Sample\tREAD1 used\tDistinct CTSS\tNo 5' clip (%)\tExtra G clip (%)\tExtra G removed, aligned (%)\tOther clip (%)\tSL (%)\tSL trimmed before alignment (%)\tSL trimmed, 5' clip added back (%)\tSL trimmed, 5' end unplaceable (%)\tSL end aligned, CTSS moved (%)\n")
         other = n_used - n_noclip - n_g
-        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_clip_added)}\t{100 * n_sl_unplaced / max(n_used + n_sl_unplaced, 1):.2f}\t{pct(n_sl_shifted)}\n")
+        out.write(f"{args.prefix}\t{n_used}\t{len(ctss)}\t{pct(n_noclip)}\t{pct(n_g)}\t{pct(n_g_removed)}\t{pct(other)}\t{pct(n_sl)}\t{pct(n_sl_trimmed)}\t{pct(n_sl_clip_added)}\t{100 * n_sl_unplaced / max(n_used + n_sl_unplaced, 1):.2f}\t{pct(n_sl_shifted)}\n")
 
     if n_used == 0:
         print(f"WARNING: no usable READ1 alignments found in {args.bam}", file=sys.stderr)

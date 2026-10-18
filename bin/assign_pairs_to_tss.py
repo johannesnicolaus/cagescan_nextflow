@@ -26,6 +26,7 @@ Outputs (PREFIX = --prefix):
 import argparse
 import bisect
 import collections
+import re
 
 import pysam
 
@@ -90,6 +91,24 @@ def sl_trimmed_unplaceable(read, clip):
     """SL-trimmed READ1 with a longer 5' soft clip: its 5' end cannot be placed (extra non-genomic bases after the
     leader, or an indel near the 5' end), so it gives no TSS."""
     return read.query_name.startswith(SL_TRIMMED) and len(clip) > MAX_SL_CLIP
+
+MD_FIRST = re.compile(r"^0[ACGTN]")
+MD_LAST = re.compile(r"[ACGTN]0$")
+
+
+def first_g_mismatch(read):
+    """READ1 aligned from its first 5' base, which is a G that differs from the genome (MD tag): the non-templated
+    G added by the reverse transcriptase at the cap; the TSS is the next base (as CAGEr's removeFirstG)."""
+    if read.query_name.startswith(SL_TRIMMED) or not read.has_tag("MD"):
+        return False
+    cigar = [op for op in (read.cigartuples or []) if op[0] != 5]
+    seq = read.query_sequence or ""
+    if not cigar or not seq:
+        return False
+    md = read.get_tag("MD")
+    if read.is_reverse:
+        return cigar[-1][0] in (0, 7, 8) and seq[-1] == "C" and bool(MD_LAST.search(md))
+    return cigar[0][0] in (0, 7, 8) and seq[0] == "G" and bool(MD_FIRST.match(md))
 
 
 def sl_status(read, clip, aligned, sl_sequence, min_overlap):
@@ -205,6 +224,8 @@ def main():
     parser.add_argument("--min-mapq", type=int, default=10, help="minimum READ1 mapping quality (default: %(default)s)")
     parser.add_argument("--sl-sequence", default="", help="spliced-leader sequence, 5'->3' (default: none)")
     parser.add_argument("--sl-min-overlap", type=int, default=8)
+    parser.add_argument("--remove-first-g", action="store_true",
+                        help="READ1s aligned from their first base: skip a first G that differs from the genome")
     parser.add_argument("--threads", type=int, default=1)
     args = parser.parse_args()
     sl_sequence = args.sl_sequence.upper()
@@ -233,6 +254,8 @@ def main():
                 pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py
             if k is not None:
                 pos = sl_trimmed_5p(read, pos, strand, clip)
+            elif args.remove_first_g and first_g_mismatch(read):
+                pos = shift_downstream(pos, strand, 1)  # same TSS position as bam_to_ctss.py
             tss_id = index.find(read.reference_name, pos, strand, sl=k is not None)
             if tss_id is None:
                 continue
