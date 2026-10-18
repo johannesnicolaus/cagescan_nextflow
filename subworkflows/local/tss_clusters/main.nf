@@ -5,6 +5,7 @@
 
 include { BAM_TO_CTSS                     } from '../../../modules/local/bam_to_ctss/main'
 include { POOL_CTSS                       } from '../../../modules/local/pool_ctss/main'
+include { POOL_CTSS as POOL_CTSS_BY_SL     } from '../../../modules/local/pool_ctss/main'
 include { PARACLU                         } from '../../../modules/nf-core/paraclu/main'
 include { ANNOTATE_TSS_CLUSTERS           } from '../../../modules/local/annotate_tss_clusters/main'
 include { ASSIGN_PAIRS_TO_TSS             } from '../../../modules/local/assign_pairs_to_tss/main'
@@ -21,6 +22,7 @@ workflow TSS_CLUSTERS {
     min_cluster         // integer: minimum total CTSS count of a broad (pooled paraclu) cluster
     run_sharp           // boolean: also build sharp (RECLU) clusters
     reclu_paraclu_min   // integer: paraclu minValue for the RECLU cluster hierarchy
+    sl_separate         // boolean: cluster spliced-leader and other CTSS separately (broad set; needs --sl_sequence)
 
     main:
 
@@ -50,12 +52,27 @@ workflow TSS_CLUSTERS {
     UCSC_BEDGRAPHTOBIGWIG(ch_bedgraph, ch_sizes.map { _meta, sizes -> sizes })
 
     //
-    // Broad clusters: paraclu on the pooled CTSS
+    // Broad clusters: paraclu on the pooled CTSS. With a spliced leader, trans-splice sites (SL READ1s) and the
+    // other TSSs are pooled and clustered separately, so that a TSS next to a trans-splice site keeps its own peak.
     //
-    PARACLU(POOL_CTSS.out.ctss, min_cluster)
-    ANNOTATE_TSS_CLUSTERS(
-        PARACLU.out.bed.combine(POOL_CTSS.out.ctss).map { meta, bed, _ctss_meta, ctss -> [meta + [cluster_set: 'broad'], bed, ctss] }
-    )
+    def ch_broad_ctss = POOL_CTSS.out.ctss
+    if (sl_separate) {
+        POOL_CTSS_BY_SL(
+            BAM_TO_CTSS.out.sl_ctss.map { _meta, ctss -> ['sl', ctss] }
+                .mix(BAM_TO_CTSS.out.nosl_ctss.map { _meta, ctss -> ['nosl', ctss] })
+                .groupTuple()
+                .map { kind, ctss -> [[id: "all_samples.${kind}", sl_class: kind], ctss] }
+        )
+        ch_broad_ctss = POOL_CTSS_BY_SL.out.ctss
+    }
+    PARACLU(ch_broad_ctss, min_cluster)
+    def ch_paraclu = PARACLU.out.bed.join(ch_broad_ctss, failOnDuplicate: true, failOnMismatch: true)
+    def ch_annotate = sl_separate
+        ? ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'nosl' }
+            .combine(ch_paraclu.filter { meta, _bed, _ctss -> meta.sl_class == 'sl' })
+            .map { _meta, bed, ctss, _sl_meta, sl_bed, sl_ctss -> [[id: 'all_samples', cluster_set: 'broad'], bed, ctss, sl_bed, sl_ctss] }
+        : ch_paraclu.map { meta, bed, ctss -> [meta + [cluster_set: 'broad'], bed, ctss, [], []] }
+    ANNOTATE_TSS_CLUSTERS(ch_annotate)
     def ch_sets = ANNOTATE_TSS_CLUSTERS.out.bed
         .join(ANNOTATE_TSS_CLUSTERS.out.tsv)
         .map { _meta, bed, tsv -> ['broad', bed, tsv] }

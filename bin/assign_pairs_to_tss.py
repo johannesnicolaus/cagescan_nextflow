@@ -89,10 +89,15 @@ def is_primary(read):
 
 
 class ClusterIndex:
-    """Look up the TSS cluster nearest to a position, per chromosome and strand."""
+    """Look up the TSS cluster nearest to a position, per chromosome and strand.
 
-    def __init__(self, bed, window):
+    When the clusters include spliced-leader clusters (IDs starting with sl_prefix) as well as others, SL READ1s
+    are only assigned to SL clusters and the other READ1s only to the other clusters.
+    """
+
+    def __init__(self, bed, window, sl_prefix="SL"):
         self.window = window
+        self.sl_prefix = sl_prefix
         self.clusters = collections.defaultdict(list)
         self.ids = []
         self.info = {}  # tss_id -> (chrom, start, end, strand)
@@ -102,15 +107,22 @@ class ClusterIndex:
                 if len(fields) < 6 or line.startswith(("#", "track")):
                     continue
                 chrom, start, end, tss_id, strand = fields[0], int(fields[1]), int(fields[2]), fields[3], fields[5]
-                self.clusters[(chrom, strand)].append((start, end, tss_id))
+                self.clusters[(chrom, strand, tss_id.startswith(sl_prefix))].append((start, end, tss_id))
                 self.ids.append(tss_id)
                 self.info[tss_id] = (chrom, start, end, strand)
         for value in self.clusters.values():
             value.sort()
+        kinds = {key[2] for key in self.clusters}
+        self.split = kinds == {True, False}
+        if not self.split:  # one kind of cluster: assign all READ1s to them
+            merged = collections.defaultdict(list)
+            for (chrom, strand, _), value in self.clusters.items():
+                merged[(chrom, strand, False)] += value
+            self.clusters = merged
         self.starts = {key: [c[0] for c in value] for key, value in self.clusters.items()}
 
-    def find(self, chrom, pos, strand):
-        key = (chrom, strand)
+    def find(self, chrom, pos, strand, sl=False):
+        key = (chrom, strand, bool(sl) and self.split)
         clusters = self.clusters.get(key)
         if not clusters:
             return None
@@ -198,7 +210,7 @@ def main():
             k = sl_status(read, clip, aligned, sl_sequence, args.sl_min_overlap)
             if k:
                 pos = shift_downstream(pos, strand, k)  # same TSS position as bam_to_ctss.py
-            tss_id = index.find(read.reference_name, pos, strand)
+            tss_id = index.find(read.reference_name, pos, strand, sl=k is not None)
             if tss_id is None:
                 continue
             assigned[read.query_name] = tss_id

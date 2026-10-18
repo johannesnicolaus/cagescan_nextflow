@@ -147,6 +147,16 @@ the genome with mismatches. On 500,000 raw pairs per library, the cutadapt step 
 splitSpliceLeaderPE/TagDust2 (99.6% and 99.98% of TagDust2's SL reads; identical trimmed sequences for >99.9%),
 in 4 s instead of 290 s, and also recovered clean SL reads that TagDust2 filtered as low complexity.
 
+**Separate clusters for trans-splice sites** (`--sl_separate_clusters`, on by default with `--sl_sequence`).
+Trans-splice sites and TSSs of the same gene are often a few bases apart. Pooled into one cluster, only the stronger
+of the two is reported as the peak. The broad set therefore clusters SL READ1s and the other READ1s separately:
+`SL…` clusters (trans-splice sites) and `TC…` clusters (TSSs), which may overlap. SL READ1s are assigned to SL
+clusters only and the other READ1s to TC clusters only, so the counts of a TC cluster are its non-SL READ1s and its
+`tss_cluster_sl_counts` are 0. Compared with the CAGEr consensus clusters of the same Osaka libraries
+(oist/LuscombeU-CAGE_libraries, which cluster SL and non-SL libraries separately), pooled clustering put the peak
+on the trans-splice site for 830 TSS clusters (3.5% with a pyrimidine-purine initiator at the peak, against 83% for
+the separate CAGEr clusters). The sharp (RECLU) set is not split.
+
 The last bases of a spliced leader
 often also match the genome, because the splice acceptor (`...AG`, `...CAG`) resembles the leader's 3' end (e.g.
 `...AACAG` in *Oikopleura dioica*). STAR then aligns those leader bases, and the read's 5' end lands up to 3 bases

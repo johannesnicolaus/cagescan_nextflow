@@ -198,6 +198,13 @@
                     "description": "Save the SL and non-SL FASTQ files of `--sl_split` to `sl_split/`.",
                     "fa_icon": "fas fa-save"
                 },
+                "sl_separate_clusters": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Cluster spliced-leader READ1s (trans-splice sites) and the other READ1s separately (broad set).",
+                    "help_text": "Trans-splice sites and TSSs of the same gene are often a few bases apart. Pooled, they form one cluster whose peak is the stronger of the two. Clustered separately, each keeps its own peak: SL clusters get IDs starting with `SL`, the others `TC`; they may overlap. SL READ1s are assigned only to SL clusters, the others only to TC clusters. Only used with `--sl_sequence`.",
+                    "fa_icon": "fas fa-object-ungroup"
+                },
                 "sl_max_error_rate": {
                     "type": "number",
                     "default": 0.15,

@@ -114,8 +114,9 @@ fragments (the library insert size), not necessarily to the polyadenylation site
 
 - `tss_clusters/`
   - `all_samples.ctss.bed`: CTSS counts pooled across samples (input to paraclu).
+  - `all_samples.{sl,nosl}.ctss.bed`: the same for spliced-leader and other READ1s (with `--sl_sequence`; the input to paraclu for the broad set when `--sl_separate_clusters`).
 - `tss_clusters/<set>/`
-  - `all_samples.<set>.tss_clusters.bed`: TSS clusters (BED9; `thickStart` is the dominant CTSS, `score` the pooled count capped at 1000).
+  - `all_samples.<set>.tss_clusters.bed`: TSS clusters (BED9; `thickStart` is the dominant CTSS, `score` the pooled count capped at 1000). With `--sl_sequence` (and `--sl_separate_clusters`, default), the broad set holds two kinds of cluster: `TC…` from READ1s without the spliced leader (TSSs; green/purple) and `SL…` from spliced-leader READ1s (trans-splice sites; orange/red). They may overlap.
   - `all_samples.<set>.tss_clusters.tsv`: cluster table: `tss_id`, location (1-based), strand, peak (1-based), total count, width.
   - `all_samples.<set>.tss_cluster_counts.tsv`: READ1 counts per cluster (rows) and sample (columns).
   - `all_samples.<set>.tss_cluster_cpm.tsv`: the same, as counts per million TSS-assigned READ1s.

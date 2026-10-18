@@ -25,6 +25,14 @@ input:
         type: file
         description: "Pooled CTSS BED"
         pattern: "*.ctss.bed"
+    - sl_paraclu_bed:
+        type: file
+        description: "paraclu output BED of the spliced-leader CTSS (optional, [] if absent): clustered separately, IDs SL..."
+        pattern: "*.bed"
+    - sl_ctss:
+        type: file
+        description: "Pooled spliced-leader CTSS BED (optional, [] if absent)"
+        pattern: "*.ctss.bed"
 output:
   bed:
     - - meta:

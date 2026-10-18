@@ -40,6 +40,8 @@ nextflow_pipeline {
             assertAll(
                 { assert truth.every { t -> is_peak(t) } },
                 { assert truth.every { t -> in_sharp(t) } },
+                // the trans-spliced gene's TSS is the peak of a separate spliced-leader cluster
+                { assert broad.any { f -> f[3].startsWith('SL') && truth.any { t -> t[3].startsWith('geneE') && f[0] == t[0] && f[5] == t[5] && Math.abs((f[6] as int) - (t[1] as int)) <= 1 } } },
                 { assert path("${params.outdir}/transcripts/broad/merged/merged.broad.transcripts.fasta").exists() },
                 { assert path("${params.outdir}/transcripts/sharp/merged/merged.sharp.transcripts.fasta").exists() },
                 { assert snapshot(

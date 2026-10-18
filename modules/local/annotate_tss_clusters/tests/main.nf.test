@@ -15,7 +15,8 @@ nextflow_process {
                 input[0] = [
                     [ id:'test' ],
                     file("${projectDir}/tests/data/modules/paraclu.bed", checkIfExists: true),
-                    file("${projectDir}/tests/data/modules/pooled.ctss.bed", checkIfExists: true)
+                    file("${projectDir}/tests/data/modules/pooled.ctss.bed", checkIfExists: true),
+                    [], []
                 ]
                 """
             }
@@ -39,7 +40,8 @@ nextflow_process {
                 input[0] = [
                     [ id:'test' ],
                     file("${projectDir}/tests/data/modules/paraclu.bed", checkIfExists: true),
-                    file("${projectDir}/tests/data/modules/pooled.ctss.bed", checkIfExists: true)
+                    file("${projectDir}/tests/data/modules/pooled.ctss.bed", checkIfExists: true),
+                    [], []
                 ]
                 """
             }
@@ -60,7 +62,8 @@ nextflow_process {
                 input[0] = [
                     [ id:'edge' ],
                     file("${projectDir}/tests/data/modules/edge_paraclu.bed", checkIfExists: true),
-                    file("${projectDir}/tests/data/modules/edge_pooled.ctss.bed", checkIfExists: true)
+                    file("${projectDir}/tests/data/modules/edge_pooled.ctss.bed", checkIfExists: true),
+                    [], []
                 ]
                 """
             }
@@ -75,6 +78,35 @@ nextflow_process {
                 { assert rows.size() == 5 },
                 { assert chr2.size() == 1 },
                 { assert chr2[0][3] == '5000' },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+
+    test("spliced-leader clusters kept separate") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'sl' ],
+                    file("${projectDir}/tests/data/modules/paraclu.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/pooled.ctss.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/sl_paraclu.bed", checkIfExists: true),
+                    file("${projectDir}/tests/data/modules/sl.ctss.bed", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            def bed = path(process.out.bed[0][1]).readLines().collect { line -> line.split('\t') }
+            def sl = bed.findAll { f -> f[3].startsWith('SL') }
+            assertAll(
+                { assert process.success },
+                // a trans-splice site 2 bp downstream of a TSS cluster gets its own SL cluster and peak
+                { assert sl.size() == 2 },
+                { assert sl.any { f -> f[0] == 'chr1' && f[5] == '+' && f[6] == '5006' } },
+                { assert bed.any { f -> f[3].startsWith('TC') && f[0] == 'chr1' && (f[1] as int) <= 5000 && (f[2] as int) >= 5003 && f[6] == '5000' } },
                 { assert snapshot(process.out).match() }
             )
         }

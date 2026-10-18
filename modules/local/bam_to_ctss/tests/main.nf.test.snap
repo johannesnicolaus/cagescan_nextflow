@@ -11,6 +11,12 @@
                     ]
                 ],
                 "1": [
+                    
+                ],
+                "2": [
+                    
+                ],
+                "3": [
                     [
                         {
                             "id": "test"
@@ -21,7 +27,7 @@
                         ]
                     ]
                 ],
-                "2": [
+                "4": [
                     [
                         {
                             "id": "test"
@@ -29,7 +35,7 @@
                         "test.softclip_5p.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "3": [
+                "5": [
                     [
                         {
                             "id": "test"
@@ -37,14 +43,14 @@
                         "test.ctss_stats_mqc.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
-                "4": [
+                "6": [
                     [
                         "BAM_TO_CTSS",
                         "python",
                         "3.12.14"
                     ]
                 ],
-                "5": [
+                "7": [
                     [
                         "BAM_TO_CTSS",
                         "pysam",
@@ -70,6 +76,12 @@
                         "test.ctss.bed:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "nosl_ctss": [
+                    
+                ],
+                "sl_ctss": [
+                    
+                ],
                 "softclip": [
                     [
                         {
@@ -102,7 +114,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-05T11:45:58.236613447",
+        "timestamp": "2026-10-18T11:01:24.066123014",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -124,10 +136,7 @@
                         {
                             "id": "test"
                         },
-                        [
-                            "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
-                            "test.ctss.plus.bedgraph:md5,4cf7fd24a3027f2bb88c34de6a6f9e5e"
-                        ]
+                        "test.sl_ctss.bed:md5,0041da425a71ba2f1da76f9c45c8160a"
                     ]
                 ],
                 "2": [
@@ -135,7 +144,7 @@
                         {
                             "id": "test"
                         },
-                        "test.softclip_5p.tsv:md5,b0d3979199efbe2cde9671277573ecac"
+                        "test.nosl_ctss.bed:md5,6cc351045d80fc5154c7222c8d17dd56"
                     ]
                 ],
                 "3": [
@@ -143,17 +152,36 @@
                         {
                             "id": "test"
                         },
-                        "test.ctss_stats_mqc.tsv:md5,428150a4ecf5fbb1c0e1af80c3cf7c18"
+                        [
+                            "test.ctss.minus.bedgraph:md5,431305e8db747fd7cc6873d6ec01744f",
+                            "test.ctss.plus.bedgraph:md5,4cf7fd24a3027f2bb88c34de6a6f9e5e"
+                        ]
                     ]
                 ],
                 "4": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.softclip_5p.tsv:md5,b0d3979199efbe2cde9671277573ecac"
+                    ]
+                ],
+                "5": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.ctss_stats_mqc.tsv:md5,428150a4ecf5fbb1c0e1af80c3cf7c18"
+                    ]
+                ],
+                "6": [
                     [
                         "BAM_TO_CTSS",
                         "python",
                         "3.12.14"
                     ]
                 ],
-                "5": [
+                "7": [
                     [
                         "BAM_TO_CTSS",
                         "pysam",
@@ -177,6 +205,22 @@
                             "id": "test"
                         },
                         "test.ctss.bed:md5,6098ca2f512b40b46df359d2b8b530e0"
+                    ]
+                ],
+                "nosl_ctss": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.nosl_ctss.bed:md5,6cc351045d80fc5154c7222c8d17dd56"
+                    ]
+                ],
+                "sl_ctss": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.sl_ctss.bed:md5,0041da425a71ba2f1da76f9c45c8160a"
                     ]
                 ],
                 "softclip": [
@@ -211,7 +255,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-10-17T21:46:18.174336246",
+        "timestamp": "2026-10-18T11:01:13.860513876",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

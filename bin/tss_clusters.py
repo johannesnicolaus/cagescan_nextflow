@@ -12,6 +12,9 @@
       P.tss_clusters.bed (BED9: chrom, start, end, id, score, strand,
       peak, peak+1, rgb) and P.tss_clusters.tsv (id, location, strand,
       peak position, total CTSS count, width).
+      With --sl-paraclu/--sl-ctss, spliced-leader CTSS (trans-splice sites) are
+      clustered separately and added with IDs starting with --sl-id-prefix (SL);
+      SL and non-SL clusters may overlap.
 
 paraclu reports the first and last CTSS position of each cluster; since the
 CTSS positions are 0-based, the BED end coordinate is last + 1.
@@ -67,10 +70,11 @@ def trim_tails(members, fraction):
     return members[lo:hi]
 
 
-def annotate(args):
+def build_clusters(paraclu, ctss, trim_fraction, merge_distance):
+    """paraclu clusters -> list of (chrom, start, end, strand, peak, total), tails trimmed and nearby clusters merged."""
     # Index pooled CTSS per (chrom, strand) for peak lookup.
     positions = collections.defaultdict(list)
-    for chrom, pos, strand, count in read_ctss(args.ctss):
+    for chrom, pos, strand, count in read_ctss(ctss):
         positions[(chrom, strand)].append((pos, count))
     for value in positions.values():
         value.sort()
@@ -78,7 +82,7 @@ def annotate(args):
 
     # Trimmed paraclu clusters per (chrom, strand), as (first, last) CTSS positions.
     spans = collections.defaultdict(list)
-    with open(args.paraclu) as handle:
+    with open(paraclu) as handle:
         for line in handle:
             fields = line.rstrip("\n").split("\t")
             if len(fields) < 6:
@@ -87,7 +91,7 @@ def annotate(args):
             key = (chrom, strand)
             lo = bisect.bisect_left(starts.get(key, []), first)
             hi = bisect.bisect_right(starts.get(key, []), last)
-            members = trim_tails(positions.get(key, [])[lo:hi], args.trim_fraction)
+            members = trim_tails(positions.get(key, [])[lo:hi], trim_fraction)
             if members:
                 spans[key].append((members[0][0], members[-1][0]))
 
@@ -98,7 +102,7 @@ def annotate(args):
     for (chrom, strand), key_spans in spans.items():
         merged = []
         for first, last in sorted(key_spans):
-            if merged and first - merged[-1][1] - 1 <= args.merge_distance:
+            if merged and first - merged[-1][1] - 1 <= merge_distance:
                 merged[-1][1] = max(merged[-1][1], last)
             else:
                 merged.append([first, last])
@@ -111,16 +115,29 @@ def annotate(args):
             # Dominant CTSS; ties broken towards the 5'-most position.
             best = max(members, key=lambda pc: (pc[1], -pc[0] if strand == "+" else pc[0]))
             clusters.append((chrom, first, last + 1, strand, best[0], total))
+    return clusters
 
-    clusters.sort()
-    width = max(6, len(str(len(clusters))))
+
+def annotate(args):
+    sets = [(args.id_prefix, build_clusters(args.paraclu, args.ctss, args.trim_fraction, args.merge_distance))]
+    if args.sl_paraclu:
+        # Trans-splice sites (spliced-leader READ1s) clustered separately from the other TSSs: both kinds of
+        # cluster can overlap; their IDs tell them apart (--sl-id-prefix).
+        sets.append((args.sl_id_prefix, build_clusters(args.sl_paraclu, args.sl_ctss, args.trim_fraction, args.merge_distance)))
+    named = []
+    for id_prefix, clusters in sets:
+        clusters.sort()
+        width = max(6, len(str(len(clusters))))
+        named += [(c, f"{id_prefix}{i:0{width}d}", id_prefix) for i, c in enumerate(clusters, 1)]
+    named.sort()
     rgb = {"+": "0,127,0", "-": "127,0,127"}
+    rgb_sl = {"+": "200,120,0", "-": "200,60,60"}
     with open(f"{args.prefix}.tss_clusters.bed", "w") as bed, open(f"{args.prefix}.tss_clusters.tsv", "w") as tsv:
         tsv.write("tss_id\tlocation\tstrand\tpeak\ttotal_count\twidth\n")
-        for i, (chrom, start, end, strand, peak, total) in enumerate(clusters, 1):
-            tss_id = f"{args.id_prefix}{i:0{width}d}"
+        for (chrom, start, end, strand, peak, total), tss_id, id_prefix in named:
             score = min(1000, total)
-            bed.write(f"{chrom}\t{start}\t{end}\t{tss_id}\t{score}\t{strand}\t{peak}\t{peak + 1}\t{rgb.get(strand, '0,0,0')}\n")
+            color = (rgb_sl if args.sl_paraclu and id_prefix == args.sl_id_prefix else rgb).get(strand, "0,0,0")
+            bed.write(f"{chrom}\t{start}\t{end}\t{tss_id}\t{score}\t{strand}\t{peak}\t{peak + 1}\t{color}\n")
             tsv.write(f"{tss_id}\t{chrom}:{start + 1}-{end}\t{strand}\t{peak + 1}\t{total}\t{end - start}\n")
 
 
@@ -141,6 +158,9 @@ def main():
                          help="trim cluster ends by up to this fraction of the cluster's counts per end (default: %(default)s)")
     p_annot.add_argument("--merge-distance", type=int, default=20,
                          help="merge clusters on the same strand separated by <= this many bases (default: %(default)s; -1 merges only overlapping clusters)")
+    p_annot.add_argument("--sl-paraclu", help="paraclu bed of the spliced-leader CTSS: cluster them separately")
+    p_annot.add_argument("--sl-ctss", help="pooled spliced-leader CTSS bed (with --sl-paraclu)")
+    p_annot.add_argument("--sl-id-prefix", default="SL", help="ID prefix of spliced-leader clusters (default: %(default)s)")
     p_annot.add_argument("paraclu", help="paraclu bed (chrom, first, last, name, count, strand)")
     p_annot.set_defaults(func=annotate)
 

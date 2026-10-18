@@ -168,7 +168,8 @@ workflow CAGESCAN {
         PREPARE_GENOME.out.sizes,
         params.paraclu_min_cluster,
         !params.skip_sharp_clusters,
-        params.reclu_paraclu_min
+        params.reclu_paraclu_min,
+        params.sl_sequence && params.sl_separate_clusters
     )
     ch_multiqc_files = ch_multiqc_files.mix(TSS_CLUSTERS.out.multiqc_files)
 

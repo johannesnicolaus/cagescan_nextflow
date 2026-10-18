@@ -8,7 +8,7 @@ process ANNOTATE_TSS_CLUSTERS {
         'quay.io/biocontainers/pysam:0.24.1--py312hf5ad864_0' }"
 
     input:
-    tuple val(meta), path(paraclu_bed), path(ctss)
+    tuple val(meta), path(paraclu_bed), path(ctss), path(sl_paraclu_bed), path(sl_ctss) // SL inputs optional ([])
 
     output:
     tuple val(meta), path("*.tss_clusters.bed"), emit: bed
@@ -25,6 +25,7 @@ process ANNOTATE_TSS_CLUSTERS {
     tss_clusters.py annotate \\
         --prefix $prefix \\
         --ctss $ctss \\
+        ${sl_paraclu_bed ? "--sl-paraclu $sl_paraclu_bed --sl-ctss $sl_ctss" : ''} \\
         $args \\
         $paraclu_bed
     """

@@ -12,6 +12,8 @@ process BAM_TO_CTSS {
 
     output:
     tuple val(meta), path("*.ctss.bed")              , emit: ctss
+    tuple val(meta), path("*.sl_ctss.bed")           , emit: sl_ctss  , optional: true
+    tuple val(meta), path("*.nosl_ctss.bed")         , emit: nosl_ctss, optional: true
     tuple val(meta), path("*.ctss.{plus,minus}.bedgraph"), emit: bedgraph
     tuple val(meta), path("*.softclip_5p.tsv")       , emit: softclip
     tuple val(meta), path("*.ctss_stats_mqc.tsv")    , emit: stats

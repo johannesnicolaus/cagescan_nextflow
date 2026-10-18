@@ -24,6 +24,7 @@ params {
     sl_split                 : Boolean = true
     save_sl_split_reads      : Boolean = true
     sl_max_error_rate        : Float   = 0.15
+    sl_separate_clusters     : Boolean = true
     paraclu_min_cluster      : Integer = 30
     tss_window               : Integer = 50
     tss_merge_distance       : Integer = 20

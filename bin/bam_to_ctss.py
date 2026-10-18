@@ -16,6 +16,8 @@ Outputs (PREFIX = --prefix):
   PREFIX.ctss.bed            chrom, pos0, pos0+1, ., count, strand
   PREFIX.ctss.plus.bedgraph  CTSS counts on the plus strand
   PREFIX.ctss.minus.bedgraph CTSS counts on the minus strand
+  PREFIX.sl_ctss.bed         CTSS of spliced-leader READ1s only (with --sl-sequence)
+  PREFIX.nosl_ctss.bed       CTSS of the other READ1s (with --sl-sequence)
   PREFIX.softclip_5p.tsv     most frequent READ1 5' soft-clipped sequences
   PREFIX.ctss_stats_mqc.tsv  one-row summary table for MultiQC
 """
@@ -91,6 +93,12 @@ def is_usable_read1(read, min_mapq):
     return read.mapping_quality >= min_mapq
 
 
+def write_ctss(path, ctss):
+    with open(path, "w") as out:
+        for (chrom, pos, strand), count in sorted(ctss.items()):
+            out.write(f"{chrom}\t{pos}\t{pos + 1}\t.\t{count}\t{strand}\n")
+
+
 def write_bedgraph(path, ctss, strand):
     with open(path, "w") as out:
         for (chrom, pos, s), count in sorted(ctss.items()):
@@ -111,6 +119,7 @@ def main():
     sl_sequence = args.sl_sequence.upper()
 
     ctss = collections.Counter()
+    sl_ctss = collections.Counter()
     clips = collections.Counter()
     n_used = n_noclip = n_g = n_sl = n_sl_trimmed = n_sl_shifted = 0
 
@@ -130,6 +139,8 @@ def main():
                     pos = shift_downstream(pos, strand, k)
                     n_sl_shifted += 1
             ctss[(read.reference_name, pos, strand)] += 1
+            if k is not None:
+                sl_ctss[(read.reference_name, pos, strand)] += 1
             n_used += 1
             if not clip:
                 n_noclip += 1
@@ -137,9 +148,11 @@ def main():
                 n_g += 1
             clips[clip[-args.max_clip_report:] if clip else "-"] += 1
 
-    with open(f"{args.prefix}.ctss.bed", "w") as out:
-        for (chrom, pos, strand), count in sorted(ctss.items()):
-            out.write(f"{chrom}\t{pos}\t{pos + 1}\t.\t{count}\t{strand}\n")
+    write_ctss(f"{args.prefix}.ctss.bed", ctss)
+    if sl_sequence:
+        # separate SL and non-SL CTSS, so that trans-splice sites and TSSs are clustered separately
+        write_ctss(f"{args.prefix}.sl_ctss.bed", sl_ctss)
+        write_ctss(f"{args.prefix}.nosl_ctss.bed", ctss - sl_ctss)
     write_bedgraph(f"{args.prefix}.ctss.plus.bedgraph", ctss, "+")
     write_bedgraph(f"{args.prefix}.ctss.minus.bedgraph", ctss, "-")
 

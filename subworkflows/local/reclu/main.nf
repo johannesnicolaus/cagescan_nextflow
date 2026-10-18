@@ -56,7 +56,7 @@ workflow RECLU {
             .map { tsvs -> [[id: 'all_samples', cluster_set: 'sharp'], tsvs] }
     )
     ANNOTATE_SHARP_CLUSTERS(
-        RECLU_COMBINE.out.bed.combine(ch_pooled_ctss).map { meta, bed, _ctss_meta, ctss -> [meta, bed, ctss] }
+        RECLU_COMBINE.out.bed.combine(ch_pooled_ctss).map { meta, bed, _ctss_meta, ctss -> [meta, bed, ctss, [], []] }
     )
 
     emit:
