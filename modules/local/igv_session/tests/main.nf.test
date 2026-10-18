@@ -20,6 +20,7 @@ nextflow_process {
                 input[1] = file("${projectDir}/tests/data/annotation.gtf", checkIfExists: true)
                 input[2] = 'SAMPLE1,SAMPLE2'
                 input[3] = 'broad,sharp'
+                input[4] = true
                 """
             }
         }
@@ -52,6 +53,7 @@ nextflow_process {
                 input[1] = []
                 input[2] = 'SAMPLE1'
                 input[3] = 'broad'
+                input[4] = true
                 """
             }
         }

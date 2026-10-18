@@ -12,6 +12,7 @@ process IGV_SESSION {
     path(gtf)        // reference annotation, or []
     val(samples)     // comma-separated sample names
     val(sets)        // comma-separated TSS cluster sets
+    val(transcripts) // boolean: transcript tracks (paired-end)
 
     output:
     path("igv_session.xml"), emit: session
@@ -31,6 +32,7 @@ process IGV_SESSION {
         $gtf_arg \\
         --samples $samples \\
         --sets $sets \\
+        ${transcripts ? '' : '--no-transcripts'} \\
         $args
     """
 

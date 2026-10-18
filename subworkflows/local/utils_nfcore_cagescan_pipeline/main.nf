@@ -163,6 +163,18 @@ workflow PIPELINE_COMPLETION {
 */
 
 //
+// Single-end CAGE: every samplesheet row without fastq_2. Mixing single-end and paired-end samples is not supported.
+//
+def isSingleEnd(input) {
+    def rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
+    def kinds = rows.collect { row -> row[2] ? 'paired' : 'single' }.unique()
+    if (kinds.size() > 1) {
+        error("Please check input samplesheet -> all samples must be single-end (no fastq_2) or all paired-end")
+    }
+    return kinds == ['single']
+}
+
+//
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {

@@ -98,4 +98,28 @@ nextflow_process {
         }
     }
 
+    test("single-end, two leaders") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'se', single_end:true ],
+                    [ file("${projectDir}/tests/data/modules/two_leaders_R1.fastq.gz", checkIfExists: true) ]
+                ]
+                input[1] = 'SL1=GGTTTAATTACCCAAGTTTGAG,SL2=GGTTTTAACCCAGTTACTCAAG'
+                """
+            }
+        }
+
+        then {
+            def sl = [process.out.sl[0][1]].flatten()
+            def heads = path(sl[0]).linesGzip.withIndex().findAll { line, i -> i % 4 == 0 }.collect { line, i -> line.split(':')[0] }
+            assertAll(
+                { assert process.success },
+                { assert sl.size() == 1 && [process.out.nosl[0][1]].flatten().size() == 1 },
+                { assert heads.sort() == ['@SL.SL1', '@SL.SL1', '@SL.SL2', '@SLG.SL1', '@SLG.SL2'] }
+            )
+        }
+    }
+
 }

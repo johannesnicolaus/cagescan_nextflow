@@ -29,6 +29,7 @@ workflow TSS_CLUSTERS {
     sl_separate         // boolean: cluster spliced-leader and other CTSS separately (broad set; needs --sl_sequence)
     has_sl              // boolean: --sl_sequence given (BAM_TO_CTSS writes SL and non-SL CTSS)
     ch_fasta_fai        // channel: [ val(meta), path(fasta), path(fai) ]
+    single_end          // boolean: single-end CAGE (no CAGEscan clusters)
 
     main:
 
@@ -153,12 +154,16 @@ workflow TSS_CLUSTERS {
     //
     // FANTOM5-style CAGEscan meta-clusters across samples, per cluster set
     //
-    MERGE_CAGESCAN_CLUSTERS(
-        ASSIGN_PAIRS_TO_TSS.out.cagescan_clusters
-            .map { meta, bed -> [meta.cluster_set, bed] }
-            .groupTuple()
-            .map { set, beds -> [[id: 'all_samples', cluster_set: set], beds] }
-    )
+    def ch_cagescan_clusters = channel.empty()
+    if (!single_end) {
+        MERGE_CAGESCAN_CLUSTERS(
+            ASSIGN_PAIRS_TO_TSS.out.cagescan_clusters
+                .map { meta, bed -> [meta.cluster_set, bed] }
+                .groupTuple()
+                .map { set, beds -> [[id: 'all_samples', cluster_set: set], beds] }
+        )
+        ch_cagescan_clusters = MERGE_CAGESCAN_CLUSTERS.out.bed
+    }
 
     def ch_multiqc_files = BAM_TO_CTSS.out.stats
         .map { _meta, stats -> stats }
@@ -181,6 +186,6 @@ workflow TSS_CLUSTERS {
     clusters_tsv      = ch_sets.map { set, _bed, tsv -> [set, tsv] }    // channel: [ val(cluster_set), path(tss_clusters.tsv) ]
     tss_bam           = ASSIGN_PAIRS_TO_TSS.out.bam                     // channel: [ val(meta), path(bam), path(bai) ]; meta.cluster_set
     counts            = MERGE_TSS_COUNTS.out.tsv                        // channel: [ val(meta), path(tsv) ]
-    cagescan_clusters = MERGE_CAGESCAN_CLUSTERS.out.bed                 // channel: [ val(meta), path(bed12) ]
+    cagescan_clusters = ch_cagescan_clusters                        // channel: [ val(meta), path(bed12) ]
     multiqc_files     = ch_multiqc_files                                // channel: path(*_mqc.tsv)
 }

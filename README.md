@@ -15,7 +15,9 @@
 ## Introduction
 
 **luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**
-(CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream).
+(CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream). It also runs on
+**single-end CAGE** (samplesheet without `fastq_2`): TSS clusters, spliced-leader handling, counts and coverage, without
+the transcripts.
 
 CAGEscan was introduced by [Plessy et al. (2010)](https://doi.org/10.1038/nmeth.1470): paired-end sequencing of
 random-primed nanoCAGE libraries links each TSS to the body of its transcript. This pipeline follows the original
