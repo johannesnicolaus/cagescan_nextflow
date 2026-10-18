@@ -10,21 +10,24 @@ The directories listed below will be created in the results directory after the 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
-Everything downstream of the TSS clusters is produced twice, once per cluster set: `broad` (pooled paraclu) and
+Everything downstream of the TSS clusters is produced twice, once per cluster set: `broad` (CAGEfightR, or paraclu) and
 `sharp` (RECLU, reproducible across replicates); see [usage](usage.md#broad-and-sharp-tss-clusters). `<set>` below
 stands for either, and output files carry the set in their name.
 
+For **single-end CAGE** (samplesheet without `fastq_2`), the folders marked *(paired-end only)* are not produced;
+all others have the same files as for paired-end CAGE.
+
 - [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
 - [eRNA candidates](#erna-candidates) - enhancer-RNA-like divergent TSS pairs
-- [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
+- [Transcripts](#transcripts) *(paired-end only)* - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
-- [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
-- [CTSS](#ctss) - per-sample CAGE TSSs, bigWigs and READ1 5' soft-clip reports
-- [Quantification](#quantification) - per-sample transcript abundance
-- [gffcompare](#gffcompare) - comparison with the reference annotation
+- [CAGEscan clusters](#cagescan-clusters) *(paired-end only)* - FANTOM5-style union of read pairs per TSS cluster
+- [CTSS](#ctss) - per-sample CAGE TSSs, bigWigs and READ1 5' reports
+- [Quantification](#quantification) *(paired-end only)* - per-sample transcript abundance
+- [gffcompare](#gffcompare) *(paired-end only)* - comparison with the reference annotation
 - [Alignment](#alignment) - STAR alignments and statistics
 - [Read QC and trimming](#read-qc-and-trimming) - FastQC, fastp, cutadapt, SortMeRNA
-- [StringTie assemblies](#stringtie-assemblies) - raw assemblies before TSS anchoring
+- [StringTie assemblies](#stringtie-assemblies) *(paired-end only)* - raw assemblies before TSS anchoring
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 

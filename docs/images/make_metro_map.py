@@ -50,34 +50,37 @@ line("M 900 270 C 940 270 940 350 980 350 L 1330 350", ORANGE)
 # turn down into row C (right to left), both sets in parallel
 line("M 1330 270 C 1385 270 1385 520 1330 520 L 330 520", RED)
 line("M 1330 350 C 1360 350 1360 536 1330 536 L 330 536", ORANGE)
-# eRNA spur (find_eRNA branch)
-line("M 830 545 L 830 660", GOLD, width=8, dash="10 8")
+# eRNA spur
+line("M 1250 545 L 1250 660", GOLD, width=8, dash="10 8")
+# paired-end only: transcript row (StringTie ... gffcompare), outlined in green
+out.append('<rect x="222" y="450" width="958" height="146" rx="14" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="7 5"/>')
+out.append('<text x="232" y="444" class="subl">paired-end CAGE (CAGEscan) only</text>')
 
 # ---------------------------------------------------------------- stations
-terminus(70, 120, 120, "FASTQ pairs", GREY, "samplesheet (+ group)")
+terminus(70, 120, 120, "FASTQ", GREY, "pairs or single-end")
 station(185, 120, "cat · seqtk", ["lanes · subsample", "FastQC"], sub_below=True)
 station(295, 120, "cutadapt", ["5' linker", "SL split (trans-splicing)"], optional=True, sub_below=True)
 station(395, 120, "fastp", "adapters · quality", sub_below=True)
 station(485, 120, "SortMeRNA", "rRNA", optional=True, sub_below=True)
-station(565, 120, "STAR", "spliced alignment", sub_below=True)
+station(565, 120, "STAR", ["spliced alignment", "READ1 5' end-to-end"], sub_below=True)
 station(660, 120, "samtools", "stats", sub_below=True)
 
 station(790, 120, "samtools view", "primary, MAPQ", sub_below=True)
-station(930, 120, "bedtools genomecov", "per strand, per million pairs", sub_below=True)
+station(930, 120, "bedtools genomecov", "per strand, per million reads", sub_below=True)
 station(1080, 120, "bedGraphToBigWig")
 terminus(1230, 120, 150, "IGV session", PURPLE, "genome · annotation · all tracks")
 
-station(790, 270, "CTSS", ["READ1 5' ends; soft-clip report", "extra G · linker · spliced leader"], above=False)
-station(880, 270, "pool", "all samples", above=True)
-station(1020, 270, "CAGEfightR", "TPM · support · SL apart", above=True)
-station(1160, 270, "trim · merge", "tails, < 20 bp gaps", above=True)
+station(790, 270, "CTSS", ["READ1 5' ends; extra G removed", "SL reads (per leader) apart"], above=False)
+station(880, 270, "TPM", "per sample", above=True)
+station(1020, 270, "CAGEfightR", "support · slice-reduce", above=True)
+station(1160, 270, "≥ 5 TPM", "TC and SL clusters", above=True)
 station(1010, 350, "paraclu", "per replicate", above=False)
 station(1110, 350, "TPM / base", "(log) stability", above=False)
 station(1210, 350, "pair · IDR", "within a group", above=False)
 station(1300, 350, "innermost", "≤ 200 bp", above=False)
 
 for i, (x, name, sub) in enumerate([
-    (1250, "assign pairs", ["READ1 in a TSS cluster", "counts · CAGEscan clusters"]),
+    (1250, "assign reads", ["counts · CAGEscan (PE)", "READ1 in a TSS cluster"]),
     (1110, "StringTie", "per sample, stranded"),
     (970, "merge", "all samples"),
     (830, "anchor", ["5' end → cluster peak", "derive · collapse 3' ends"]),
@@ -85,16 +88,15 @@ for i, (x, name, sub) in enumerate([
     (550, "StringTie -e", "quantification"),
     (420, "gffcompare", "vs --gtf"),
 ]):
-    station(x, 520, name, sub, above=(i % 2 == 1), tall=16)
+    station(x, 520, name, sub, above=(i % 2 == 1 or i == 0), tall=16)
 terminus(290, 528, 120, "transcripts", GREEN, "per TSS, per set")
-station(830, 660, "find eRNA", ["divergent non-SL pairs · distal", "balanced · unspliced · vs convergent"], above=False)
-out.append('<text x="845" y="625" class="subl">find_eRNA branch</text>')
+station(1250, 660, "find eRNA", ["divergent non-SL pairs · distal", "balanced · unspliced (PE) · vs convergent"], above=False)
 
 # ---------------------------------------------------------------- titles and legend
 out.append('<text x="40" y="44" class="title">luscombeu/cagescan</text>')
-out.append('<text x="40" y="66" class="subl">paired-end CAGE (CAGEscan) without UMIs → TSS clusters → 5\'-anchored transcripts</text>')
-legend = [(BLUE, "reads and alignment"), (PURPLE, "coverage and genome browser"), (RED, "broad TSS clusters (pooled)"),
-          (ORANGE, "sharp TSS clusters (RECLU, replicates)"), (GOLD, "eRNA candidates (find_eRNA)")]
+out.append('<text x="40" y="66" class="subl">CAGE without UMIs → TSS clusters (single-end or paired-end) → 5\'-anchored transcripts (paired-end, CAGEscan)</text>')
+legend = [(BLUE, "reads and alignment"), (PURPLE, "coverage and genome browser"), (RED, "broad TSS clusters (CAGEfightR)"),
+          (ORANGE, "sharp TSS clusters (RECLU, replicates)"), (GOLD, "eRNA candidates")]
 lx, ly = 40, 640
 for i, (c, t) in enumerate(legend):
     y = ly + 20 * i
