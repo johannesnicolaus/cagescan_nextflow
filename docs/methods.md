@@ -82,8 +82,10 @@ CTSS are written per sample, and with `--sl_sequence` separately for SL and non-
 With `--cluster_method cagefightr` (default), CAGEfightR 1.26.0 (Thodberg et al. 2019) is run on the per-sample
 CTSS, separately for non-SL and SL CTSS when `--sl_sequence` is given (`--sl_separate_clusters`):
 
-1. counts are converted to tags per million (TPM) per sample, relative to all READ1s used for CTSS in that sample
-   (for both the SL and the non-SL CTSS);
+1. counts are converted to tags per million (TPM) per sample and class: non-SL CTSS relative to the sample's non-SL
+   READ1s, SL CTSS relative to its SL READ1s (so that a sample's share of trans-spliced reads does not change the
+   threshold; normalising both to all READ1s removed 38% of the TSS clusters, of which 86.9% had a pyrimidine-purine
+   initiator);
 2. CTSSs with reads in fewer than `--ctss_min_samples` (2) samples are dropped (`subsetBySupport`);
 3. the pooled signal (TPM summed across samples, `calcPooled`) is clustered by slice-reduce
    (`clusterUnidirectionally`, `pooledCutoff = 0`, `mergeDist = --tss_merge_distance` (20): positions with signal

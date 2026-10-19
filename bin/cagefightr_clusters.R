@@ -4,9 +4,8 @@
 #   -> clusterUnidirectionally (slice-reduce, pooledCutoff 0, mergeDist --merge-dist)
 #   -> TCs with >= --tc-min-tpm TPM in >= --tc-min-samples samples
 # The peak (thick) is the CTSS with the highest pooled TPM (CAGEfightR sums TPM across samples).
-# TPM is relative to --library-sizes (TSV: sample, READ1s), e.g. all READ1s of a sample when only its spliced-leader
-# CTSS are clustered, so that a TPM threshold means the same depth for SL and non-SL clusters; without it, to the
-# CTSS given. Sample-count thresholds are capped at the number of samples. Empty inputs give an empty output.
+# TPM is relative to the CTSS given (the pipeline's default: each class, SL or non-SL, within itself), or to
+# --library-sizes (TSV: sample, READ1s) when given. Sample-count thresholds are capped at the number of samples. Empty inputs give an empty output.
 #
 # usage: cagefightr_clusters.R --prefix P --fai genome.fa.fai [--library-sizes sizes.tsv] [options] S1.ctss.bed ...
 # CTSS bed: chrom, pos0, pos0+1, ., count, strand.  Output: P.cagefightr.bed

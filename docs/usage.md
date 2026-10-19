@@ -56,9 +56,12 @@ used for CAGE, with CAGEr: counts are normalised to tags per million (TPM) per s
 in fewer than `--ctss_min_samples` (2) samples are dropped, the TPM summed across samples (CAGEfightR's pooled
 signal) is clustered by slice-reduce (positions with signal fewer than `--tss_merge_distance`, 20, bases apart are
 merged), the peak of a cluster is its CTSS with the highest pooled TPM, and clusters with less than `--tc_min_tpm`
-(5) TPM in at least `--tc_min_samples` (1) samples are dropped. TPM is relative to all READ1s of a sample (the CTSS
-total), also for the separately clustered trans-splice sites, so the threshold means the same depth for both kinds
-of cluster. Sample-count thresholds are capped at the number of samples.
+(5) TPM in at least `--tc_min_samples` (1) samples are dropped. With separate spliced-leader clusters, TPM is computed
+within each class: TSS clusters relative to the sample's non-SL READ1s, trans-splice sites relative to its SL READ1s
+(as when SL and non-SL libraries are processed separately). Normalising both to all READ1s was tested and rejected:
+a sample's share of trans-spliced reads (30-70% in the Osaka libraries) then changes the read count a TSS needs to
+pass, and it removed 6,603 of 17,203 TSS clusters that were mostly real (86.9% with a pyrimidine-purine initiator, half
+of them in the CAGEr set). Sample-count thresholds are capped at the number of samples.
 
 How strict? Common practice ranges from 1 TPM (CAGEr's tag clusters, `clusterCTSS(threshold = 1)`; the CAGEfightR
 vignette, >= 1 TPM in a minimum number of samples; FANTOM5 "robust" peaks, >= 1 TPM and >= 11 reads at one position

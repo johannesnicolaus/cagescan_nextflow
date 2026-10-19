@@ -88,17 +88,14 @@ workflow TSS_CLUSTERS {
             ? BAM_TO_CTSS.out.sl_ctss.map { _meta, ctss -> ['sl', ctss] }
                 .mix(BAM_TO_CTSS.out.nosl_ctss.map { _meta, ctss -> ['nosl', ctss] })
             : BAM_TO_CTSS.out.ctss.map { _meta, ctss -> ['all', ctss] }
-        // TPM relative to all READ1s of a sample (CTSS stats 'READ1 used'), also for its SL and non-SL CTSS
-        def ch_library_sizes = BAM_TO_CTSS.out.stats
-            .map { meta, stats -> "${meta.id}\t${stats.readLines().last().tokenize('\t')[1]}" }
-            .collectFile(name: 'library_sizes.tsv', newLine: true, sort: true)
-            .first()
+        // TPM within each class: SL CTSS relative to the sample's SL READ1s, non-SL CTSS to its non-SL READ1s, so that
+        // a sample's share of trans-spliced reads does not change the threshold for its TSSs (and vice versa)
         CAGEFIGHTR_CLUSTERS(
             ch_class_ctss
                 .groupTuple(sort: { a, b -> a.name <=> b.name })
                 .map { kind, ctss -> [[id: "all_samples.${kind}", sl_class: kind], ctss] },
             ch_fasta_fai.map { meta, _fasta, fai -> [meta, fai] },
-            ch_library_sizes
+            []
         )
         def ch_cfr = CAGEFIGHTR_CLUSTERS.out.bed
         COMBINE_TSS_CLUSTERS(

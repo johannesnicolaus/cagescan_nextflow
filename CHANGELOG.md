@@ -24,7 +24,7 @@ TSSs and trans-splice sites
 - CTSS from READ1 5' ends; SL-trimmed READ1s start at the trans-splice site (up to 3 soft-clipped 5' bases added back,
   longer clips excluded); with local alignment, SL recognition in the 5' soft clip and the shift to the acceptor when
   the leader's last bases align.
-- Broad TSS clusters with CAGEfightR (default: per-sample TPM relative to all READ1s, CTSSs in >= 2 samples,
+- Broad TSS clusters with CAGEfightR (default: per-sample TPM within each class (SL / non-SL), CTSSs in >= 2 samples,
   slice-reduce with `--tss_merge_distance` 20, >= 5 TPM in >= 1 sample) or paraclu (`--cluster_method paraclu`);
   trans-splice sites (`SL…`) clustered separately from TSSs (`TC…`, `--sl_separate_clusters`).
 - Sharp TSS clusters following RECLU (per-replicate paraclu hierarchy, TPM-per-base filter, hierarchical
