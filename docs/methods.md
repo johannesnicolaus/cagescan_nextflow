@@ -192,7 +192,7 @@ initiator dinucleotide at TSS peaks (pyrimidine-purine expected) and the two bas
 expected). Annotated 5' ends were not used to compare peak positions, because the O10 v1.3 5' UTRs were derived from
 the CAGEr clusters themselves.
 
-| | this pipeline (version of 2026-10-18) | CAGEr clusters |
+| | this pipeline (commit b25ad8a) | CAGEr clusters |
 | --- | --- | --- |
 | TSS (non-SL) clusters / SL clusters | 17,203 / 6,572 | 13,969 / 5,939 |
 | non-SL peaks with a PyPu initiator | 90.5% | 88.8% |
@@ -201,8 +201,9 @@ the CAGEr clusters themselves.
 | where the peaks differ, PyPu (ours vs theirs) | 83.1% vs 63.5% | |
 | READ1s in clusters that the CAGEr set also has | 99.2% | |
 
-The comparison scripts are in `runs/osa_MGI_220209/compare_CAGE_libraries/` of the analysis directory, not in the
-pipeline. Individual changes were evaluated in the same way:
+Full-depth run of commit b25ad8a (2026-10-19; 466 M READ1s after leader splitting and alignment, 380 M in TSS
+clusters; eRNA candidates: 76 divergent vs 11 convergent pairs). The comparison scripts are in
+`runs/osa_MGI_220209/compare_CAGE_libraries/` of the analysis directory, not in the pipeline. Individual changes were evaluated in the same way:
 
 | change | effect |
 | --- | --- |
