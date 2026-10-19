@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Extract CAGE transcription start sites (CTSS) from a CAGE BAM (paired-end or single-end).
+"""Extract CAGE transcription start sites (CTSS) from a paired-end CAGE BAM.
 
-The 5' end of each READ1 (or single read) alignment marks a capped 5' end.  For every primary, mapped READ1 that
+The 5' end of each READ1 alignment marks a capped 5' end.  For every primary, mapped READ1 that
 passes the MAPQ filter we record its 5' genomic position and strand:
 - READ1 aligned from its first base (STAR --alignEndsType Extend5pOfRead1, the pipeline default): a first G that
   differs from the genome (MD tag) is the G added by the reverse transcriptase at the cap; with --remove-first-g the

@@ -5,8 +5,8 @@
 ## Introduction
 
 The pipeline takes **paired-end CAGE** reads (CAGEscan-style: READ1 starts at the capped 5' end of the RNA,
-READ2 is random-primed downstream) **without UMIs**, and reconstructs 5'-anchored transcripts. It also takes
-**single-end CAGE** (see [Single-end CAGE](#single-end-cage)), for which steps 1-3 run.
+READ2 is random-primed downstream) or other **paired-end CAGE** libraries (READ1 at the cap) **without UMIs**, calls TSS
+clusters and reconstructs 5'-anchored transcripts:
 
 1. reads are aligned to the genome with STAR (spliced; READ1 aligned from its first base, mates locally);
 2. READ1 5' ends give CAGE TSSs (CTSS; a non-templated first G is removed), which are clustered with CAGEfightR
@@ -248,15 +248,14 @@ Without UMIs, PCR duplicates cannot be told apart from independent molecules wit
 `--dedup`, read pairs with identical READ1 *and* READ2 positions are marked by `samtools markdup` and ignored
 downstream (CTSS, TSS cluster counts, coverage tracks and transcripts). Because READ2 is random-primed this is a
 reasonable proxy (FANTOM5 CAGEscan removed such pairs), but highly expressed TSSs with short fragments also collide by
-chance, so it is off by default. It is not available for single-end CAGE, where identical 5' ends are expected.
+chance, so it is off by default.
 
 ### Which reads are counted
 
 CTSS and the TSS signal bigWigs use every primary READ1 (or single read) with mapping quality >= `--min_mapq` (10),
 not QC-failed and not marked as duplicate. TSS cluster counts (`tss_cluster_counts.tsv`) additionally require
 paired-end READ1s to be in a proper pair (both mates aligned in the expected orientation and distance), as in the
-FANTOM5 CAGEscan workflow, so cluster counts are slightly lower than the CTSS in the same clusters. Single-end reads
-have no such requirement.
+FANTOM5 CAGEscan workflow, so cluster counts are slightly lower than the CTSS in the same clusters.
 
 ### Reference annotation
 
@@ -266,7 +265,7 @@ transcript 5' ends come from the CAGE data; use `--stringtie_guide` to change th
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with a header row and the columns `sample`, `fastq_1`, and optionally `fastq_2` (paired-end) and `group`, as shown in the examples below. The sample names `all_samples` and `merged` are reserved for pooled outputs.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with a header row and the columns `sample`, `fastq_1`, `fastq_2` and optionally `group`, as shown in the examples below. The sample names `all_samples` and `merged` are reserved for pooled outputs.
 
 ```bash
 --input '[path to samplesheet file]'
@@ -285,8 +284,7 @@ CAGE_REP1,CAGE_REP1_L004_R1.fastq.gz,CAGE_REP1_L004_R2.fastq.gz
 
 ### Full samplesheet
 
-`fastq_1` must be READ1, the read that starts at the capped 5' end. Leave `fastq_2` empty for single-end CAGE (see
-below); all samples of a run must be either paired-end or single-end. The optional `group` column names the condition
+Reads must be paired-end. `fastq_1` must be READ1, the read that starts at the capped 5' end. The optional `group` column names the condition
 a sample is a replicate of; it is only used for the sharp (RECLU) TSS clusters.
 
 ```csv title="samplesheet.csv"
@@ -301,25 +299,10 @@ BRAIN_REP2,BRAIN_REP2_R1.fastq.gz,BRAIN_REP2_R2.fastq.gz,brain
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sample`  | Sample name: letters, digits, `_` and `-` only. Identical for multiple sequencing runs of the same library.                                  |
 | `fastq_1` | Full path to the gzipped READ1 FastQ file (cap side). Extension ".fastq.gz" or ".fq.gz".                                                     |
-| `fastq_2` | Full path to the gzipped READ2 FastQ file. Extension ".fastq.gz" or ".fq.gz". Empty for single-end CAGE.                                    |
+| `fastq_2` | Full path to the gzipped READ2 FastQ file. Extension ".fastq.gz" or ".fq.gz".                                                                |
 | `group`   | Optional. Condition the sample is a replicate of (letters, digits, `_`, `-`). Default: all samples form one group.                           |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
-
-### Single-end CAGE
-
-Most CAGE libraries are single-end (e.g. FANTOM5, DNAFORM's standard CAGE). With a samplesheet without `fastq_2`
-(`sample,fastq_1,fastq_2` with the last field empty, or no `fastq_2` column), the pipeline runs everything that
-needs only the 5' end of each read, with the same output files as for paired-end CAGE:
-
-- read QC, subsampling, linker and spliced-leader trimming (with several leaders), STAR alignment, first-G removal;
-- CTSS, TSS signal bigWigs, broad (and sharp) TSS clusters with separate spliced-leader clusters;
-- `tss_cluster_counts.tsv`, `tss_cluster_cpm.tsv`, `tss_cluster_sl_counts.tsv` and `tss_cluster_sl_leaders.tsv`,
-  TSS-anchored BAMs, coverage tracks, eRNA candidates (without the *unspliced* filter, which needs transcripts),
-  MultiQC and the IGV session.
-
-Without read pairs there are no CAGEscan clusters, transcripts, transcript quantification or gffcompare
-(`cagescan_clusters/`, `transcripts/`, `stringtie/`, `quantification/`, `gffcompare/`). `--dedup` is ignored.
 
 ## Running the pipeline
 

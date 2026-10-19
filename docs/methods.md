@@ -6,16 +6,16 @@ User-facing documentation is in [usage](usage.md) and [output](output.md).
 
 ## Overview
 
-luscombeu/cagescan processes CAGE libraries without unique molecular identifiers (UMIs):
+luscombeu/cagescan processes paired-end CAGE libraries without unique molecular identifiers (UMIs): CAGEscan libraries
+(READ2 random-primed downstream of the cap) and other paired-end CAGE libraries (READ1 at the cap).
 
-- **TSS calling** (single-end and paired-end CAGE): CAGE transcription start sites (CTSSs) are the 5' ends of READ1,
+- **TSS calling**: CAGE transcription start sites (CTSSs) are the 5' ends of READ1,
   clustered into TSS clusters per experiment, with trans-splice sites (reads carrying a spliced leader, SL) called
   separately from transcription start sites.
-- **Transcripts** (paired-end CAGE, "CAGEscan"; Plessy et al. 2010; Bertin et al. 2017): read pairs whose READ1 starts
+- **Transcripts** ("CAGEscan"; Plessy et al. 2010; Bertin et al. 2017): read pairs whose READ1 starts
   in a TSS cluster are assembled into isoforms, whose 5' ends are anchored to the cluster peak.
 
-The mode is chosen from the samplesheet: without a `fastq_2` column (or with it empty) the run is single-end and the
-transcript steps are skipped; all samples of a run must be of one kind. The pipeline is written in Nextflow
+The pipeline is written in Nextflow
 (>= 26.04) with the nf-core template (4.1.0) and runs every tool in a container.
 
 ## 1. Reads
@@ -51,13 +51,13 @@ transcript steps are skipped; all samples of a run must be of one kind. The pipe
   `Local` with `--read1_end_to_end false`, and always when a spliced leader is given but not split before
   alignment, so that it can be soft-clipped), plus `--star_extra_args`. READ1 is aligned from its first base;
   mates and READ1 3' ends are aligned locally.
-- **Duplicates** (optional, `--dedup`, paired-end only): `samtools collate`, `fixmate`, `sort`, `markdup`; pairs with
+- **Duplicates** (optional, `--dedup`): `samtools collate`, `fixmate`, `sort`, `markdup`; pairs with
   identical READ1 and READ2 positions are marked and ignored downstream.
 - **Alignment QC**: `samtools stats`, `flagstat`, `idxstats`.
 
 ## 3. CTSS
 
-For each sample, every READ1 (or single read) that is primary, mapped, not QC-failed, not marked as duplicate and
+For each sample, every READ1 that is primary, mapped, not QC-failed, not marked as duplicate and
 has MAPQ >= `--min_mapq` (10) gives one CTSS at its 5' end: the first aligned base on the plus strand
 (`reference_start`, 0-based), the last aligned base on the minus strand (`reference_end - 1`). Then:
 
@@ -127,7 +127,7 @@ Per cluster and sample: READ1 counts, counts per million assigned READ1s, SL REA
 SL READ1 counts per leader (with the main leader of each cluster). Assigned reads (pairs) are written to
 TSS-anchored BAMs with a `TC:Z:<cluster>` tag.
 
-## 6. Transcripts (paired-end CAGE)
+## 6. Transcripts
 
 1. **CAGEscan clusters** (Bertin et al. 2017): per TSS cluster, the union of the aligned blocks of its read pairs, per
    sample and merged across samples.
@@ -155,7 +155,7 @@ Unless `--find_erna false`, per cluster set (Andersson et al. 2014): non-SL clus
 READ1s and an SL fraction <= `--erna_max_sl_fraction` (0.1); pairs of a minus-strand peak upstream of a plus-strand peak
 `--erna_min_distance` (50) to `--erna_max_distance` (400) bases apart (divergent); both peaks > `--erna_distal_distance`
 (500) bases from annotated transcript 5' ends (with `--gtf`); directionality |F - R| / (F + R) <
-`--erna_max_directionality` (0.8); and (paired-end) no multi-exon transcript starting at either cluster. Convergent
+`--erna_max_directionality` (0.8); and no multi-exon transcript starting at either cluster. Convergent
 pairs (plus-strand peak upstream of a minus-strand peak) go through the same filters as a chance control; the
 divergent/convergent ratio after each filter is reported.
 
@@ -245,7 +245,7 @@ The versions used by a run are written to `pipeline_info/cagescan_software_mqc_v
   value of a run.
 - Defaults change between versions; results of runs made with different versions are not directly comparable.
 - Test data: `tests/data/make_test_data.py` simulates paired-end CAGE of 156 genes on a 1 Mb genome, with known TSSs,
-  isoforms and a trans-spliced gene; the nf-test suite runs the pipeline (paired-end, single-end, paraclu,
+  isoforms and a trans-spliced gene; the nf-test suite runs the pipeline (default, paraclu,
   NCBI-style annotation) and every local module on it.
 
 ## References

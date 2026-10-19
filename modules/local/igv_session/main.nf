@@ -12,7 +12,6 @@ process IGV_SESSION {
     path(gtf)        // reference annotation, or []
     val(samples)     // comma-separated sample names
     val(sets)        // comma-separated TSS cluster sets
-    val(transcripts) // boolean: transcript tracks (paired-end)
     val(bigwigs)     // comma-separated names of the bigWig files produced, or '' (all)
 
     output:
@@ -33,7 +32,6 @@ process IGV_SESSION {
         $gtf_arg \\
         --samples $samples \\
         --sets $sets \\
-        ${transcripts ? '' : '--no-transcripts'} \\
         ${bigwigs ? "--bigwigs ${bigwigs}" : ''} \\
         $args
     """

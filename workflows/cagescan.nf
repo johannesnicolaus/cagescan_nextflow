@@ -41,7 +41,6 @@ workflow CAGESCAN {
 
     take:
     ch_samplesheet // channel: samplesheet read in from --input
-    single_end     // boolean: single-end CAGE (no fastq_2): TSS clusters and counts only, no CAGEscan transcripts
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -63,7 +62,7 @@ workflow CAGESCAN {
     def ch_fastq = ch_samplesheet
         .map { meta, fastqs -> [meta + [group: meta.group ?: 'all'], fastqs] }
         .branch { _meta, fastqs ->
-            single  : fastqs.size() == (single_end ? 1 : 2)
+            single  : fastqs.size() == 2
             multiple: true
         }
     CAT_FASTQ(ch_fastq.multiple)
@@ -124,7 +123,7 @@ workflow CAGESCAN {
         SPLIT_SPLICED_LEADER(ch_reads, params.sl_sequence)
         ch_reads = SPLIT_SPLICED_LEADER.out.sl
             .join(SPLIT_SPLICED_LEADER.out.nosl, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, sl, nosl -> [meta, single_end ? [sl, nosl].flatten() : [sl[0], sl[1], nosl[0], nosl[1]]] }
+            .map { meta, sl, nosl -> [meta, [sl[0], sl[1], nosl[0], nosl[1]]] }
         ch_multiqc_files = ch_multiqc_files.mix(SPLIT_SPLICED_LEADER.out.log.map { _meta, log -> log })
     }
 
@@ -139,10 +138,7 @@ workflow CAGESCAN {
     // MODULES: Optional pair-level duplicate marking (proxy for the missing UMIs)
     //
     def ch_no_fasta = channel.value([[:], [], []])
-    if (params.dedup && single_end) {
-        log.warn "--dedup is ignored for single-end CAGE: identical 5' ends are expected without UMIs and there is no mate to tell copies apart"
-    }
-    if (params.dedup && !single_end) {
+    if (params.dedup) {
         SAMTOOLS_COLLATE(ch_bam, ch_no_fasta)
         SAMTOOLS_FIXMATE(SAMTOOLS_COLLATE.out.bam, ch_no_fasta)
         SAMTOOLS_SORT(SAMTOOLS_FIXMATE.out.bam, ch_no_fasta, '')
@@ -176,18 +172,13 @@ workflow CAGESCAN {
         params.reclu_paraclu_min,
         params.sl_sequence && params.sl_separate_clusters,
         params.sl_sequence as boolean,
-        PREPARE_GENOME.out.fasta.combine(PREPARE_GENOME.out.fai).map { meta, fasta, _fai_meta, fai -> [meta, fasta, fai] }.first(),
-        single_end
+        PREPARE_GENOME.out.fasta.combine(PREPARE_GENOME.out.fai).map { meta, fasta, _fai_meta, fai -> [meta, fasta, fai] }.first()
     )
     ch_multiqc_files = ch_multiqc_files.mix(TSS_CLUSTERS.out.multiqc_files)
 
     //
-    // SUBWORKFLOW: Build, anchor, convert and quantify transcripts (paired-end CAGE / CAGEscan only)
+    // SUBWORKFLOW: Build, anchor, convert and quantify transcripts
     //
-    def ch_merged_gtf = channel.empty()
-    if (single_end) {
-        log.info "Single-end CAGE: TSS clusters, counts and coverage only; CAGEscan clusters, transcripts and the eRNA unspliced filter need read pairs"
-    } else {
     BUILD_TRANSCRIPTS(
         TSS_CLUSTERS.out.tss_bam,
         TSS_CLUSTERS.out.clusters_tsv,
@@ -198,18 +189,15 @@ workflow CAGESCAN {
         params.gtf as boolean
     )
     ch_multiqc_files = ch_multiqc_files.mix(BUILD_TRANSCRIPTS.out.multiqc_files)
-    ch_merged_gtf = BUILD_TRANSCRIPTS.out.gtf.filter { meta, _gtf -> meta.id == 'merged' }.map { meta, gtf -> [meta.cluster_set, gtf] }
-    }
 
     //
     // MODULE: Enhancer-RNA-like divergent TSS pairs, per cluster set
     //
     if (params.find_erna) {
-        def ch_erna_in = TSS_CLUSTERS.out.clusters_tsv
+        def ch_erna = TSS_CLUSTERS.out.clusters_tsv
             .join(TSS_CLUSTERS.out.counts.map { meta, files -> [meta.cluster_set, files] })
-        def ch_erna = single_end
-            ? ch_erna_in.map { set, tsv, files -> [[id: 'all_samples', cluster_set: set], tsv, files, []] }
-            : ch_erna_in.join(ch_merged_gtf).map { set, tsv, files, gtf -> [[id: 'all_samples', cluster_set: set], tsv, files, gtf] }
+            .join(BUILD_TRANSCRIPTS.out.gtf.filter { meta, _gtf -> meta.id == 'merged' }.map { meta, gtf -> [meta.cluster_set, gtf] })
+            .map { set, tsv, files, gtf -> [[id: 'all_samples', cluster_set: set], tsv, files, gtf] }
         FIND_ERNA(ch_erna, PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf })
         ch_multiqc_files = ch_multiqc_files.mix(FIND_ERNA.out.stats.map { _meta, stats -> stats })
     }
@@ -227,7 +215,6 @@ workflow CAGESCAN {
         PREPARE_GENOME.out.gtf.map { _meta, gtf -> gtf },
         ch_bam_bai.map { meta, _bam, _bai -> meta.id }.toSortedList().map { ids -> ids.join(',') },
         TSS_CLUSTERS.out.clusters_tsv.map { set, _tsv -> set }.toSortedList().map { sets -> sets.join(',') },
-        !single_end,
         TSS_CLUSTERS.out.ctss_bigwig.mix(COVERAGE_TRACKS.out.bigwig)
             .map { _meta, bigwig -> bigwig.name }
             .toSortedList()

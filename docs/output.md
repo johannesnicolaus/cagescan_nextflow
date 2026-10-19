@@ -14,20 +14,18 @@ Everything downstream of the TSS clusters is produced twice, once per cluster se
 `sharp` (RECLU, reproducible across replicates); see [usage](usage.md#broad-and-sharp-tss-clusters). `<set>` below
 stands for either, and output files carry the set in their name.
 
-For **single-end CAGE** (samplesheet without `fastq_2`), the folders marked *(paired-end only)* are not produced;
-all others have the same files as for paired-end CAGE.
 
 - [Genome browser](#genome-browser) - IGV session and stranded coverage tracks
 - [eRNA candidates](#erna-candidates) - enhancer-RNA-like divergent TSS pairs
-- [Transcripts](#transcripts) *(paired-end only)* - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
+- [Transcripts](#transcripts) - the main result: TSS-anchored transcripts (GTF, GFF3, BED12, FASTA)
 - [TSS clusters](#tss-clusters) - consensus TSS clusters, counts and TSS-anchored BAMs
-- [CAGEscan clusters](#cagescan-clusters) *(paired-end only)* - FANTOM5-style union of read pairs per TSS cluster
+- [CAGEscan clusters](#cagescan-clusters) - FANTOM5-style union of read pairs per TSS cluster
 - [CTSS](#ctss) - per-sample CAGE TSSs, bigWigs and READ1 5' reports
-- [Quantification](#quantification) *(paired-end only)* - per-sample transcript abundance
-- [gffcompare](#gffcompare) *(paired-end only)* - comparison with the reference annotation
+- [Quantification](#quantification) - per-sample transcript abundance
+- [gffcompare](#gffcompare) - comparison with the reference annotation
 - [Alignment](#alignment) - STAR alignments and statistics
 - [Read QC and trimming](#read-qc-and-trimming) - FastQC, fastp, cutadapt, SortMeRNA
-- [StringTie assemblies](#stringtie-assemblies) *(paired-end only)* - raw assemblies before TSS anchoring
+- [StringTie assemblies](#stringtie-assemblies) - raw assemblies before TSS anchoring
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
@@ -36,9 +34,9 @@ all others have the same files as for paired-end CAGE.
 <details markdown="1">
 <summary>Output files</summary>
 
-- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts (paired-end) and TSS clusters of each cluster set, eRNA candidates (`--find_erna`), the pooled TSS signal per strand and the read coverage per sample and strand (strands without reads have no track).
+- `igv_session.xml`: [IGV](https://igv.org/doc/desktop/) session loading the genome, gene models (`--gtf`), merged transcripts and TSS clusters of each cluster set, eRNA candidates (`--find_erna`), the pooled TSS signal per strand and the read coverage per sample and strand (strands without reads have no track).
 - `igv/genome.fa`, `igv/genome.fa.fai`, `igv/annotation.gtf`: copies of the genome, its index and the annotation used by the session.
-- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns; duplicates excluded with `--dedup`), per million READ1s used for CTSS (primary, MAPQ >= `--min_mapq`; reads for single-end CAGE). The strand is that of the RNA (CAGE READ1 is sense).
+- `coverage/<sample>.coverage.{plus,minus}.bigWig`: read coverage per strand, from primary alignments with MAPQ >= `--min_mapq` (both mates, spliced reads split at introns; duplicates excluded with `--dedup`), per million READ1s used for CTSS (primary, MAPQ >= `--min_mapq`). The strand is that of the RNA (CAGE READ1 is sense).
 - `ctss/bigwig/all_samples.ctss.{plus,minus}.bigWig`: TSS signal (READ1 5' ends) pooled across samples.
 
 </details>
@@ -217,8 +215,8 @@ For TSS-level expression, prefer `tss_clusters/<set>/all_samples.<set>.tss_clust
 - `trimming/fastp/`: fastp reports and logs.
 - `trimming/cutadapt/`: cutadapt logs (only with `--r1_5p_linker`).
 - `sl_split/` (only with `--sl_sequence`): read pairs split by the spliced leader at the READ1 start.
-  - `<sample>.SL_{1,2}.fastq.gz` (`SL_1` only for single-end CAGE): trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL.<leader>:` (or `SLG.<leader>:` when the extra G preceded the leader).
-  - `<sample>.noSL_{1,2}.fastq.gz` (`noSL_1` only for single-end CAGE): the other pairs, names prefixed with `no_adapter:`.
+  - `<sample>.SL_{1,2}.fastq.gz`: trans-spliced pairs, SL trimmed from READ1, names prefixed with `SL.<leader>:` (or `SLG.<leader>:` when the extra G preceded the leader).
+  - `<sample>.noSL_{1,2}.fastq.gz`: the other pairs, names prefixed with `no_adapter:`.
   - `<sample>.sl_split.log`: cutadapt report (`Read 1 with adapter` = trans-spliced pairs).
   The FASTQ files are saved with `--save_sl_split_reads` (default); they come after subsampling and trimming.
 - `sortmerna/`: SortMeRNA logs (only with `--ribo_database_manifest`).

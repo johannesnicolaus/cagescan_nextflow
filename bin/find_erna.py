@@ -112,7 +112,7 @@ def main():
     parser.add_argument("--clusters", required=True, help="tss_clusters.tsv")
     parser.add_argument("--counts", required=True, help="tss_cluster_counts.tsv (READ1s per cluster and sample)")
     parser.add_argument("--sl-counts", default=None, help="tss_cluster_sl_counts.tsv (optional)")
-    parser.add_argument("--transcripts", default=None, help="merged TSS-anchored transcripts GTF of the same cluster set (optional; enables the unspliced filter)")
+    parser.add_argument("--transcripts", required=True, help="merged TSS-anchored transcripts GTF of the same cluster set")
     parser.add_argument("--annotation", default=None, help="reference annotation GTF (optional; enables the distal filter)")
     parser.add_argument("--min-reads", type=float, default=10, help="(default: %(default)s)")
     parser.add_argument("--max-sl-fraction", type=float, default=0.1, help="(default: %(default)s)")
@@ -124,7 +124,7 @@ def main():
 
     counts = read_matrix_sums(args.counts)
     sl = read_matrix_sums(args.sl_counts)
-    spliced = spliced_tss(args.transcripts) if args.transcripts else None
+    spliced = spliced_tss(args.transcripts)
     five = annotated_five_prime(args.annotation) if args.annotation else None
 
     usable = collections.defaultdict(list)
@@ -163,9 +163,7 @@ def main():
     steps = [("opposite-strand pairs", lambda x: True)]
     if five is not None:
         steps.append((f"distal (> {args.distal_distance} bp from annotated 5' ends)", distal))
-    steps.append((f"balanced (directionality < {args.max_directionality})", balanced))
-    if spliced is not None:  # needs transcripts (paired-end); single-end CAGE has no splicing information here
-        steps.append(("unspliced", unspliced))
+    steps += [(f"balanced (directionality < {args.max_directionality})", balanced), ("unspliced", unspliced)]
 
     kept = {k: list(v) for k, v in pairs.items()}
     table = []

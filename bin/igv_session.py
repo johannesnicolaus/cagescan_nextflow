@@ -33,7 +33,6 @@ def main():
     parser.add_argument("--samples", required=True, help="comma-separated sample names")
     parser.add_argument("--sets", required=True, help="comma-separated TSS cluster sets")
     parser.add_argument("--erna", action="store_true", help="add the eRNA candidate tracks")
-    parser.add_argument("--no-transcripts", action="store_true", help="no transcript tracks (single-end CAGE)")
     parser.add_argument("--bigwigs", default=None,
                         help="comma-separated names of the bigWig files produced (strands without signal have none); default: all")
     args = parser.parse_args()
@@ -47,8 +46,7 @@ def main():
         tracks.append(track("igv/annotation.gtf", "Gene models (--gtf)", FEATURE, displayMode="EXPANDED"))
     group = 0
     for s in args.sets.split(","):
-        if not args.no_transcripts:
-            tracks.append(track(f"transcripts/{s}/merged/merged.{s}.transcripts.bed12", f"Transcripts ({s} TSS clusters)", FEATURE, displayMode="EXPANDED"))
+        tracks.append(track(f"transcripts/{s}/merged/merged.{s}.transcripts.bed12", f"Transcripts ({s} TSS clusters)", FEATURE, displayMode="EXPANDED"))
         tracks.append(track(f"tss_clusters/{s}/all_samples.{s}.tss_clusters.bed", f"TSS clusters ({s})", FEATURE, displayMode="COLLAPSED"))
         if args.erna:
             tracks.append(track(f"erna/{s}/all_samples.{s}.erna_candidates.bed", f"eRNA-like divergent pairs ({s})", FEATURE, displayMode="EXPANDED", color="120,0,160"))

@@ -52,12 +52,9 @@ line("M 1330 270 C 1385 270 1385 520 1330 520 L 330 520", RED)
 line("M 1330 350 C 1360 350 1360 536 1330 536 L 330 536", ORANGE)
 # eRNA spur
 line("M 1250 545 L 1250 660", GOLD, width=8, dash="10 8")
-# paired-end only: transcript row (StringTie ... gffcompare), outlined in green
-out.append('<rect x="222" y="450" width="958" height="146" rx="14" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="7 5"/>')
-out.append('<text x="232" y="444" class="subl">paired-end CAGE (CAGEscan) only</text>')
 
 # ---------------------------------------------------------------- stations
-terminus(70, 120, 120, "FASTQ", GREY, "pairs or single-end")
+terminus(70, 120, 120, "FASTQ pairs", GREY, "samplesheet (+ group)")
 station(185, 120, "cat · seqtk", ["lanes · subsample", "FastQC"], sub_below=True)
 station(272, 120, "cutadapt", "5' linker", optional=True, sub_below=True)
 station(352, 120, "fastp", ["adapters", "quality"], sub_below=True)
@@ -81,7 +78,7 @@ station(1210, 350, "pair · IDR", "within a group", above=False)
 station(1300, 350, "innermost", "≤ 200 bp", above=False)
 
 for i, (x, name, sub) in enumerate([
-    (1250, "assign reads", ["counts · CAGEscan (PE)", "READ1 in a TSS cluster"]),
+    (1250, "assign reads", ["counts · CAGEscan clusters", "READ1 in a TSS cluster"]),
     (1110, "StringTie", "per sample, stranded"),
     (970, "merge", "all samples"),
     (830, "anchor", ["5' end → cluster peak", "derive · collapse 3' ends"]),
@@ -91,11 +88,11 @@ for i, (x, name, sub) in enumerate([
 ]):
     station(x, 520, name, sub, above=(i % 2 == 1 or i == 0), tall=16)
 terminus(290, 528, 120, "transcripts", GREEN, "per TSS, per set")
-station(1250, 660, "find eRNA", ["divergent non-SL pairs · distal", "balanced · unspliced (PE) · vs convergent"], above=False)
+station(1250, 660, "find eRNA", ["divergent non-SL pairs · distal", "balanced · unspliced · vs convergent"], above=False)
 
 # ---------------------------------------------------------------- titles and legend
 out.append('<text x="40" y="44" class="title">luscombeu/cagescan</text>')
-out.append('<text x="40" y="66" class="subl">CAGE without UMIs → TSS clusters (single-end or paired-end) → 5\'-anchored transcripts (paired-end, CAGEscan)</text>')
+out.append('<text x="40" y="66" class="subl">paired-end CAGE (CAGEscan) without UMIs → TSS clusters → 5\'-anchored transcripts</text>')
 legend = [(BLUE, "reads and alignment"), (PURPLE, "coverage and genome browser"), (RED, "broad TSS clusters (CAGEfightR)"),
           (ORANGE, "sharp TSS clusters (RECLU, replicates)"), (GOLD, "eRNA candidates")]
 lx, ly = 40, 640

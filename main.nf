@@ -67,7 +67,6 @@ params {
 include { CAGESCAN  } from './workflows/cagescan'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_cagescan_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_cagescan_pipeline'
-include { isSingleEnd             } from './subworkflows/local/utils_nfcore_cagescan_pipeline'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -89,7 +88,6 @@ workflow LUSCOMBEU_CAGESCAN {
     //
     CAGESCAN (
         samplesheet,
-        isSingleEnd(params.input),
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

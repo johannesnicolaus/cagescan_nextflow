@@ -8,7 +8,7 @@ process FIND_ERNA {
         'quay.io/biocontainers/pysam:0.24.1--py312hf5ad864_0' }"
 
     input:
-    tuple val(meta), path(clusters), path(count_files, stageAs: 'counts/*'), path(transcripts) // transcripts: [] for single-end (no unspliced filter)
+    tuple val(meta), path(clusters), path(count_files, stageAs: 'counts/*'), path(transcripts)
     path(annotation)  // reference GTF, or [] (no distal filter)
 
     output:
@@ -37,7 +37,7 @@ process FIND_ERNA {
         --clusters $clusters \\
         --counts $counts \\
         $sl_arg \\
-        ${transcripts ? "--transcripts $transcripts" : ''} \\
+        --transcripts $transcripts \\
         $annot_arg \\
         $args
     """

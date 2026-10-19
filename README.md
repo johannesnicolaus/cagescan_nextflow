@@ -14,10 +14,9 @@
 
 ## Introduction
 
-**luscombeu/cagescan** reconstructs 5'-anchored transcripts from **paired-end CAGE reads without UMIs**
-(CAGEscan-style libraries: READ1 starts at the capped 5' end, READ2 is random-primed downstream). It also runs on
-**single-end CAGE** (samplesheet without `fastq_2`): TSS clusters, spliced-leader handling, counts and coverage, without
-the transcripts.
+**luscombeu/cagescan** calls TSS clusters and reconstructs 5'-anchored transcripts from **paired-end CAGE reads
+without UMIs**: CAGEscan libraries (READ1 starts at the capped 5' end, READ2 is random-primed downstream) and other
+paired-end CAGE libraries (READ1 at the cap). TSSs come from READ1; transcripts from the read pairs.
 
 CAGEscan was introduced by [Plessy et al. (2010)](https://doi.org/10.1038/nmeth.1470): paired-end sequencing of
 random-primed nanoCAGE libraries links each TSS to the body of its transcript. This pipeline follows the original
@@ -33,21 +32,17 @@ the TSS cluster that READ1 starts in. It then also resolves isoforms per TSS fro
 
 1. Merge lanes ([`cat`](https://www.gnu.org/software/coreutils/)), random subsampling to at most `--subsample_reads` reads (or read pairs) per sample (default 10 M; [`seqtk`](https://github.com/lh3/seqtk)) and read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
 2. Optional READ1 5' linker removal ([`cutadapt`](https://cutadapt.readthedocs.io/)), adapter/quality trimming ([`fastp`](https://github.com/OpenGene/fastp)), optional rRNA removal ([`SortMeRNA`](https://github.com/sortmerna/sortmerna)), and spliced-leader detection and trimming at the READ1 start, with one or several leaders (`--sl_sequence`; cutadapt)
-3. Spliced alignment of read pairs or single reads ([`STAR`](https://github.com/alexdobin/STAR)); READ1 is aligned to its 5' end and a non-templated first G that differs from the genome is removed (as CAGEr's `removeFirstG`)
-4. Optional pair-level duplicate marking (paired-end only) ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
+3. Spliced alignment of read pairs ([`STAR`](https://github.com/alexdobin/STAR)); READ1 is aligned to its 5' end and a non-templated first G that differs from the genome is removed (as CAGEr's `removeFirstG`)
+4. Optional pair-level duplicate marking ([`samtools markdup`](http://www.htslib.org/)) and alignment QC ([`samtools`](http://www.htslib.org/))
 5. CTSS extraction from READ1 5' ends (extra G removed; spliced-leader reads, with several leaders, kept apart), with a report of what preceded the cap
 6. Two TSS cluster sets: **broad** clusters ([`CAGEfightR`](https://bioconductor.org/packages/CAGEfightR) by default, from per-sample TPM; or [`paraclu`](https://gitlab.com/mcfrith/paraclu) on CTSS pooled across samples; trans-splice sites clustered separately), and **sharp** clusters reproducible across replicates, following [RECLU](https://doi.org/10.1186/1471-2164-15-269) (paraclu hierarchy + [IDR](https://github.com/nboley/idr)); CTSS bigWigs ([`bedGraphToBigWig`](https://genome.ucsc.edu/goldenPath/help/bigWig.html)). All later steps run for both sets, so you can choose afterwards
-7. Grouping of reads by TSS cluster (READ1 5' end inside a cluster), per-sample TSS cluster counts (all reads and spliced-leader reads), and, for paired-end CAGE, FANTOM5-style CAGEscan clusters / meta-clusters ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147))
-8. *(paired-end only)* Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
-9. *(paired-end only)* Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
-10. *(paired-end only)* Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))
-11. Enhancer-RNA-like divergent TSS pairs (non-SL, distal, balanced, and unspliced for paired-end CAGE; convergent pairs as control)
-12. Stranded read-coverage bigWigs ([`samtools`](http://www.htslib.org/), [`bedtools genomecov`](https://bedtools.readthedocs.io/)) and an IGV session with genome, gene models, transcripts (paired-end), TSS clusters and coverage
+7. Grouping of read pairs by TSS cluster (READ1 5' end inside a cluster), per-sample TSS cluster counts (all reads and spliced-leader reads), and FANTOM5-style CAGEscan clusters / meta-clusters ([Bertin et al. 2017](https://doi.org/10.1038/sdata.2017.147))
+8. Isoform assembly from the TSS-anchored pairs per sample, merged across samples ([`StringTie`](https://ccb.jhu.edu/software/stringtie/))
+9. Anchoring: every transcript's 5' end is moved to its TSS cluster's dominant CTSS; transcripts are named `<tss_id>.<n>`
+10. Transcript GTF, GFF3, BED12 and FASTA ([`gffread`](https://github.com/gpertea/gffread)), per-sample quantification (StringTie `-e`) and comparison with a reference annotation ([`gffcompare`](https://github.com/gpertea/gffcompare))
+11. Enhancer-RNA-like divergent TSS pairs (non-SL, distal, balanced, unspliced; convergent pairs as control)
+12. Stranded read-coverage bigWigs ([`samtools`](http://www.htslib.org/), [`bedtools genomecov`](https://bedtools.readthedocs.io/)) and an IGV session with genome, gene models, transcripts, TSS clusters and coverage
 13. Report ([`MultiQC`](http://multiqc.info/))
-
-With **single-end CAGE** (samplesheet without `fastq_2`), steps 1-7 and 11-13 run with the same output files; the
-steps that need read pairs (CAGEscan clusters, transcripts, quantification, gffcompare) are skipped. In the metro map,
-the green-bordered transcript row is paired-end only.
 
 > [!NOTE]
 > CAGEscan transcripts span from the TSS to the end of the sequenced fragment (roughly the insert size, a few hundred
@@ -58,7 +53,7 @@ the green-bordered transcript row is paired-end only.
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
-Prepare a samplesheet with one row per FASTQ pair, or per FASTQ file for single-end CAGE (leave `fastq_2` empty); rows with the same `sample` are treated as lanes and concatenated:
+Prepare a samplesheet with one row per pair of FASTQ files (rows with the same `sample` are treated as lanes and concatenated):
 
 `samplesheet.csv`:
 

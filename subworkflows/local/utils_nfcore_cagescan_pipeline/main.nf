@@ -182,18 +182,6 @@ def validateSplicedLeaders(spec) {
 }
 
 //
-// Single-end CAGE: every samplesheet row without fastq_2. Mixing single-end and paired-end samples is not supported.
-//
-def isSingleEnd(input) {
-    def rows = samplesheetToList(input, "${projectDir}/assets/schema_input.json")
-    def kinds = rows.collect { row -> row[2] ? 'paired' : 'single' }.unique()
-    if (kinds.size() > 1) {
-        error("Please check input samplesheet -> all samples must be single-end (no fastq_2) or all paired-end")
-    }
-    return kinds == ['single']
-}
-
-//
 // Validate channels from input samplesheet
 //
 def validateInputSamplesheet(input) {
@@ -214,7 +202,6 @@ def validateInputSamplesheet(input) {
 // Tools used in this run, for the methods text: [condition, citation in the text, bibliography entry]
 //
 def usedTools() {
-    def single_end = params.input ? isSingleEnd(params.input) : false
     def sl_split = params.sl_sequence && params.sl_split
     def end_to_end = params.read1_end_to_end && !(params.sl_sequence && !params.sl_split)
     return [
@@ -246,9 +233,9 @@ def usedTools() {
             "Ohmiya H, Vitezic M, Frith MC, et al. (2014). RECLU: a pipeline to discover reproducible transcriptional start sites and their alternative regulation using capped analysis of gene expression (CAGE). BMC Genomics, 15, 269. doi: 10.1186/1471-2164-15-269"],
         [!params.skip_sharp_clusters, "IDR (Li et al. 2011)",
             "Li Q, Brown JB, Huang H, Bickel PJ. (2011). Measuring reproducibility of high-throughput experiments. Annals of Applied Statistics, 5(3), 1752-1779. doi: 10.1214/11-AOAS466"],
-        [!single_end, "StringTie (Pertea et al. 2015)",
+        [true, "StringTie (Pertea et al. 2015)",
             "Pertea M, Pertea GM, Antonescu CM, et al. (2015). StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology, 33(3), 290-295. doi: 10.1038/nbt.3122"],
-        [!single_end, (params.gtf ? "GffRead and GffCompare" : "GffRead") + " (Pertea and Pertea 2020)",
+        [true, (params.gtf ? "GffRead and GffCompare" : "GffRead") + " (Pertea and Pertea 2020)",
             "Pertea G, Pertea M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9, 304. doi: 10.12688/f1000research.23297.2"],
         [true, "BEDTools (Quinlan and Hall 2010)",
             "Quinlan AR, Hall IM. (2010). BEDTools: a flexible suite of utilities for comparing genomic features. Bioinformatics, 26(6), 841-842. doi: 10.1093/bioinformatics/btq033"],
@@ -256,9 +243,9 @@ def usedTools() {
             "Kent WJ, Zweig AS, Barber G, Hinrichs AS, Karolchik D. (2010). BigWig and BigBed: enabling browsing of large distributed datasets. Bioinformatics, 26(17), 2204-2207. doi: 10.1093/bioinformatics/btq351"],
         [true, "IGV (Robinson et al. 2011)",
             "Robinson JT, Thorvaldsdóttir H, Winckler W, et al. (2011). Integrative genomics viewer. Nature Biotechnology, 29(1), 24-26. doi: 10.1038/nbt.1754"],
-        [!single_end, "the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017)",
+        [true, "the CAGEscan approach (Plessy et al. 2010; Bertin et al. 2017)",
             "Plessy C, Bertin N, Takahashi H, et al. (2010). Linking promoters to functional transcripts in small samples with nanoCAGE and CAGEscan. Nature Methods, 7(7), 528-534. doi: 10.1038/nmeth.1470"],
-        [!single_end, "",
+        [true, "",
             "Bertin N, Mendez M, Hasegawa A, et al. (2017). Linking FANTOM5 CAGE peaks to annotations with CAGEscan. Scientific Data, 4, 170147. doi: 10.1038/sdata.2017.147"],
         [params.find_erna as boolean, "eRNA-like divergent TSS pairs as defined by Andersson et al. (2014)",
             "Andersson R, Gebhard C, Miguel-Escalada I, et al. (2014). An atlas of active enhancers across human cell types and tissues. Nature, 507, 455-461. doi: 10.1038/nature12787"],

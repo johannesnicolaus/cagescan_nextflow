@@ -33,7 +33,7 @@
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 (paired-end CAGE / CAGEscan) cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'; leave empty for single-end CAGE"
+                "errorMessage": "FastQ file for reads 2 must be provided (paired-end CAGE), cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             },
             "group": {
                 "type": "string",
@@ -46,7 +46,8 @@
         },
         "required": [
             "sample",
-            "fastq_1"
+            "fastq_1",
+            "fastq_2"
         ]
     }
 }

@@ -10,7 +10,7 @@ Initial release of luscombeu/cagescan, created with the [nf-core](https://nf-co.
 ### `Added`
 
 Reads and alignment
-- Paired-end CAGE without UMIs (CAGEscan) and single-end CAGE (samplesheet without `fastq_2`; transcripts skipped).
+- Paired-end CAGE without UMIs: CAGEscan libraries (READ2 random-primed) and other paired-end CAGE libraries.
 - Random subsampling per sample (`--subsample_reads`, default 10,000,000; seqtk), optional READ1 5' linker removal
   (cutadapt), fastp, optional rRNA removal (SortMeRNA).
 - Spliced leaders (`--sl_sequence`, one or several named leaders): reads split into SL and non-SL sets before
@@ -18,7 +18,7 @@ Reads and alignment
   `--sl_max_error_rate`, no indels), reads renamed `SL.<leader>:` / `SLG.<leader>:`; following splitSpliceLeaderPE.
 - STAR alignment with READ1 aligned from its first base (`--read1_end_to_end`) and removal of a non-templated first G
   that differs from the genome (as CAGEr's removeFirstG); `--star_extra_args`.
-- Optional pair-level duplicate marking (`--dedup`, samtools markdup; paired-end only).
+- Optional pair-level duplicate marking (`--dedup`, samtools markdup).
 
 TSSs and trans-splice sites
 - CTSS from READ1 5' ends; SL-trimmed READ1s start at the trans-splice site (up to 3 soft-clipped 5' bases added back,
@@ -33,19 +33,19 @@ TSSs and trans-splice sites
 - MultiQC: CTSS extraction, PyPu initiator at TSSs, AG acceptor at trans-splice sites, spliced-leader shares, TSS
   assignment.
 
-Transcripts (paired-end)
+Transcripts
 - Read pairs grouped by TSS cluster (proper pairs), FANTOM5-style CAGEscan clusters and meta-clusters, StringTie
   assembly per sample and merged, anchoring of 5' ends to cluster peaks, derived transcripts for TSSs inside exons,
   removal of 3'-truncated copies; GTF, GFF3, BED12, FASTA (gffread); quantification (StringTie `-e`); gffcompare.
 
 Other
-- eRNA candidates: divergent, distal, balanced (and, paired-end, unspliced) pairs of non-SL TSS clusters, with
+- eRNA candidates: divergent, distal, balanced, unspliced pairs of non-SL TSS clusters, with
   convergent pairs as a control.
 - Stranded coverage bigWigs, pooled TSS-signal bigWigs and a self-contained IGV session.
 - Reference GTFs: records with an empty `transcript_id` (gene rows of NCBI-style GTFs, which gffcompare rejects) are
   dropped before use.
 - Simulated test data (`tests/data/make_test_data.py`) with known TSSs, isoforms and a trans-spliced gene; tests for
-  paired-end, single-end, paraclu, NCBI-style GTFs and every local module.
+  the default run, paraclu, NCBI-style GTFs and every local module.
 
 ### `Fixed`
 

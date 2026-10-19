@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/luscombeu/cagescan/master/nextflow_schema.json",
     "title": "luscombeu/cagescan pipeline parameters",
-    "description": "Reconstruct 5'-anchored transcripts from paired-end CAGE (CAGEscan) reads without UMIs, and call TSS and trans-splice-site clusters from paired-end or single-end CAGE",
+    "description": "Call TSS clusters and reconstruct 5'-anchored transcripts from paired-end CAGE (CAGEscan) reads without UMIs",
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -23,7 +23,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "A comma-separated file with a header row and the columns `sample`, `fastq_1`, optionally `fastq_2` and `group`. `fastq_1` is READ1 (starting at the cap). Leave `fastq_2` empty for single-end CAGE (TSS clusters and counts only, no transcripts); all samples must be single-end or all paired-end. `group` names the condition each sample is a replicate of (sharp clusters only). Rows with the same sample name are lanes and are concatenated. The names `all_samples` and `merged` are reserved.",
+                    "help_text": "A comma-separated file with a header row and the columns `sample`, `fastq_1`, `fastq_2`, plus an optional `group` column. Reads must be paired-end; `fastq_1` is READ1 (starting at the cap). `group` names the condition each sample is a replicate of (sharp clusters only). Rows with the same sample name are lanes and are concatenated. The names `all_samples` and `merged` are reserved.",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {

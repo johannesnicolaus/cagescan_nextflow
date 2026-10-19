@@ -23,16 +23,12 @@ process SPLIT_SPLICED_LEADER {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // Paired-end: the leader is looked for in READ1 and both mates are written; single-end: the reads only.
     // Leaders: 'SEQ' or 'NAME=SEQ,NAME=SEQ,...'; unnamed ones are SL (one leader) or SL1, SL2, ...
     def entries = sl_sequence.tokenize(',')*.trim().findAll { entry -> entry }
     def leaders = entries.withIndex().collect { entry, i ->
         def parts = entry.tokenize('=')
         parts.size() > 1 ? [parts[0], parts[1].toUpperCase()] : [entries.size() == 1 ? 'SL' : "SL${i + 1}", parts[0].toUpperCase()]
     }
-    def outputs = meta.single_end
-        ? "-o ${prefix}.SL_1.fastq.gz --untrimmed-output ${prefix}.noSL_1.fastq.gz"
-        : "-o ${prefix}.SL_1.fastq.gz -p ${prefix}.SL_2.fastq.gz --untrimmed-output ${prefix}.noSL_1.fastq.gz --untrimmed-paired-output ${prefix}.noSL_2.fastq.gz"
     def fasta = leaders.collect { name, seq -> ">SL.${name}\\n${seq}\\n>SLG.${name}\\nG${seq}" }.join('\\n')
     // A leader must start at READ1 base 1 or after one G (the extra G); mismatches are allowed but no indels, so that
     // it is cut exactly at its end. It is trimmed, and the pairs are written to separate files and renamed
@@ -44,9 +40,12 @@ process SPLIT_SPLICED_LEADER {
         --cores $task.cpus \\
         -g ^file:leaders.fa \\
         --no-indels \\
-        --rename '${meta.single_end ? '{adapter_name}' : '{r1.adapter_name}'}:{id}' \\
+        --rename '{r1.adapter_name}:{id}' \\
         $args \\
-        ${outputs} \\
+        -o ${prefix}.SL_1.fastq.gz \\
+        -p ${prefix}.SL_2.fastq.gz \\
+        --untrimmed-output ${prefix}.noSL_1.fastq.gz \\
+        --untrimmed-paired-output ${prefix}.noSL_2.fastq.gz \\
         $reads \\
         > ${prefix}.sl_split.log
     """
@@ -54,7 +53,7 @@ process SPLIT_SPLICED_LEADER {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    for f in ${meta.single_end ? 'SL_1 noSL_1' : 'SL_1 SL_2 noSL_1 noSL_2'}; do echo '' | gzip > ${prefix}.\$f.fastq.gz; done
+    for f in SL_1 SL_2 noSL_1 noSL_2; do echo '' | gzip > ${prefix}.\$f.fastq.gz; done
     touch ${prefix}.sl_split.log
     """
 }
